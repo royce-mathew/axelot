@@ -1,3 +1,5 @@
+'use client';
+
 import React from 'react';
 import {
   AppBar,
@@ -8,39 +10,75 @@ import {
   Box,
   Card,
   CardContent,
+  CircularProgress,
 } from '@mui/material';
 import ThemeToggle from '@/components/ThemeToggle';
+import { useAuth } from '@/hooks/use-auth';
+import { signIn, signOut } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 
 const Header = () => {
+  const { isAuthenticated, isLoading, user } = useAuth();
+  const router = useRouter();
+
+  const handleSignIn = () => {
+    signIn();
+  };
+
+  const handleSignOut = async () => {
+    await signOut();
+  };
+
   return (
     <AppBar 
       position="sticky" 
       elevation={0}
-      className="!bg-background-paper border-b border-divider !text-primary"
+      className="bg-background-paper! border-b border-divider text-primary!"
     >
       <Toolbar className="max-w-6xl mx-auto w-full px-4 sm:px-6">
         <Typography 
           variant="h5" 
           component="div" 
-          className="flex-grow font-bold text-primary"
+          className="grow font-bold text-primary"
         >
           Axelot.io
         </Typography>
         
         <Box className="flex items-center gap-4">
           <ThemeToggle />
-          <Button 
-            color="inherit"
-            className="!text-primary"
-          >
-            Sign In
-          </Button>
-          <Button 
-            variant="contained" 
-            className="!rounded-lg !normal-case"
-          >
-            Get Started
-          </Button>
+          {isLoading ? (
+            <CircularProgress size={24} />
+          ) : isAuthenticated ? (
+            <>
+              <Typography variant="body2" className="text-primary!">
+                {user?.email}
+              </Typography>
+              <Button 
+                color="inherit"
+                className="text-primary!"
+                onClick={handleSignOut}
+              >
+                Sign Out
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button 
+                color="inherit"
+                className="text-primary!"
+                onClick={handleSignIn}
+              >
+                Sign In
+              </Button>
+              <Button 
+                variant="contained" 
+                className="rounded-lg! normal-case!"
+                onClick={handleSignIn}
+              >
+                Get Started
+              </Button>
+            </>
+          )}
         </Box>
       </Toolbar>
     </AppBar>
@@ -49,7 +87,7 @@ const Header = () => {
 
 const HeroSection = () => {
   return (
-    <Box className="bg-gradient-to-br from-indigo-400 to-purple-500 py-24">
+    <Box className="bg-linear-to-br from-indigo-400 to-purple-500 py-24">
       <Container maxWidth="lg">
         <Box className="text-center">
           <Typography 
@@ -83,7 +121,7 @@ const FeatureCard = ({ title, description }: { title: string; description: strin
       elevation={0}
       className="p-6 h-full border border-divider hover:shadow-4 hover:-translate-y-0.5 transition-all duration-300 ease-in-out"
     >
-      <CardContent className="!p-0">
+      <CardContent className="p-0!">
         <Typography 
           variant="h6" 
           component="h3" 
@@ -93,7 +131,7 @@ const FeatureCard = ({ title, description }: { title: string; description: strin
         </Typography>
         <Typography 
           variant="body2" 
-          className="text-[var(--mui-palette-text-secondary)] leading-relaxed"
+          className="text-(--mui-palette-text-secondary) leading-relaxed"
         >
           {description}
         </Typography>

@@ -5,7 +5,6 @@ import {
   collection,
   doc,
   Firestore,
-  getFirestore,
   onSnapshot,
   setDoc,
   Timestamp,
@@ -15,7 +14,7 @@ import { ObservableV2 } from "lib0/observable"
 import * as awarenessProtocol from "y-protocols/awareness"
 import * as Y from "yjs"
 
-import { auth } from "../firebase/client"
+import { auth, db as firebaseDb } from "../firebase/client"
 import { createGraph } from "./graph"
 import { deleteInstance, initiateInstance, refreshPeers } from "./utils"
 import { WebRtc } from "./webrtc"
@@ -474,7 +473,7 @@ export class FireProvider extends ObservableV2<any> {
 
     // Initializing values
     this.firebaseApp = firebaseApp
-    this.db = getFirestore(this.firebaseApp)
+    this.db = firebaseDb // Use the shared Firestore instance from lib/firebase/client
     this.doc = ydoc
     this.documentPath = path
     if (maxUpdatesThreshold) this.maxCacheUpdates = maxUpdatesThreshold

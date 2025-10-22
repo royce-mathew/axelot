@@ -6,7 +6,6 @@ import {
   DocumentData,
   DocumentReference,
   Firestore,
-  getFirestore,
   onSnapshot,
   setDoc,
   Unsubscribe,
@@ -16,6 +15,7 @@ import SimplePeer from "simple-peer-light"
 import * as awarenessProtocol from "y-protocols/awareness"
 import * as Y from "yjs"
 
+import { db as firebaseDb } from "../firebase/client"
 import {
   base64ToUint8Array,
   decryptData,
@@ -78,7 +78,7 @@ export class WebRtc extends ObservableV2<any> {
     this.documentPath = documentPath
     this.uid = uid
     this.peerUid = peerUid
-    this.db = getFirestore(firebaseApp)
+    this.db = firebaseDb // Use the shared Firestore instance from lib/firebase/client
     this.isCaller = isCaller
     /**
      * Let's initiate this peer. The peer

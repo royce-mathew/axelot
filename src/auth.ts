@@ -4,7 +4,7 @@ import { OAuthConfig } from "next-auth/providers"
 import GitHub, { GitHubProfile } from "next-auth/providers/github"
 import Google, { GoogleProfile } from "next-auth/providers/google"
 // Import the Firebase Admin SDK
-import { adminAuth, firebaseAdminFirestore } from "@/lib/firebase/server"
+import {  firebaseAdminFirestore } from "@/lib/firebase/server"
 
 const providers = [
   Google({
@@ -29,32 +29,10 @@ export const providerMap = providers.map(
 export const { auth, handlers, signIn, signOut } = NextAuth({
   providers: providers,
   adapter: FirestoreAdapter(firebaseAdminFirestore),
-  session: {
-    strategy: "jwt",
-  },
   pages: {
     signIn: "/auth/sign-in",
   },
-  callbacks: {
-    jwt: async ({ user, token }) => {
-      if (user) {
-        token.sub = user.id as string
-      }
-      return token
-    },
-    session: async ({ session, token }) => {
-      if (session?.user) {
-        if (token.sub) {
-          session.user.id = token.sub
-
-          const firebaseToken = await adminAuth.createCustomToken(token.sub)
-          session.sessionToken = firebaseToken
-        }
-      }
-      return session
-    },
-  },
-  debug: false,
+  debug: true,
   theme: {
     brandColor: "#0062ff",
     logo: "/favicon.ico",
