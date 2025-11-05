@@ -11,6 +11,7 @@ import {
   Unsubscribe,
 } from "firebase/firestore"
 import { ObservableV2 } from "lib0/observable"
+// @ts-ignore
 import SimplePeer from "simple-peer-light"
 import * as awarenessProtocol from "y-protocols/awareness"
 import * as Y from "yjs"

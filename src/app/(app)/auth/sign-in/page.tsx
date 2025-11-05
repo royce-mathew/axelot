@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { Suspense } from 'react';
 import { 
   Box, 
   Container, 
@@ -9,13 +9,14 @@ import {
   Button,
   Stack,
   Divider,
+  CircularProgress,
 } from '@mui/material';
 import { signIn } from 'next-auth/react';
 import { useSearchParams } from 'next/navigation';
 import GoogleIcon from '@mui/icons-material/Google';
 import GitHubIcon from '@mui/icons-material/GitHub';
 
-export default function SignInPage() {
+function SignInContent() {
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get('callbackUrl') || '/';
 
@@ -117,5 +118,27 @@ export default function SignInPage() {
         </Paper>
       </Container>
     </Box>
+  );
+}
+
+export default function SignInPage() {
+  return (
+    <Suspense
+      fallback={
+        <Box
+          sx={{
+            minHeight: '100vh',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          }}
+        >
+          <CircularProgress />
+        </Box>
+      }
+    >
+      <SignInContent />
+    </Suspense>
   );
 }
