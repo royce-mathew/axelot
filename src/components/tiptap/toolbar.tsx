@@ -93,6 +93,7 @@ const Toolbar2 = ({ editor, showCharacterCount = false, onToggleCharacterCount }
   const [insertMenuAnchor, setInsertMenuAnchor] = useState<HTMLElement | null>(null);
   const [formatMenuAnchor, setFormatMenuAnchor] = useState<HTMLElement | null>(null);
   const [tablePickerAnchor, setTablePickerAnchor] = useState<HTMLElement | null>(null);
+  const [alignMenuAnchor, setAlignMenuAnchor] = useState<HTMLElement | null>(null);
 
   useEffect(() => {
     if (!editor) return;
@@ -162,6 +163,28 @@ const Toolbar2 = ({ editor, showCharacterCount = false, onToggleCharacterCount }
   const handleLineHeightChange = (event: SelectChangeEvent<string>) => {
     const value = event.target.value;
     editor.chain().focus().setLineHeight(value).run();
+  };
+
+  const getCurrentAlignment = () => {
+    if (editor.isActive({ textAlign: 'left' })) return 'left';
+    if (editor.isActive({ textAlign: 'center' })) return 'center';
+    if (editor.isActive({ textAlign: 'right' })) return 'right';
+    if (editor.isActive({ textAlign: 'justify' })) return 'justify';
+    return 'left'; // default
+  };
+
+  const getAlignmentIcon = () => {
+    const align = getCurrentAlignment();
+    switch (align) {
+      case 'center':
+        return <FormatAlignCenterIcon fontSize="small" />;
+      case 'right':
+        return <FormatAlignRightIcon fontSize="small" />;
+      case 'justify':
+        return <FormatAlignJustifyIcon fontSize="small" />;
+      default:
+        return <FormatAlignLeftIcon fontSize="small" />;
+    }
   };
 
   const setLink = () => {
@@ -395,10 +418,9 @@ const Toolbar2 = ({ editor, showCharacterCount = false, onToggleCharacterCount }
           <ListItemText>Insert Table</ListItemText>
         </MenuItem>
         {/* Table manipulation options - only show when cursor is in a table */}
-        {editor.can().addColumnAfter() && (
-          <>
-            <Divider />
-            <MenuItem onClick={() => { editor.chain().focus().addColumnBefore().run(); setInsertMenuAnchor(null); }}>
+        {editor.can().addColumnAfter() && [
+            <Divider key="divider-1" />,
+            <MenuItem key="col-before" onClick={() => { editor.chain().focus().addColumnBefore().run(); setInsertMenuAnchor(null); }}>
               <ListItemIcon>
                 <ViewColumnIcon fontSize="small" />
               </ListItemIcon>
@@ -406,8 +428,8 @@ const Toolbar2 = ({ editor, showCharacterCount = false, onToggleCharacterCount }
               <ListItemIcon sx={{ ml: 'auto', minWidth: 'auto' }}>
                 <AddIcon fontSize="small" />
               </ListItemIcon>
-            </MenuItem>
-            <MenuItem onClick={() => { editor.chain().focus().addColumnAfter().run(); setInsertMenuAnchor(null); }}>
+            </MenuItem>,
+            <MenuItem key="col-after" onClick={() => { editor.chain().focus().addColumnAfter().run(); setInsertMenuAnchor(null); }}>
               <ListItemIcon>
                 <ViewColumnIcon fontSize="small" />
               </ListItemIcon>
@@ -415,8 +437,8 @@ const Toolbar2 = ({ editor, showCharacterCount = false, onToggleCharacterCount }
               <ListItemIcon sx={{ ml: 'auto', minWidth: 'auto' }}>
                 <AddIcon fontSize="small" />
               </ListItemIcon>
-            </MenuItem>
-            <MenuItem onClick={() => { editor.chain().focus().addRowBefore().run(); setInsertMenuAnchor(null); }}>
+            </MenuItem>,
+            <MenuItem key="row-before" onClick={() => { editor.chain().focus().addRowBefore().run(); setInsertMenuAnchor(null); }}>
               <ListItemIcon>
                 <TableRowsIcon fontSize="small" />
               </ListItemIcon>
@@ -424,8 +446,8 @@ const Toolbar2 = ({ editor, showCharacterCount = false, onToggleCharacterCount }
               <ListItemIcon sx={{ ml: 'auto', minWidth: 'auto' }}>
                 <AddIcon fontSize="small" />
               </ListItemIcon>
-            </MenuItem>
-            <MenuItem onClick={() => { editor.chain().focus().addRowAfter().run(); setInsertMenuAnchor(null); }}>
+            </MenuItem>,
+            <MenuItem key="row-after" onClick={() => { editor.chain().focus().addRowAfter().run(); setInsertMenuAnchor(null); }}>
               <ListItemIcon>
                 <TableRowsIcon fontSize="small" />
               </ListItemIcon>
@@ -433,28 +455,27 @@ const Toolbar2 = ({ editor, showCharacterCount = false, onToggleCharacterCount }
               <ListItemIcon sx={{ ml: 'auto', minWidth: 'auto' }}>
                 <AddIcon fontSize="small" />
               </ListItemIcon>
-            </MenuItem>
-            <Divider />
-            <MenuItem onClick={() => { editor.chain().focus().deleteColumn().run(); setInsertMenuAnchor(null); }}>
+            </MenuItem>,
+            <Divider key="divider-2" />,
+            <MenuItem key="del-col" onClick={() => { editor.chain().focus().deleteColumn().run(); setInsertMenuAnchor(null); }}>
               <ListItemIcon>
                 <DeleteIcon fontSize="small" color="error" />
               </ListItemIcon>
               <ListItemText>Delete Column</ListItemText>
-            </MenuItem>
-            <MenuItem onClick={() => { editor.chain().focus().deleteRow().run(); setInsertMenuAnchor(null); }}>
+            </MenuItem>,
+            <MenuItem key="del-row" onClick={() => { editor.chain().focus().deleteRow().run(); setInsertMenuAnchor(null); }}>
               <ListItemIcon>
                 <DeleteIcon fontSize="small" color="error" />
               </ListItemIcon>
               <ListItemText>Delete Row</ListItemText>
-            </MenuItem>
-            <MenuItem onClick={() => { editor.chain().focus().deleteTable().run(); setInsertMenuAnchor(null); }}>
+            </MenuItem>,
+            <MenuItem key="del-table" onClick={() => { editor.chain().focus().deleteTable().run(); setInsertMenuAnchor(null); }}>
               <ListItemIcon>
                 <DeleteIcon fontSize="small" color="error" />
               </ListItemIcon>
               <ListItemText>Delete Table</ListItemText>
             </MenuItem>
-          </>
-        )}
+        ]}
         {!editor.can().addColumnAfter() && <Divider />}
         <MenuItem onClick={() => { editor.chain().focus().setHorizontalRule().run(); setInsertMenuAnchor(null); }}>
           <ListItemIcon>
@@ -870,49 +891,80 @@ const Toolbar2 = ({ editor, showCharacterCount = false, onToggleCharacterCount }
 
         <Divider orientation="vertical" flexItem />
 
-        {/* Text Alignment */}
-        <ToggleButtonGroup size="small" sx={{ height: 32 }} value={false} aria-label="text alignment">
-          <ToggleButton
-            value="left"
+        {/* Text Alignment Dropdown */}
+        <Tooltip title="Align" disableInteractive>
+          <IconButton
+            size="small"
+            onClick={(e) => setAlignMenuAnchor(e.currentTarget)}
+            sx={{
+              border: 1,
+              borderColor: 'divider',
+              borderRadius: 1,
+              '&:hover': { bgcolor: 'action.hover' },
+            }}
+          >
+            {getAlignmentIcon()}
+          </IconButton>
+        </Tooltip>
+        
+        <Menu
+          anchorEl={alignMenuAnchor}
+          open={Boolean(alignMenuAnchor)}
+          onClose={() => setAlignMenuAnchor(null)}
+          anchorOrigin={{
+            vertical: 'bottom',
+            horizontal: 'left',
+          }}
+        >
+          <MenuItem 
             selected={editor.isActive({ textAlign: 'left' })}
-            onClick={() => editor.chain().focus().setTextAlign('left').run()}
-            aria-label="Align Left"
+            onClick={() => { 
+              editor.chain().focus().setTextAlign('left').run(); 
+              setAlignMenuAnchor(null); 
+            }}
           >
-            <Tooltip title="Align Left" disableInteractive>
+            <ListItemIcon>
               <FormatAlignLeftIcon fontSize="small" />
-            </Tooltip>
-          </ToggleButton>
-          <ToggleButton
-            value="center"
+            </ListItemIcon>
+            <ListItemText>Left</ListItemText>
+          </MenuItem>
+          <MenuItem 
             selected={editor.isActive({ textAlign: 'center' })}
-            onClick={() => editor.chain().focus().setTextAlign('center').run()}
-            aria-label="Align Center"
+            onClick={() => { 
+              editor.chain().focus().setTextAlign('center').run(); 
+              setAlignMenuAnchor(null); 
+            }}
           >
-            <Tooltip title="Align Center" disableInteractive>
+            <ListItemIcon>
               <FormatAlignCenterIcon fontSize="small" />
-            </Tooltip>
-          </ToggleButton>
-          <ToggleButton
-            value="right"
+            </ListItemIcon>
+            <ListItemText>Center</ListItemText>
+          </MenuItem>
+          <MenuItem 
             selected={editor.isActive({ textAlign: 'right' })}
-            onClick={() => editor.chain().focus().setTextAlign('right').run()}
-            aria-label="Align Right"
+            onClick={() => { 
+              editor.chain().focus().setTextAlign('right').run(); 
+              setAlignMenuAnchor(null); 
+            }}
           >
-            <Tooltip title="Align Right" disableInteractive>
+            <ListItemIcon>
               <FormatAlignRightIcon fontSize="small" />
-            </Tooltip>
-          </ToggleButton>
-          <ToggleButton
-            value="justify"
+            </ListItemIcon>
+            <ListItemText>Right</ListItemText>
+          </MenuItem>
+          <MenuItem 
             selected={editor.isActive({ textAlign: 'justify' })}
-            onClick={() => editor.chain().focus().setTextAlign('justify').run()}
-            aria-label="Justify"
+            onClick={() => { 
+              editor.chain().focus().setTextAlign('justify').run(); 
+              setAlignMenuAnchor(null); 
+            }}
           >
-            <Tooltip title="Justify" disableInteractive>
+            <ListItemIcon>
               <FormatAlignJustifyIcon fontSize="small" />
-            </Tooltip>
-          </ToggleButton>
-        </ToggleButtonGroup>
+            </ListItemIcon>
+            <ListItemText>Justify</ListItemText>
+          </MenuItem>
+        </Menu>
       </Paper>
 
       {/* Table Picker Popover */}

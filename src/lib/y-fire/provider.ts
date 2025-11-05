@@ -305,7 +305,7 @@ export class FireProvider extends ObservableV2<any> {
         {
           metadata: {
             ...this.metadata,
-            updatedBy: auth.currentUser?.displayName || "anonymous",
+            updatedBy: auth.currentUser?.uid || "anonymous",
             lastUpdated: Timestamp.now(),
           },
           content: Bytes.fromUint8Array(Y.encodeStateAsUpdate(this.doc)),

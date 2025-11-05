@@ -25,11 +25,6 @@ body {
   line-height: 1.6;
 }
 
-a {
-  color: inherit;
-  text-decoration: none;
-}
-
 #__next {
   min-height: 100vh;
 }
@@ -219,4 +214,69 @@ a {
 
 .invisible-newline {
   opacity: 0.7;
+}
+
+/* Collaboration Caret Styles - Cursor Popup Design */
+.collaboration-cursor__caret,
+.collaboration-carets__caret {
+  position: relative;
+  margin-left: -1px;
+  margin-right: -1px;
+  border-left: 2px solid;
+  border-right: none;
+  word-break: normal;
+  pointer-events: none;
+}
+
+
+.collaboration-cursor__label,
+.collaboration-carets__label {
+  position: absolute;
+  top: -2.5em;
+  left: 0;
+  transform: translateX(-50%);
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 600;
+  line-height: normal;
+  user-select: none;
+  color: #fff;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 1000;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  transition: opacity 0.2s ease;
+}
+
+/* Arrow pointing down to cursor */
+.collaboration-cursor__label::after,
+.collaboration-carets__label::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 4px solid;
+  border-top-color: inherit;
+}
+
+/* Hide label on hover to keep it out of the way */
+.ProseMirror:hover .collaboration-cursor__label,
+.ProseMirror:hover .collaboration-carets__label {
+  opacity: 0.8;
+}
+
+/* Selection styles for other users - semi-transparent highlight */
+.ProseMirror .collaboration-cursor__selection,
+.ProseMirror .collaboration-carets__selection {
+  pointer-events: none;
+  user-select: none;
+  opacity: 0.25;
+  mix-blend-mode: multiply;
 }
