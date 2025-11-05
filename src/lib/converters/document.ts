@@ -3,6 +3,7 @@ import {
   doc,
   DocumentData,
   FirestoreDataConverter,
+  or,
   query,
   QueryDocumentSnapshot,
   SnapshotOptions,
@@ -12,6 +13,10 @@ import {
 import { Document } from "@/types/document"
 import { db } from "@/lib/firebase/client"
 
+/**
+ * Firestore converter for Story/Document
+ * Uses flattened structure for optimal query performance
+ */
 const documentConverter: FirestoreDataConverter<Document> = {
   fromFirestore(
     snapshot: QueryDocumentSnapshot<DocumentData>,
@@ -22,44 +27,71 @@ const documentConverter: FirestoreDataConverter<Document> = {
       id: snapshot.id,
       ref: snapshot.ref,
       owner: data.owner,
-      writeAccess: data.writeAccess,
-      readAccess: data.readAccess,
-      content: data.content,
-      metadata: {
-        title: data.metadata.title,
-        created: data.metadata.created,
-        lastUpdated: data.metadata.lastUpdated,
-        lastUpdatedBy: data.metadata.lastUpdatedBy,
-        lastOpened: data.metadata.lastOpened,
-      },
+      writeAccess: data.writeAccess || [],
+      readAccess: data.readAccess || [],
+      isPublic: data.isPublic ?? false,
+      title: data.title || "Untitled",
+      slug: data.slug,
+      created: data.created,
+      lastUpdated: data.lastUpdated,
+      lastUpdatedBy: data.lastUpdatedBy,
+      tags: data.tags || [],
+      isArchived: data.isArchived ?? false,
+      version: data.version || 1,
     }
   },
   toFirestore(document: Document): DocumentData {
-    const doc: Document = {
-      content: document.content,
+    const data: DocumentData = {
       owner: document.owner,
       writeAccess: document.writeAccess,
       readAccess: document.readAccess,
-      metadata: {
-        title: document.metadata.title,
-        created: document.metadata.created,
-        lastUpdated: document.metadata.lastUpdated,
-        lastUpdatedBy: document.metadata.lastUpdatedBy,
-        lastOpened: document.metadata.lastOpened,
-      },
+      isPublic: document.isPublic,
+      title: document.title,
+      created: document.created,
+      lastUpdated: document.lastUpdated,
+      lastUpdatedBy: document.lastUpdatedBy,
+      tags: document.tags || [],
+      isArchived: document.isArchived,
+      version: document.version || 1,
     }
-    return doc
+
+    if (document.slug !== undefined) {
+      data.slug = document.slug
+    }
+    
+    return data
   },
 }
 
+/**
+ * Get a reference to a specific story/document
+ */
 export const documentRef = (documentId?: string) =>
-  doc(db, `documents/${documentId}`).withConverter(documentConverter)
+  doc(db, `stories/${documentId}`).withConverter(documentConverter)
 
+/**
+ * Get a query for all stories/documents owned by a user or shared with them
+ */
 export const documentsByOwnerRef = (ownerId: string) =>
   query(
-    collection(db, "documents"),
-    where("owner", "==", ownerId)
+    collection(db, "stories"),
+    or(
+      where("owner", "==", ownerId),
+      where("writeAccess", "array-contains", ownerId)
+    )
   ).withConverter(documentConverter)
 
+/**
+ * Get a query for all published public stories/documents
+ */
+export const publicDocumentsRef = () =>
+  query(
+    collection(db, "stories"),
+    where("isPublic", "==", true)
+  ).withConverter(documentConverter)
+
+/**
+ * Get a reference to all stories/documents collection
+ */
 export const allDocumentsRef = () =>
-  collection(db, "documents").withConverter(documentConverter)
+  collection(db, "stories").withConverter(documentConverter)

@@ -1,27 +1,48 @@
-import { DocumentData, DocumentReference, Timestamp } from "firebase/firestore"
+import { DocumentReference, Timestamp } from "firebase/firestore"
 
-export interface DocumentMetadata {
-  title: string
-  created: Timestamp
-  lastOpened: Timestamp
-  lastUpdated: Timestamp
-  lastUpdatedBy: string
+/**
+ * Version history entry
+ */
+export interface VersionEntry {
+  version: number
+  timestamp: Timestamp
+  userId: string
+  userName: string
+  changes?: string
 }
 
+/**
+ * Document/Story interface - for collaborative writing
+ * Flattened structure for optimal Firestore performance
+ */
 export interface Document {
-  id?: string // ID of the document
+  id?: string
+  ref?: DocumentReference
 
-  // The unique identifier of the document
-  ref?: DocumentReference // The reference to the document
-
-  // Ownerhsip and sharing information
+  // Ownership and access control
   owner: string
   readAccess: string[]
   writeAccess: string[]
 
-  // Metadata of the document
-  metadata: DocumentMetadata
+  // Public/private visibility
+  isPublic: boolean
 
-  // The data of the document
-  content: object | null
+  // Basic information
+  title: string
+  description?: string
+  slug?: string // URL-friendly version of title
+
+  // Timestamps
+  created: Timestamp
+  lastUpdated: Timestamp
+  lastUpdatedBy: string
+
+  // Categorization
+  tags?: string[]
+
+  // Archive status
+  isArchived: boolean
+
+  // Version control (optional for future use)
+  version?: number
 }

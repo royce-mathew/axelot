@@ -32,7 +32,12 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
   pages: {
     signIn: "/auth/sign-in",
   },
-  debug: true,
+  callbacks: {
+    async session({ session }) {
+      return session;
+    },
+  },
+  debug: false,
   theme: {
     brandColor: "#0062ff",
     logo: "/favicon.ico",

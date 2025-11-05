@@ -1,5 +1,4 @@
 import {
-  collection,
   doc,
   DocumentData,
   FirestoreDataConverter,
@@ -20,15 +19,17 @@ const userDataConverter: FirestoreDataConverter<User> = {
       email: data.email,
       emailVerified: data.emailVerified,
       name: data.name,
-      ownedDocuments: data.ownedDocuments,
+      image: data.image,
     }
   },
   toFirestore(document: User): DocumentData {
-    const doc: User = {
+    const doc: Partial<User> = {
       email: document.email,
       emailVerified: document.emailVerified,
       name: document.name,
-      ownedDocuments: document.ownedDocuments,
+    }
+    if (document.image) {
+      doc.image = document.image
     }
     return doc
   },

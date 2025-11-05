@@ -32,6 +32,11 @@ const ThemeToggle: React.FC = () => {
                             border: 'none',
                             borderRadius: '50px',
                             aspectRatio: '1/1',
+                            padding: '4px',
+                            minWidth: '28px',
+                            '& .MuiSvgIcon-root': {
+                                fontSize: '1rem',
+                            },
                         },
                     }}
                 >
@@ -65,6 +70,11 @@ const ThemeToggle: React.FC = () => {
                         border: 'none',
                         borderRadius: '50px',
                         aspectRatio: '1/1',
+                        padding: '4px',
+                        minWidth: '28px',
+                        '& .MuiSvgIcon-root': {
+                            fontSize: '1rem',
+                        },
                     },
                 }}
             >

@@ -1,13 +1,5 @@
 'use client';
 import { createTheme } from '@mui/material/styles';
-import { Roboto } from 'next/font/google';
-
-const roboto = Roboto({
-  weight: ['300', '400', '500', '700'],
-  subsets: ['latin'],
-  display: 'swap',
-});
-
 
 const theme = createTheme({
     colorSchemes: {
@@ -18,7 +10,39 @@ const theme = createTheme({
         colorSchemeSelector: 'class',
     },
     typography: {
-        fontFamily: roboto.style.fontFamily,
+        fontFamily: 'var(--font-dm-sans), system-ui, -apple-system, sans-serif',
+        h1: {
+            fontFamily: 'var(--font-outfit), system-ui, sans-serif',
+            fontWeight: 700,
+        },
+        h2: {
+            fontFamily: 'var(--font-outfit), system-ui, sans-serif',
+            fontWeight: 700,
+        },
+        h3: {
+            fontFamily: 'var(--font-outfit), system-ui, sans-serif',
+            fontWeight: 600,
+        },
+        h4: {
+            fontFamily: 'var(--font-outfit), system-ui, sans-serif',
+            fontWeight: 600,
+        },
+        h5: {
+            fontFamily: 'var(--font-dm-sans), system-ui, sans-serif',
+            fontWeight: 500,
+        },
+        h6: {
+            fontFamily: 'var(--font-outfit), system-ui, sans-serif',
+            fontWeight: 600,
+        },
+        body1: {
+            fontFamily: 'var(--font-dm-sans), system-ui, sans-serif',
+            lineHeight: 1.7,
+        },
+        body2: {
+            fontFamily: 'var(--font-dm-sans), system-ui, sans-serif',
+            lineHeight: 1.6,
+        },
     },
    
 });

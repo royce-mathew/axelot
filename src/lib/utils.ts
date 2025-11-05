@@ -1,16 +1,10 @@
-import { clsx, type ClassValue } from "clsx"
 import { formatDistanceToNow } from "date-fns"
 import { Timestamp } from "firebase/firestore"
-import { twMerge } from "tailwind-merge"
-
-export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs))
-}
 
 export function timeAgo(timestamp: Timestamp) {
   try {
     return formatDistanceToNow(timestamp.toDate(), { addSuffix: true })
-  } catch (e) {
+  } catch {
     return "Never"
   }
 }
