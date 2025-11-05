@@ -28,7 +28,6 @@ import {
 } from '@/lib/username-utils';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase/client';
-import { updateAuthorDataInStories } from '@/lib/update-author-data';
 
 export default function SettingsPage() {
   const { user, isLoading: authLoading, isAuthenticated } = useAuth();
@@ -141,7 +140,6 @@ export default function SettingsPage() {
 
     try {
       const newUsername = username.toLowerCase();
-      const hasUsernameChanged = newUsername !== originalUsername.toLowerCase();
       
       // Update user profile
       await setDoc(
@@ -153,15 +151,6 @@ export default function SettingsPage() {
         },
         { merge: true }
       );
-
-      // If username changed, update all user's stories with new author data
-      if (hasUsernameChanged) {
-        await updateAuthorDataInStories(user.id, {
-          name: user.name,
-          username: newUsername,
-          image: user.image,
-        });
-      }
 
       setOriginalUsername(username);
       setSuccessMessage('Profile updated successfully!');

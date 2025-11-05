@@ -290,9 +290,8 @@ export default function Home() {
   const trendingStories = storiesData?.trending ?? [];
 
   const handleCardClick = (doc: Document) => {
-    // Use denormalized username if available, otherwise fall back to user ID
-    const userIdentifier = doc.ownerUsername ? `@${doc.ownerUsername}` : doc.owner;
-    router.push(`/u/${userIdentifier}/${doc.id}`);
+    // Navigate to story using owner ID
+    router.push(`/u/${doc.owner}/${doc.id}`);
   };
 
   const handleCreateNew = () => {
@@ -415,19 +414,22 @@ export default function Home() {
                           </Typography>
                         )}
                         <Stack direction="row" spacing={1} flexWrap="wrap" gap={1}>
-                          {doc.ownerName && (
-                            <Chip 
-                              icon={<PersonIcon />} 
-                              label={doc.ownerName} 
-                              size="small"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                const userIdentifier = doc.ownerUsername ? `@${doc.ownerUsername}` : doc.owner;
-                                router.push(`/u/${userIdentifier}`);
-                              }}
-                              sx={{ cursor: 'pointer' }}
-                            />
-                          )}
+                          <Chip 
+                            icon={<PersonIcon />} 
+                            label={
+                              doc.authorNames && doc.authorNames.length > 0
+                                ? doc.authorNames.length === 1
+                                  ? doc.authorNames[0]
+                                  : `${doc.authorNames[0]} +${doc.authorNames.length - 1}`
+                                : 'Anonymous'
+                            }
+                            size="small"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              router.push(`/u/${doc.owner}`);
+                            }}
+                            sx={{ cursor: 'pointer' }}
+                          />
                           <Chip 
                             icon={<VisibilityIcon />} 
                             label={`${(doc.viewCount || 0).toLocaleString()} views`} 
@@ -500,19 +502,22 @@ export default function Home() {
                           </Typography>
                         )}
                         <Stack direction="row" spacing={1} flexWrap="wrap" gap={1}>
-                          {doc.ownerName && (
-                            <Chip 
-                              icon={<PersonIcon />} 
-                              label={doc.ownerName} 
-                              size="small"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                const userIdentifier = doc.ownerUsername ? `@${doc.ownerUsername}` : doc.owner;
-                                router.push(`/u/${userIdentifier}`);
-                              }}
-                              sx={{ cursor: 'pointer' }}
-                            />
-                          )}
+                          <Chip 
+                            icon={<PersonIcon />} 
+                            label={
+                              doc.authorNames && doc.authorNames.length > 0
+                                ? doc.authorNames.length === 1
+                                  ? doc.authorNames[0]
+                                  : `${doc.authorNames[0]} +${doc.authorNames.length - 1}`
+                                : 'Anonymous'
+                            }
+                            size="small"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              router.push(`/u/${doc.owner}`);
+                            }}
+                            sx={{ cursor: 'pointer' }}
+                          />
                           <Chip 
                             icon={<VisibilityIcon />} 
                             label={`${(doc.viewCount || 0).toLocaleString()} views`} 

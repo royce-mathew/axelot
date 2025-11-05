@@ -55,6 +55,7 @@ import { Document } from '@/types/document';
 import { documentRef } from '@/lib/converters/document';
 import { timeAgo } from '@/lib/utils';
 import { generateSlug } from '@/lib/content-utils';
+import { syncAuthorNames } from '@/lib/update-author-data';
 import { Header } from '@/components/header';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
@@ -364,6 +365,11 @@ export default function StoryPage(props: { params: Promise<{ userId: string; sto
 
       await updateDoc(documentRef(storyId), updateData);
       
+      // Sync author names after modifying write access
+      if (sharingRole === 'editor') {
+        await syncAuthorNames(storyId, document.owner, updateData.writeAccess || []);
+      }
+      
       // Update local document state
       setDocument({ ...document, ...updateData });
       
@@ -389,6 +395,10 @@ export default function StoryPage(props: { params: Promise<{ userId: string; sto
       };
 
       await updateDoc(documentRef(storyId), updateData);
+      
+      // Sync author names after removing user from write access
+      await syncAuthorNames(storyId, document.owner, updateData.writeAccess || []);
+      
       setDocument({ ...document, ...updateData });
     } catch (error) {
       console.error('Error removing user:', error);
@@ -413,6 +423,10 @@ export default function StoryPage(props: { params: Promise<{ userId: string; sto
       }
 
       await updateDoc(documentRef(storyId), updateData);
+      
+      // Sync author names after changing roles (affects write access)
+      await syncAuthorNames(storyId, document.owner, updateData.writeAccess || []);
+      
       setDocument({ ...document, ...updateData });
     } catch (error) {
       console.error('Error changing user role:', error);

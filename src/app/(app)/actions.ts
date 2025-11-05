@@ -6,9 +6,7 @@ import { Timestamp } from 'firebase/firestore';
 interface StoryData {
   id: string;
   owner: string;
-  ownerName?: string;
-  ownerUsername?: string;
-  ownerImage?: string;
+  authorNames?: string[];
   title: string;
   description?: string;
   slug?: string;

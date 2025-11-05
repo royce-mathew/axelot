@@ -136,10 +136,8 @@ export default function StoriesPage() {
         lastUpdated: Timestamp.now(),
         lastUpdatedBy: user.id,
         isArchived: false,
-        // Denormalized author data
-        ownerName: user.name || undefined,
-        ownerUsername: user.username || undefined,
-        ownerImage: user.image || undefined,
+        // Denormalized author names (just owner at creation)
+        authorNames: user.name ? [user.name] : [],
       };
 
       const newDoc = await addDoc(allDocumentsRef(), completeDocData);

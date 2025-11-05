@@ -1,74 +1,42 @@
-import { getDocs, query, where, writeBatch, WriteBatch } from 'firebase/firestore';
-import { allDocumentsRef } from '@/lib/converters/document';
-import { db } from '@/lib/firebase/client';
+import { getDoc, updateDoc } from 'firebase/firestore';
+import { documentRef } from '@/lib/converters/document';
+import { userRef } from '@/lib/converters/user';
 
 /**
- * Updates denormalized author data across all stories when user profile changes
- * This should be called when user updates their profile (name, username, or image)
+ * Syncs authorNames array with current owner and writeAccess users
+ * This should be called when writeAccess is modified or when user names change
  */
-export async function updateAuthorDataInStories(
-  userId: string,
-  updates: {
-    name?: string | null;
-    username?: string | null;
-    image?: string | null;
-  }
+export async function syncAuthorNames(
+  storyId: string,
+  ownerId: string,
+  writeAccessUserIds: string[]
 ) {
   try {
-    // Query all stories owned by this user
-    const storiesQuery = query(
-      allDocumentsRef(),
-      where('owner', '==', userId)
-    );
-    
-    const snapshot = await getDocs(storiesQuery);
-    
-    if (snapshot.empty) {
-      console.log('No stories found for user:', userId);
-      return;
-    }
+    // Collect all user IDs that should be authors (owner + writeAccess)
+    const allAuthorIds = [ownerId, ...writeAccessUserIds];
+    const uniqueAuthorIds = [...new Set(allAuthorIds)]; // Remove duplicates
 
-    // Firestore batches can only handle 500 operations
-    const batchSize = 500;
-    const batches: WriteBatch[] = [];
-    let currentBatch = writeBatch(db);
-    let operationCount = 0;
-
-    snapshot.docs.forEach((doc) => {
-      const updateData: Record<string, string | null> = {};
-      
-      if (updates.name !== undefined) {
-        updateData.ownerName = updates.name || null;
-      }
-      if (updates.username !== undefined) {
-        updateData.ownerUsername = updates.username || null;
-      }
-      if (updates.image !== undefined) {
-        updateData.ownerImage = updates.image || null;
-      }
-
-      currentBatch.update(doc.ref, updateData);
-      operationCount++;
-
-      // If we've reached the batch size, start a new batch
-      if (operationCount === batchSize) {
-        batches.push(currentBatch);
-        currentBatch = writeBatch(db);
-        operationCount = 0;
-      }
+    // Fetch all author names in parallel
+    const authorNamePromises = uniqueAuthorIds.map(async (userId) => {
+      const userDocRef = userRef(userId);
+      const userSnap = await getDoc(userDocRef);
+      return userSnap.exists() ? userSnap.data().name : null;
     });
 
-    // Add the last batch if it has operations
-    if (operationCount > 0) {
-      batches.push(currentBatch);
-    }
+    const authorNamesResults = await Promise.all(authorNamePromises);
+    
+    // Filter out null values (users that don't exist or have no name)
+    const authorNames = authorNamesResults.filter((name): name is string => name != null);
 
-    // Commit all batches
-    await Promise.all(batches.map(batch => batch.commit()));
+    // Update the story document
+    const storyRef = documentRef(storyId);
+    await updateDoc(storyRef, {
+      authorNames,
+    });
 
-    console.log(`Updated author data in ${snapshot.docs.length} stories`);
+    console.log(`Synced ${authorNames.length} author names for story ${storyId}`);
   } catch (error) {
-    console.error('Error updating author data in stories:', error);
+    console.error('Error syncing author names:', error);
     throw error;
   }
 }

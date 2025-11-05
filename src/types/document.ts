@@ -24,10 +24,8 @@ export interface Document {
   readAccess: string[]
   writeAccess: string[]
 
-  // Denormalized author data (for performance optimization)
-  ownerName?: string        // Author's display name
-  ownerUsername?: string    // Author's username (without @ prefix)
-  ownerImage?: string       // Author's avatar URL
+  // Denormalized author data (names of all users with write access)
+  authorNames?: string[]    // Display names of owner + writeAccess users
 
   // Public/private visibility
   isPublic: boolean

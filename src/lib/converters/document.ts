@@ -39,10 +39,8 @@ const documentConverter: FirestoreDataConverter<Document> = {
       tags: data.tags || [],
       isArchived: data.isArchived ?? false,
       version: data.version || 1,
-      // Denormalized author data
-      ownerName: data.ownerName,
-      ownerUsername: data.ownerUsername,
-      ownerImage: data.ownerImage,
+      // Denormalized author names
+      authorNames: data.authorNames || [],
       // Trending algorithm fields
       viewCount: data.viewCount,
       lastViewed: data.lastViewed,
@@ -91,17 +89,9 @@ const documentConverter: FirestoreDataConverter<Document> = {
       data.trendingLastComputed = document.trendingLastComputed
     }
 
-    // Denormalized author fields - only include if defined
-    if (document.ownerName !== undefined) {
-      data.ownerName = document.ownerName
-    }
-
-    if (document.ownerUsername !== undefined) {
-      data.ownerUsername = document.ownerUsername
-    }
-
-    if (document.ownerImage !== undefined) {
-      data.ownerImage = document.ownerImage
+    // Denormalized author names - only include if defined
+    if (document.authorNames !== undefined) {
+      data.authorNames = document.authorNames
     }
     
     return data
