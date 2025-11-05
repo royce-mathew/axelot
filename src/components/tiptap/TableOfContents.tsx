@@ -1,6 +1,6 @@
 'use client';
 
-import { List, ListItem, ListItemButton, ListItemText, Paper, Typography } from '@mui/material';
+import { List, ListItem, ListItemButton, ListItemText, Paper, Typography, Box } from '@mui/material';
 import { useEffect, useState } from 'react';
 import type { Editor } from '@tiptap/react';
 
@@ -41,30 +41,42 @@ export const TableOfContents = ({ editor }: TableOfContentsProps) => {
         }
       });
       
-      setAnchors(headings);
+      // Only update if the structure changed (different count or content)
+      setAnchors(prev => {
+        if (prev.length !== headings.length) return headings;
+        
+        const hasChanged = headings.some((h, i) => 
+          h.textContent !== prev[i]?.textContent || 
+          h.level !== prev[i]?.level ||
+          h.pos !== prev[i]?.pos
+        );
+        
+        return hasChanged ? headings : prev;
+      });
     };
 
-    // Update on editor changes
+    // Update on editor content changes only (not selection)
     updateAnchors();
     editor.on('update', updateAnchors);
-    editor.on('selectionUpdate', updateAnchors);
 
     return () => {
       editor.off('update', updateAnchors);
-      editor.off('selectionUpdate', updateAnchors);
     };
   }, [editor]);
 
   const handleClick = (anchor: TocAnchor) => {
     if (!editor) return;
     
-    // Scroll to the heading position
+    // Focus editor and move cursor to heading content
     editor.commands.focus();
-    editor.commands.setTextSelection(anchor.pos);
+    editor.commands.setTextSelection(anchor.pos + 1);
     
-    // Scroll the heading into view - centered
-    const element = editor.view.domAtPos(anchor.pos).node as HTMLElement;
-    element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    // Find and scroll to the heading element
+    const { node } = editor.view.domAtPos(anchor.pos);
+    const element = node.nodeType === Node.TEXT_NODE ? node.parentElement : node;
+    const heading = (element as HTMLElement)?.closest('h1, h2, h3, h4, h5, h6');
+    
+    heading?.scrollIntoView({ behavior: 'smooth', block: 'center' });
   };
 
   if (!editor || anchors.length === 0) {
@@ -73,25 +85,20 @@ export const TableOfContents = ({ editor }: TableOfContentsProps) => {
 
   return (
     <Paper
-      elevation={2}
+      elevation={0}
       sx={{
-        // Mobile: vertical list at top (not sticky)
-        // Desktop: fixed on right side
-        position: { xs: 'relative', md: 'fixed' },
+        // Sticky positioning that stays in place as users scroll
+        position: 'sticky',
         top: { xs: 0, md: 100 },
-        right: { xs: 0, md: 24 },
-        left: { xs: 0, md: 'auto' },
-        width: { xs: '100%', md: 280 },
+        width: '100%',
+        maxWidth: { xs: '100%', md: 260 },
         maxHeight: { xs: 'calc(50vh)', md: 'calc(100vh - 120px)' },
         overflow: 'auto',
-        p: { xs: 2, md: 2.5 },
-        borderRadius: { xs: 2, md: 2 },
-        bgcolor: 'background.paper',
-        border: 1,
-        borderColor: 'divider',
+        p: 0,
+        borderRadius: 0,
+        bgcolor: 'transparent',
+        border: 0,
         zIndex: { xs: 1, md: 5 },
-        display: anchors.length > 0 ? 'block' : 'none',
-        boxShadow: { xs: 2, md: 2 },
         mb: { xs: 3, md: 0 },
         '&::-webkit-scrollbar': {
           width: '8px',
@@ -110,29 +117,46 @@ export const TableOfContents = ({ editor }: TableOfContentsProps) => {
         },
       }}
     >
-      <Typography 
-        variant="overline" 
-        fontWeight="bold" 
-        sx={{ 
-          px: 1,
-          mb: 1.5,
-          display: 'block',
-          color: 'text.secondary',
-          letterSpacing: 1.2,
-          fontSize: '0.75rem',
-        }}
-      >
-        Table of Contents
-      </Typography>
-      <List 
-        dense 
-        disablePadding
+      {/* Header */}
+      <Box
         sx={{
           display: 'flex',
-          flexDirection: 'column',
-          gap: 0.5,
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          px: 0,
+          py: 1.5,
+          borderBottom: 1,
+          borderColor: 'divider',
+          position: 'sticky',
+          top: 0,
+          bgcolor: 'background.default',
+          zIndex: 1,
         }}
       >
+        <Typography 
+          variant="overline" 
+          fontWeight="bold" 
+          sx={{ 
+            color: 'text.secondary',
+            letterSpacing: 1.2,
+            fontSize: '0.75rem',
+          }}
+        >
+          Table of Contents
+        </Typography>
+      </Box>
+
+      {/* Content area */}
+      <Box sx={{ p: { xs: 2, md: 2.5 } }}>
+        <List 
+          dense 
+          disablePadding
+          sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 0.5,
+          }}
+        >
         {anchors.map((anchor) => (
           <ListItem
             key={anchor.id}
@@ -144,16 +168,15 @@ export const TableOfContents = ({ editor }: TableOfContentsProps) => {
             <ListItemButton
               onClick={() => handleClick(anchor)}
               sx={{
-                py: 1,
-                px: 1.5,
-                borderRadius: 1.5,
-                minHeight: 36,
+                py: 0.75,
+                px: 1,
+                borderRadius: 1,
+                minHeight: 32,
                 transition: 'all 0.2s ease',
-                borderLeft: '3px solid transparent',
+                borderLeft: '2px solid transparent',
                 '&:hover': {
                   backgroundColor: 'action.hover',
                   borderLeftColor: 'primary.main',
-                  transform: 'translateX(4px)',
                 },
               }}
             >
@@ -178,6 +201,7 @@ export const TableOfContents = ({ editor }: TableOfContentsProps) => {
           </ListItem>
         ))}
       </List>
+      </Box>
     </Paper>
   );
 };

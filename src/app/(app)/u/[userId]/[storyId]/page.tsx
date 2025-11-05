@@ -30,7 +30,6 @@ import {
 } from '@mui/material';
 import {
   Share as ShareIcon,
-  ArrowBack as ArrowBackIcon,
   Public as PublicIcon,
   Lock as LockIcon,
   CheckCircle as CheckCircleIcon,
@@ -39,6 +38,7 @@ import {
   MoreVert as MoreVertIcon,
   Archive as ArchiveIcon,
   Unarchive as UnarchiveIcon,
+  Close as CloseIcon,
 } from '@mui/icons-material';
 import Collaboration from '@tiptap/extension-collaboration';
 import CollaborationCaret from '@tiptap/extension-collaboration-caret';
@@ -299,16 +299,33 @@ export default function StoryPage(props: { params: Promise<{ userId: string; sto
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
       <Header />
-      <Container maxWidth="lg" sx={{ py: 4 }}>
-        {/* Back Button */}
-        <Box sx={{ mb: 2 }}>
-          <IconButton onClick={() => router.push('/stories')} size="small">
-            <ArrowBackIcon />
-          </IconButton>
+      
+      {/* Main Layout with Sidebar */}
+      <Box 
+        sx={{ 
+          display: 'flex',
+          gap: 3,
+          maxWidth: '1400px',
+          mx: 'auto',
+          px: 3,
+          py: 4,
+        }}
+      >
+        {/* Left Sidebar - Table of Contents */}
+        <Box 
+          sx={{ 
+            width: 260,
+            flexShrink: 0,
+            display: { xs: 'none', md: 'block' },
+          }}
+        >
+          <TableOfContents editor={currentEditor} />
         </Box>
 
-        {/* Title and Actions Bar */}
-        <Paper elevation={0} sx={{ p: 3, mb: 3, border: 1, borderColor: 'divider' }}>
+        {/* Main Content Area */}
+        <Box sx={{ flex: 1, minWidth: 0 }}>
+          {/* Title and Actions Bar */}
+          <Paper elevation={0} sx={{ p: 3, mb: 3, border: 1, borderColor: 'divider' }}>
           <Stack spacing={2}>
             <TextField
               fullWidth
@@ -464,29 +481,23 @@ export default function StoryPage(props: { params: Promise<{ userId: string; sto
           </MenuItem>
         </Menu>
 
-        {/* Editor with Fixed TOC on Right */}
-        <Box sx={{ position: 'relative' }}>
-          {/* Table of Contents - Fixed on Right */}
-          <TableOfContents editor={currentEditor} />
-
-          {/* Editor - Main Content */}
-          <Tiptap
-            editable={access === true}
-            onEditorReady={setCurrentEditor}
-            passedExtensions={[
-              Collaboration.configure({
-                document: provider.doc,
-              }),
-              CollaborationCaret.configure({
-                provider: provider,
-                user: {
-                  name: user.name || 'Anonymous',
-                  color: userColor,
-                },
-              }),
-            ]}
-          />
-        </Box>
+        {/* Editor */}
+        <Tiptap
+          editable={access === true}
+          onEditorReady={setCurrentEditor}
+          passedExtensions={[
+            Collaboration.configure({
+              document: provider.doc,
+            }),
+            CollaborationCaret.configure({
+              provider: provider,
+              user: {
+                name: user.name || 'Anonymous',
+                color: userColor,
+              },
+            }),
+          ]}
+        />
 
         {/* Share Dialog */}
         <Dialog
@@ -499,7 +510,7 @@ export default function StoryPage(props: { params: Promise<{ userId: string; sto
             <Stack direction="row" alignItems="center" justifyContent="space-between">
               <Typography variant="h6">Share Story</Typography>
               <IconButton onClick={() => setShareDialogOpen(false)} size="small">
-                <ArrowBackIcon />
+                <CloseIcon />
               </IconButton>
             </Stack>
           </DialogTitle>
@@ -557,7 +568,8 @@ export default function StoryPage(props: { params: Promise<{ userId: string; sto
             <Button onClick={() => setShareDialogOpen(false)}>Close</Button>
           </DialogActions>
         </Dialog>
-      </Container>
+        </Box>
+      </Box>
     </Box>
   );
 }

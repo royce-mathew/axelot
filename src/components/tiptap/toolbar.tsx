@@ -47,27 +47,40 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import CodeIcon from '@mui/icons-material/Code';
 import NumbersIcon from '@mui/icons-material/Numbers';
+import ViewColumnIcon from '@mui/icons-material/ViewColumn';
+import TableRowsIcon from '@mui/icons-material/TableRows';
+import DeleteIcon from '@mui/icons-material/Delete';
+import AddIcon from '@mui/icons-material/Add';
+import { TablePicker } from './TablePicker';
 
 interface ToolbarProps {
   editor: Editor;
+  showCharacterCount?: boolean;
+  onToggleCharacterCount?: (show: boolean) => void;
 }
 
 const FONT_FAMILIES = [
-  { label: 'Default', value: '' },
-  { label: 'DM Sans', value: 'var(--font-dm-sans), sans-serif' },
-  { label: 'Outfit', value: 'var(--font-outfit), sans-serif' },
-  { label: 'Arial', value: 'Arial, sans-serif' },
-  { label: 'Times New Roman', value: '"Times New Roman", serif' },
-  { label: 'Courier New', value: '"Courier New", monospace' },
-  { label: 'Georgia', value: 'Georgia, serif' },
-  { label: 'Verdana', value: 'Verdana, sans-serif' },
+  { label: 'Default', value: '', fontFamily: 'inherit' },
+  { label: 'DM Sans', value: 'var(--font-dm-sans), sans-serif', fontFamily: 'var(--font-dm-sans), sans-serif' },
+  { label: 'Outfit', value: 'var(--font-outfit), sans-serif', fontFamily: 'var(--font-outfit), sans-serif' },
+  { label: 'Arial', value: 'Arial, sans-serif', fontFamily: 'Arial, sans-serif' },
+  { label: 'Times New Roman', value: '"Times New Roman", serif', fontFamily: '"Times New Roman", serif' },
+  { label: 'Courier New', value: '"Courier New", monospace', fontFamily: '"Courier New", monospace' },
+  { label: 'Georgia', value: 'Georgia, serif', fontFamily: 'Georgia, serif' },
+  { label: 'Verdana', value: 'Verdana, sans-serif', fontFamily: 'Verdana, sans-serif' },
 ];
 
 const FONT_SIZES = ['12px', '14px', '16px', '18px', '20px', '24px', '28px', '32px', '36px', '48px'];
 
-const LINE_HEIGHTS = ['100%', '26px', '150%', '200%', '250%', '300%'];
+const LINE_HEIGHTS = [
+  { label: 'Compact (1.0)', value: '100%' },
+  { label: 'Normal (1.5)', value: '150%' },
+  { label: 'Relaxed (1.75)', value: '175%' },
+  { label: 'Loose (2.0)', value: '200%' },
+  { label: 'Extra Loose (2.5)', value: '250%' },
+];
 
-const Toolbar2 = ({ editor }: ToolbarProps) => {
+const Toolbar2 = ({ editor, showCharacterCount = false, onToggleCharacterCount }: ToolbarProps) => {
   const [, setUpdateTrigger] = useState(0);
   const [colorAnchor, setColorAnchor] = useState<HTMLButtonElement | null>(null);
   const [highlightAnchor, setHighlightAnchor] = useState<HTMLButtonElement | null>(null);
@@ -79,6 +92,7 @@ const Toolbar2 = ({ editor }: ToolbarProps) => {
   const [viewMenuAnchor, setViewMenuAnchor] = useState<HTMLElement | null>(null);
   const [insertMenuAnchor, setInsertMenuAnchor] = useState<HTMLElement | null>(null);
   const [formatMenuAnchor, setFormatMenuAnchor] = useState<HTMLElement | null>(null);
+  const [tablePickerAnchor, setTablePickerAnchor] = useState<HTMLElement | null>(null);
 
   useEffect(() => {
     if (!editor) return;
@@ -187,11 +201,6 @@ const Toolbar2 = ({ editor }: ToolbarProps) => {
 
   const handleHighlightChange = (color: { hex: string }) => {
     editor.chain().focus().setHighlight({ color: color.hex }).run();
-  };
-
-  const insertTable = (rows: number, cols: number) => {
-    editor.chain().focus().insertTable({ rows, cols, withHeaderRow: true }).run();
-    setInsertMenuAnchor(null);
   };
 
   const toggleInvisibleChars = () => {
@@ -340,6 +349,14 @@ const Toolbar2 = ({ editor }: ToolbarProps) => {
             {invisibleCharsEnabled ? 'Hide' : 'Show'} Non-Printable Characters
           </ListItemText>
         </MenuItem>
+        <MenuItem onClick={() => { onToggleCharacterCount?.(!showCharacterCount); setViewMenuAnchor(null); }}>
+          <ListItemIcon>
+            {showCharacterCount ? <VisibilityOffIcon fontSize="small" /> : <VisibilityIcon fontSize="small" />}
+          </ListItemIcon>
+          <ListItemText>
+            {showCharacterCount ? 'Hide' : 'Show'} Character Count
+          </ListItemText>
+        </MenuItem>
         <Divider />
         <MenuItem disabled>
           <ListItemIcon>
@@ -371,25 +388,74 @@ const Toolbar2 = ({ editor }: ToolbarProps) => {
             Ctrl+K
           </Typography>
         </MenuItem>
-        <MenuItem onClick={() => { insertTable(3, 3); }}>
+        <MenuItem onClick={(e) => { setTablePickerAnchor(e.currentTarget); }}>
           <ListItemIcon>
             <TableChartIcon fontSize="small" />
           </ListItemIcon>
-          <ListItemText>Table (3x3)</ListItemText>
+          <ListItemText>Insert Table</ListItemText>
         </MenuItem>
-        <MenuItem onClick={() => { insertTable(4, 4); }}>
-          <ListItemIcon>
-            <TableChartIcon fontSize="small" />
-          </ListItemIcon>
-          <ListItemText>Table (4x4)</ListItemText>
-        </MenuItem>
-        <MenuItem onClick={() => { insertTable(5, 5); }}>
-          <ListItemIcon>
-            <TableChartIcon fontSize="small" />
-          </ListItemIcon>
-          <ListItemText>Table (5x5)</ListItemText>
-        </MenuItem>
-        <Divider />
+        {/* Table manipulation options - only show when cursor is in a table */}
+        {editor.can().addColumnAfter() && (
+          <>
+            <Divider />
+            <MenuItem onClick={() => { editor.chain().focus().addColumnBefore().run(); setInsertMenuAnchor(null); }}>
+              <ListItemIcon>
+                <ViewColumnIcon fontSize="small" />
+              </ListItemIcon>
+              <ListItemText>Column Before</ListItemText>
+              <ListItemIcon sx={{ ml: 'auto', minWidth: 'auto' }}>
+                <AddIcon fontSize="small" />
+              </ListItemIcon>
+            </MenuItem>
+            <MenuItem onClick={() => { editor.chain().focus().addColumnAfter().run(); setInsertMenuAnchor(null); }}>
+              <ListItemIcon>
+                <ViewColumnIcon fontSize="small" />
+              </ListItemIcon>
+              <ListItemText>Column After</ListItemText>
+              <ListItemIcon sx={{ ml: 'auto', minWidth: 'auto' }}>
+                <AddIcon fontSize="small" />
+              </ListItemIcon>
+            </MenuItem>
+            <MenuItem onClick={() => { editor.chain().focus().addRowBefore().run(); setInsertMenuAnchor(null); }}>
+              <ListItemIcon>
+                <TableRowsIcon fontSize="small" />
+              </ListItemIcon>
+              <ListItemText>Row Before</ListItemText>
+              <ListItemIcon sx={{ ml: 'auto', minWidth: 'auto' }}>
+                <AddIcon fontSize="small" />
+              </ListItemIcon>
+            </MenuItem>
+            <MenuItem onClick={() => { editor.chain().focus().addRowAfter().run(); setInsertMenuAnchor(null); }}>
+              <ListItemIcon>
+                <TableRowsIcon fontSize="small" />
+              </ListItemIcon>
+              <ListItemText>Row After</ListItemText>
+              <ListItemIcon sx={{ ml: 'auto', minWidth: 'auto' }}>
+                <AddIcon fontSize="small" />
+              </ListItemIcon>
+            </MenuItem>
+            <Divider />
+            <MenuItem onClick={() => { editor.chain().focus().deleteColumn().run(); setInsertMenuAnchor(null); }}>
+              <ListItemIcon>
+                <DeleteIcon fontSize="small" color="error" />
+              </ListItemIcon>
+              <ListItemText>Delete Column</ListItemText>
+            </MenuItem>
+            <MenuItem onClick={() => { editor.chain().focus().deleteRow().run(); setInsertMenuAnchor(null); }}>
+              <ListItemIcon>
+                <DeleteIcon fontSize="small" color="error" />
+              </ListItemIcon>
+              <ListItemText>Delete Row</ListItemText>
+            </MenuItem>
+            <MenuItem onClick={() => { editor.chain().focus().deleteTable().run(); setInsertMenuAnchor(null); }}>
+              <ListItemIcon>
+                <DeleteIcon fontSize="small" color="error" />
+              </ListItemIcon>
+              <ListItemText>Delete Table</ListItemText>
+            </MenuItem>
+          </>
+        )}
+        {!editor.can().addColumnAfter() && <Divider />}
         <MenuItem onClick={() => { editor.chain().focus().setHorizontalRule().run(); setInsertMenuAnchor(null); }}>
           <ListItemIcon>
             <HorizontalRuleIcon fontSize="small" />
@@ -568,9 +634,21 @@ const Toolbar2 = ({ editor }: ToolbarProps) => {
                 fontSize: '0.875rem',
               },
             }}
+            renderValue={(value) => {
+              const selected = FONT_FAMILIES.find(f => f.value === value);
+              return (
+                <span style={{ fontFamily: selected?.fontFamily || 'inherit' }}>
+                  {selected?.label || 'Default'}
+                </span>
+              );
+            }}
           >
             {FONT_FAMILIES.map((font) => (
-              <MenuItem key={font.value} value={font.value}>
+              <MenuItem 
+                key={font.value} 
+                value={font.value}
+                sx={{ fontFamily: font.fontFamily }}
+              >
                 {font.label}
               </MenuItem>
             ))}
@@ -614,22 +692,23 @@ const Toolbar2 = ({ editor }: ToolbarProps) => {
             onChange={handleLineHeightChange}
             size="small"
             sx={{
-              minWidth: 80,
+              minWidth: 120,
               '& .MuiSelect-select': {
                 py: 0.75,
                 fontSize: '0.875rem',
               },
             }}
             renderValue={(value) => {
+              const selected = LINE_HEIGHTS.find(h => h.value === value);
               return <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                 <LineWeightIcon fontSize="small" />
-                <span>{value}</span>
+                <span>{selected?.label.split(' ')[0] || value}</span>
               </Box>;
             }}
           >
             {LINE_HEIGHTS.map((height) => (
-              <MenuItem key={height} value={height}>
-                {height}
+              <MenuItem key={height.value} value={height.value}>
+                {height.label}
               </MenuItem>
             ))}
           </Select>
@@ -835,6 +914,34 @@ const Toolbar2 = ({ editor }: ToolbarProps) => {
           </ToggleButton>
         </ToggleButtonGroup>
       </Paper>
+
+      {/* Table Picker Popover */}
+      <Popover
+        open={Boolean(tablePickerAnchor)}
+        anchorEl={tablePickerAnchor}
+        onClose={() => setTablePickerAnchor(null)}
+        anchorOrigin={{
+          vertical: 'bottom',
+          horizontal: 'left',
+        }}
+        transformOrigin={{
+          vertical: 'top',
+          horizontal: 'left',
+        }}
+        slotProps={{
+          paper: {
+            sx: { zIndex: 1400 }
+          }
+        }}
+      >
+        <TablePicker
+          editor={editor}
+          onInsert={() => {
+            setTablePickerAnchor(null);
+            setInsertMenuAnchor(null);
+          }}
+        />
+      </Popover>
     </Box>
   );
 };

@@ -42,50 +42,109 @@ a {
 }
 
 /* TipTap Table Styles */
-.tiptap-table {
+.tiptap-editor-content .tableWrapper,
+.tableWrapper {
+  overflow-x: auto;
+  overflow-y: hidden;
+  margin: 1rem 0;
+  width: 100%;
+  /* Scrollbar styling */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(128, 128, 128, 0.3) transparent;
+}
+
+.tiptap-editor-content .tableWrapper::-webkit-scrollbar,
+.tableWrapper::-webkit-scrollbar {
+  height: 8px;
+}
+
+.tiptap-editor-content .tableWrapper::-webkit-scrollbar-track,
+.tableWrapper::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 4px;
+}
+
+.tiptap-editor-content .tableWrapper::-webkit-scrollbar-thumb,
+.tableWrapper::-webkit-scrollbar-thumb {
+  background: rgba(128, 128, 128, 0.3);
+  border-radius: 4px;
+}
+
+.tiptap-editor-content .tableWrapper::-webkit-scrollbar-thumb:hover,
+.tableWrapper::-webkit-scrollbar-thumb:hover {
+  background: rgba(128, 128, 128, 0.5);
+}
+
+.tiptap-editor-content table,
+.tableWrapper table {
   border-collapse: collapse;
   table-layout: fixed;
   width: 100%;
-  margin: 1rem 0;
-  overflow: hidden;
-  border: 1px solid;
-  border-color: rgba(var(--mui-palette-divider), 0.5);
+  min-width: 100%;
+  border: 1px solid rgba(128, 128, 128, 0.3);
 }
 
-.tiptap-table td,
-.tiptap-table th {
+.tiptap-editor-content td,
+.tiptap-editor-content th,
+.tableWrapper td,
+.tableWrapper th {
   min-width: 1em;
-  border: 1px solid;
-  border-color: rgba(var(--mui-palette-divider), 0.5);
+  border: 1px solid rgba(128, 128, 128, 0.3);
   padding: 0.5rem;
   vertical-align: top;
   box-sizing: border-box;
   position: relative;
 }
 
-.tiptap-table th {
+.tiptap-editor-content th,
+.tableWrapper th {
   font-weight: bold;
   text-align: left;
-  background-color: rgba(var(--mui-palette-action-hover), 0.08);
+  background-color: rgba(128, 128, 128, 0.1);
 }
 
 /* Dark mode specific table styles */
 @media (prefers-color-scheme: dark) {
-  .tiptap-table {
+  .tiptap-editor-content .tableWrapper,
+  .tableWrapper {
+    scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+  }
+
+  .tiptap-editor-content .tableWrapper::-webkit-scrollbar-track,
+  .tableWrapper::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  .tiptap-editor-content .tableWrapper::-webkit-scrollbar-thumb,
+  .tableWrapper::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+  }
+
+  .tiptap-editor-content .tableWrapper::-webkit-scrollbar-thumb:hover,
+  .tableWrapper::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.5);
+  }
+
+  .tiptap-editor-content table,
+  .tableWrapper table {
     border-color: rgba(255, 255, 255, 0.12);
   }
   
-  .tiptap-table td,
-  .tiptap-table th {
+  .tiptap-editor-content td,
+  .tiptap-editor-content th,
+  .tableWrapper td,
+  .tableWrapper th {
     border-color: rgba(255, 255, 255, 0.12);
   }
   
-  .tiptap-table th {
+  .tiptap-editor-content th,
+  .tableWrapper th {
     background-color: rgba(255, 255, 255, 0.08);
   }
 }
 
-.tiptap-table .selectedCell:after {
+.tiptap-editor-content .selectedCell:after,
+.tableWrapper .selectedCell:after {
   z-index: 2;
   position: absolute;
   content: "";
@@ -97,7 +156,8 @@ a {
   pointer-events: none;
 }
 
-.tiptap-table .column-resize-handle {
+.tiptap-editor-content .column-resize-handle,
+.tableWrapper .column-resize-handle {
   position: absolute;
   right: -2px;
   top: 0;

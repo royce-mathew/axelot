@@ -1,11 +1,12 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Extension } from '@tiptap/core';
 import { EditorContent, JSONContent, useEditor, Editor } from '@tiptap/react';
 import { Box, Paper } from '@mui/material';
 import Toolbar2 from './toolbar';
 import { BubbleMenu } from './BubbleMenu';
+import { CharacterCountPopup } from './CharacterCountPopup';
 import { extensions } from './utils/extensions';
 import 'katex/dist/katex.min.css';
 
@@ -20,6 +21,8 @@ export interface TiptapProps {
 }
 
 const Tiptap2 = ({ passedExtensions, initialContent, editable = true, onEditorReady }: TiptapProps) => {
+  const [showCharacterCount, setShowCharacterCount] = useState(false);
+  
   const editor = useEditor({
     editorProps: {
       attributes: {
@@ -62,10 +65,17 @@ const Tiptap2 = ({ passedExtensions, initialContent, editable = true, onEditorRe
   return (
     <>
       {/* Toolbar - Outside Paper so it can be sticky */}
-      <Toolbar2 editor={editor} />
+      <Toolbar2 
+        editor={editor} 
+        showCharacterCount={showCharacterCount}
+        onToggleCharacterCount={setShowCharacterCount}
+      />
       
       {/* Bubble Menu */}
       <BubbleMenu editor={editor} />
+      
+      {/* Character Count Popup */}
+      {showCharacterCount && <CharacterCountPopup editor={editor} />}
       
       {/* Editor Content */}
       <Paper

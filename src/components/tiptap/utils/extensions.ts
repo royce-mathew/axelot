@@ -83,6 +83,10 @@ export const extensions: Extensions = [
   // Table extensions
   Table.configure({
     resizable: true,
+    handleWidth: 5,
+    cellMinWidth: 50,
+    lastColumnResizable: true,
+    allowTableNodeSelection: true,
     HTMLAttributes: {
       class: "tiptap-table",
     },
@@ -104,12 +108,7 @@ export const extensions: Extensions = [
   InvisibleCharacters.configure({
     visible: false, // Hidden by default, toggle with toolbar button
   }),
-  TableOfContents.configure({
-    onUpdate: (anchors) => {
-      // Store anchors in editor storage for potential use
-      console.log('TOC updated with', anchors.length, 'anchors');
-    },
-  }),
+  TableOfContents,
   Print,
   
   // Special extensions
