@@ -12,12 +12,13 @@ import {
   CircularProgress,
 } from '@mui/material';
 import { signIn } from 'next-auth/react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import GoogleIcon from '@mui/icons-material/Google';
 import GitHubIcon from '@mui/icons-material/GitHub';
 
 function SignInContent() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const callbackUrl = searchParams.get('callbackUrl') || '/';
 
   const handleGoogleSignIn = async () => {
@@ -111,6 +112,22 @@ function SignInContent() {
           </Stack>
 
           <Divider sx={{ my: 3, width: '100%' }} />
+
+          <Typography 
+            variant="body2" 
+            color="text.secondary"
+            textAlign="center"
+            sx={{ mb: 2 }}
+          >
+            Don&apos;t have an account?{' '}
+            <Button 
+              size="small" 
+              onClick={() => router.push('/auth/sign-up')}
+              sx={{ textTransform: 'none' }}
+            >
+              Sign Up
+            </Button>
+          </Typography>
 
           <Typography variant="body2" color="text.secondary" textAlign="center">
             By signing in, you agree to our Terms of Service and Privacy Policy
