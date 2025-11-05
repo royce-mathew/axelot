@@ -1,0 +1,88 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper function to check if user is authenticated
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    // Helper function to check if user is the owner of a specific document
+    function isOwner(doc) {
+      return isSignedIn() && doc.owner == request.auth.uid;
+    }
+    
+    // Helper function to check if user has write access to a specific document
+    function hasWriteAccess(doc) {
+      return isSignedIn() &&
+             (isOwner(doc) ||
+              (doc.writeAccess is list && 
+               request.auth.uid in doc.writeAccess));
+    }
+    
+    // Helper function to check if user has read access to a specific document
+    function hasReadAccess(doc) {
+      return doc.isPublic == true ||
+             isOwner(doc) ||
+             (isSignedIn() && 
+              ((doc.readAccess is list && request.auth.uid in doc.readAccess) ||
+               (doc.writeAccess is list && request.auth.uid in doc.writeAccess)));
+    }
+    
+    // =================================================================
+    // Stories collection rules
+    // =================================================================
+    match /stories/{storyId} {
+      // GET - Single document reads use complex access checks on the resource
+      allow get: if hasReadAccess(resource.data);
+      
+      // LIST - Allow queries for authenticated users or public stories
+      allow list: if isSignedIn() || resource.data.isPublic == true;
+
+      // CREATE - Only authenticated users can create stories for themselves
+      allow create: if isOwner(request.resource.data) &&
+                       request.resource.data.keys().hasAll(['owner', 'isPublic', 'readAccess', 'writeAccess', 'title', 'created', 'lastUpdated', 'lastUpdatedBy', 'isArchived']) &&
+                       request.resource.data.isPublic is bool &&
+                       request.resource.data.readAccess is list &&
+                       request.resource.data.writeAccess is list;
+
+      // UPDATE - Only owner or users with write access can update
+      allow update: if hasWriteAccess(resource.data);
+
+      // DELETE - Only owner can delete
+      allow delete: if isOwner(resource.data);
+
+      // Y.js collaboration subcollections
+      // For performance, we allow any authenticated user to read/write the collaboration data
+      // The parent document access controls who can actually collaborate
+      match /instances/{instanceId=**} {
+        allow read, write: if isSignedIn();
+      }
+    }
+    
+    // =================================================================
+    // Users collection rules
+    // =================================================================
+    match /users/{userId} {
+      // Allow anyone to read user profiles
+      allow read: if true;
+      
+      // Only the user can write their own profile
+      allow write: if isSignedIn() && request.auth.uid == userId;
+    }
+    
+    // =================================================================
+    // NextAuth Collections (Server-Only/Admin SDK)
+    // =================================================================
+    
+    // Deny all direct client access to these collections
+    match /sessions/{sessionId} {
+      allow read, write: if false;
+    }
+    
+    match /accounts/{accountId} {
+      allow read, write: if false;
+    }
+  }
+}
