@@ -1,24 +1,63 @@
 import { Extension } from "@tiptap/core"
-import type { EditorView } from "@tiptap/pm/view"
+import { printView } from "./print-utils"
 
-import { printView } from "./util"
+export interface PrintOptions {
+  /**
+   * The keyboard shortcut to trigger printing
+   * @default 'Mod-p'
+   */
+  shortcut: string
+}
 
 declare module "@tiptap/core" {
   interface Commands<ReturnType> {
     print: {
+      /**
+       * Prints the editor content
+       */
       print: () => ReturnType
     }
   }
 }
 
-const Print = Extension.create({
+/**
+ * Print extension for TipTap
+ * Allows printing the editor content with proper styling
+ * 
+ * @example
+ * ```ts
+ * import { Print } from './extensions/print'
+ * 
+ * const editor = useEditor({
+ *   extensions: [
+ *     Print.configure({
+ *       shortcut: 'Mod-p',
+ *     }),
+ *   ],
+ * })
+ * 
+ * // Trigger print programmatically
+ * editor.commands.print()
+ * ```
+ */
+export const Print = Extension.create<PrintOptions>({
   name: "print",
+
+  addOptions() {
+    return {
+      shortcut: "Mod-p",
+    }
+  },
+
   addCommands() {
     return {
       print:
         () =>
-        ({ view }: { view: EditorView }) => {
-          printView(view)
+        ({ view }) => {
+          // Execute async but return true immediately for command system
+          printView(view).catch((error) => {
+            console.error("Print command failed:", error)
+          })
           return true
         },
     }
@@ -26,9 +65,11 @@ const Print = Extension.create({
 
   addKeyboardShortcuts() {
     return {
-      "Mod-p": () => this.editor.commands.print(),
+      [this.options.shortcut]: () => {
+        return this.editor.commands.print()
+      },
     }
   },
 })
 
-export { Print }
+export default Print

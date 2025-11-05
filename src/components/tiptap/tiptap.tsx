@@ -1,9 +1,11 @@
 'use client';
 
+import { useEffect } from 'react';
 import { Extension } from '@tiptap/core';
-import { EditorContent, JSONContent, useEditor } from '@tiptap/react';
+import { EditorContent, JSONContent, useEditor, Editor } from '@tiptap/react';
 import { Box, Paper } from '@mui/material';
 import Toolbar2 from './toolbar';
+import { BubbleMenu } from './BubbleMenu';
 import { extensions } from './utils/extensions';
 import 'katex/dist/katex.min.css';
 
@@ -14,9 +16,10 @@ export interface TiptapProps {
   initialContent?: JSONContent | undefined;
   passedExtensions?: Extension[];
   editable?: boolean;
+  onEditorReady?: (editor: Editor) => void;
 }
 
-const Tiptap2 = ({ passedExtensions, initialContent, editable = true }: TiptapProps) => {
+const Tiptap2 = ({ passedExtensions, initialContent, editable = true, onEditorReady }: TiptapProps) => {
   const editor = useEditor({
     editorProps: {
       attributes: {
@@ -24,11 +27,21 @@ const Tiptap2 = ({ passedExtensions, initialContent, editable = true }: TiptapPr
         style: 'outline: none; min-height: 500px; padding: 24px;',
       },
     },
-    extensions: [...extensions, ...(passedExtensions ?? [])],
+    extensions: [
+      ...extensions,
+      ...(passedExtensions ?? []),
+    ],
     content: initialContent,
     editable,
     immediatelyRender: false,
   });
+
+  // Notify parent when editor is ready (using useEffect to avoid setState during render)
+  useEffect(() => {
+    if (editor && onEditorReady) {
+      onEditorReady(editor);
+    }
+  }, [editor, onEditorReady]);
 
   if (!editor) {
     return (
@@ -47,19 +60,29 @@ const Tiptap2 = ({ passedExtensions, initialContent, editable = true }: TiptapPr
   }
 
   return (
-    <Paper
-      elevation={0}
-      sx={{
-        border: 1,
-        borderColor: 'divider',
-        borderRadius: 2,
-        overflow: 'hidden',
-      }}
-    >
+    <>
+      {/* Toolbar - Outside Paper so it can be sticky */}
       <Toolbar2 editor={editor} />
-      <Box
+      
+      {/* Bubble Menu */}
+      <BubbleMenu editor={editor} />
+      
+      {/* Editor Content */}
+      <Paper
+        elevation={0}
         sx={{
-          '& .tiptap-editor-content': {
+          border: 1,
+          borderColor: 'divider',
+          borderRadius: 2,
+          overflow: 'hidden',
+          borderTop: 0,
+          borderTopLeftRadius: 0,
+          borderTopRightRadius: 0,
+        }}
+      >
+        <Box
+          sx={{
+            '& .tiptap-editor-content': {
             fontFamily: 'var(--font-dm-sans)',
             fontSize: '1.125rem',
             lineHeight: 1.8,
@@ -175,6 +198,7 @@ const Tiptap2 = ({ passedExtensions, initialContent, editable = true }: TiptapPr
         <EditorContent editor={editor} />
       </Box>
     </Paper>
+    </>
   );
 };
 

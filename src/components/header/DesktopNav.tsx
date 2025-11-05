@@ -64,8 +64,17 @@ export const DesktopNav = () => {
           <Button
             component={Link}
             href="/stories"
+            variant="outlined"
             startIcon={<DescriptionIcon />}
-            sx={{ textTransform: 'none' }}
+            sx={{ 
+              textTransform: 'none',
+              borderColor: 'primary.main',
+              color: 'primary.main',
+              '&:hover': {
+                borderColor: 'primary.dark',
+                bgcolor: 'action.hover',
+              }
+            }}
           >
             My Stories
           </Button>

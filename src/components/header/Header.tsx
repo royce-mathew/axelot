@@ -1,26 +1,41 @@
 'use client';
 
-import { AppBar, Toolbar, Box, useTheme, IconButton } from '@mui/material';
+import { AppBar, Toolbar, Box, useTheme, IconButton, useScrollTrigger, Slide } from '@mui/material';
 import Image from 'next/image';
 import Link from 'next/link';
 import { DesktopNav } from './DesktopNav';
 import { MobileNav } from './MobileNav';
 import { SearchBar } from './SearchBar';
 
+interface HideOnScrollProps {
+  children: React.ReactElement;
+}
+
+function HideOnScroll({ children }: HideOnScrollProps) {
+  const trigger = useScrollTrigger();
+
+  return (
+    <Slide appear={false} direction="down" in={!trigger}>
+      {children}
+    </Slide>
+  );
+}
+
 export const Header = () => {
   const theme = useTheme();
   const isDark = theme.palette.mode === 'dark';
   
   return (
-    <AppBar 
-      position="sticky" 
-      elevation={0}
-      sx={{
-        boxShadow: 3,
-        bgcolor: 'rgba(var(--mui-palette-background-paperChannel) / 0.9)',
-        backdropFilter: 'blur(12px)',
-      }}
-    >
+    <HideOnScroll>
+      <AppBar 
+        position="sticky" 
+        elevation={0}
+        sx={{
+          boxShadow: 3,
+          bgcolor: 'rgba(var(--mui-palette-background-paperChannel) / 0.9)',
+          backdropFilter: 'blur(12px)',
+        }}
+      >
       <Toolbar sx={{ 
         maxWidth: 1200, 
         mx: 'auto', 
@@ -66,5 +81,6 @@ export const Header = () => {
         </Box>
       </Toolbar>
     </AppBar>
+    </HideOnScroll>
   );
 };

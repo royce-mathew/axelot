@@ -54,6 +54,8 @@ import { useAuth } from '@/hooks/use-auth';
 import { firebaseApp } from '@/lib/firebase/client';
 import { yProvider } from '@/components/tiptap/providers/firebase-sync';
 import { FireProvider } from '@/lib/y-fire';
+import { TableOfContents } from '@/components/tiptap/TableOfContents';
+import { Editor } from '@tiptap/react';
 
 const Tiptap = dynamic(() => import('@/components/tiptap/tiptap'), {
   ssr: false,
@@ -84,6 +86,7 @@ export default function StoryPage(props: { params: Promise<{ userId: string; sto
   const [userColor] = useState(
     () => '#' + Math.floor(Math.random() * 16777215).toString(16)
   );
+  const [currentEditor, setCurrentEditor] = useState<Editor | null>(null);
 
   const menuOpen = Boolean(menuAnchorEl);
 
@@ -333,7 +336,14 @@ export default function StoryPage(props: { params: Promise<{ userId: string; sto
               flexWrap="wrap"
               gap={2}
             >
-              <Stack direction="row" spacing={2} alignItems="center">
+              {/* Left side: Status chips and timestamp */}
+              <Stack 
+                direction="row" 
+                spacing={1.5} 
+                alignItems="center"
+                flexWrap="wrap"
+                sx={{ flex: 1 }}
+              >
                 {/* Saving Status */}
                 <Chip
                   icon={saving ? <CircleIcon /> : <CheckCircleIcon />}
@@ -352,7 +362,7 @@ export default function StoryPage(props: { params: Promise<{ userId: string; sto
                   />
                 )}
 
-                {/* Public/Private Toggle - Only show if user has write access */}
+                {/* Public/Private - Desktop only as switch */}
                 {access === true && (
                   <FormControlLabel
                     control={
@@ -360,6 +370,7 @@ export default function StoryPage(props: { params: Promise<{ userId: string; sto
                         checked={isPublic}
                         onChange={(e) => handleVisibilityChange(e.target.checked)}
                         color="success"
+                        size="small"
                       />
                     }
                     label={
@@ -370,25 +381,34 @@ export default function StoryPage(props: { params: Promise<{ userId: string; sto
                         </Typography>
                       </Stack>
                     }
+                    sx={{ 
+                      display: { xs: 'none', md: 'flex' },
+                      m: 0,
+                    }}
                   />
                 )}
-              </Stack>
 
-              <Stack direction="row" spacing={1} alignItems="center">
+                {/* Timestamp */}
                 {document && (
-                  <Typography variant="caption" color="text.secondary">
+                  <Typography 
+                    variant="caption" 
+                    color="text.secondary"
+                    sx={{ display: { xs: 'none', sm: 'inline' } }}
+                  >
                     Updated {timeAgo(document.lastUpdated)}
                   </Typography>
                 )}
-                {access === true && (
-                  <IconButton
-                    onClick={handleMenuOpen}
-                    size="small"
-                  >
-                    <MoreVertIcon />
-                  </IconButton>
-                )}
               </Stack>
+
+              {/* Right side: Menu button */}
+              {access === true && (
+                <IconButton
+                  onClick={handleMenuOpen}
+                  size="small"
+                >
+                  <MoreVertIcon />
+                </IconButton>
+              )}
             </Stack>
           </Stack>
         </Paper>
@@ -399,6 +419,31 @@ export default function StoryPage(props: { params: Promise<{ userId: string; sto
           open={menuOpen}
           onClose={handleMenuClose}
         >
+          {/* Public/Private Toggle - Mobile only */}
+          <MenuItem 
+            sx={{ 
+              display: { xs: 'flex', md: 'none' },
+              '&:hover': { bgcolor: 'transparent' }
+            }}
+            disableRipple
+          >
+            <ListItemIcon>
+              {isPublic ? <PublicIcon fontSize="small" /> : <LockIcon fontSize="small" />}
+            </ListItemIcon>
+            <ListItemText>
+              {isPublic ? 'Public' : 'Private'}
+            </ListItemText>
+            <Switch
+              checked={isPublic}
+              onChange={(e) => handleVisibilityChange(e.target.checked)}
+              color="success"
+              size="small"
+            />
+          </MenuItem>
+          
+          {/* Divider - Mobile only */}
+          <Divider sx={{ display: { xs: 'block', md: 'none' } }} />
+          
           <MenuItem onClick={handleShareClick}>
             <ListItemIcon>
               <ShareIcon fontSize="small" />
@@ -419,22 +464,29 @@ export default function StoryPage(props: { params: Promise<{ userId: string; sto
           </MenuItem>
         </Menu>
 
-        {/* Editor */}
-        <Tiptap
-          editable={access === true}
-          passedExtensions={[
-            Collaboration.configure({
-              document: provider.doc,
-            }),
-            CollaborationCaret.configure({
-              provider: provider,
-              user: {
-                name: user.name || 'Anonymous',
-                color: userColor,
-              },
-            }),
-          ]}
-        />
+        {/* Editor with Fixed TOC on Right */}
+        <Box sx={{ position: 'relative' }}>
+          {/* Table of Contents - Fixed on Right */}
+          <TableOfContents editor={currentEditor} />
+
+          {/* Editor - Main Content */}
+          <Tiptap
+            editable={access === true}
+            onEditorReady={setCurrentEditor}
+            passedExtensions={[
+              Collaboration.configure({
+                document: provider.doc,
+              }),
+              CollaborationCaret.configure({
+                provider: provider,
+                user: {
+                  name: user.name || 'Anonymous',
+                  color: userColor,
+                },
+              }),
+            ]}
+          />
+        </Box>
 
         {/* Share Dialog */}
         <Dialog
