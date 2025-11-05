@@ -122,7 +122,7 @@ export const MobileNav = () => {
             ) : isAuthenticated ? (
               <>
                 <ListItem disablePadding>
-                  <ListItemButton component={Link} href={`/u/${user?.id}`} onClick={toggleDrawer(false)}>
+                  <ListItemButton component={Link} href={user?.username ? `/u/@${user.username}` : `/u/${user?.id}`} onClick={toggleDrawer(false)}>
                     <ListItemIcon>
                       <PersonIcon fontSize="small" />
                     </ListItemIcon>

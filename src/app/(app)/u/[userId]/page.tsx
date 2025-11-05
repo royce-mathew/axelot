@@ -14,12 +14,19 @@ import {
   Skeleton,
   Divider,
   Button,
+  IconButton,
+  Menu,
+  MenuItem,
+  ListItemIcon,
+  ListItemText,
 } from '@mui/material';
 import {
   Public as PublicIcon,
   Article as ArticleIcon,
   Add as AddIcon,
   Archive as ArchiveIcon,
+  Settings as SettingsIcon,
+  MoreVert as MoreVertIcon,
 } from '@mui/icons-material';
 import { useRouter } from 'next/navigation';
 import { Header } from '@/components/header';
@@ -30,6 +37,7 @@ import { Document } from '@/types/document';
 import { User } from '@/types/user';
 import { timeAgo } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
+import { getUserIdByUsername, isUsernameParam, stripUsernamePrefix } from '@/lib/username-utils';
 
 export default function UserProfilePage(props: { params: Promise<{ userId: string }> }) {
   const params = use(props.params);
@@ -39,16 +47,67 @@ export default function UserProfilePage(props: { params: Promise<{ userId: strin
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [userLoading, setUserLoading] = useState(true);
+  const [actualUserId, setActualUserId] = useState<string>('');
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const menuOpen = Boolean(anchorEl);
 
-  const isOwnProfile = currentUser?.id === params.userId;
+  const isOwnProfile = currentUser?.id === actualUserId;
+  
+  // Get display username (with @ if it's a username param)
+  const displayParam = isUsernameParam(params.userId) 
+    ? params.userId 
+    : user?.username 
+      ? `@${user.username}` 
+      : params.userId;
+
+  // Resolve username or Firebase ID to actual user ID
+  useEffect(() => {
+    const resolveUser = async () => {
+      try {
+        // Decode the parameter in case it's URL-encoded (%40masq -> @masq)
+        const paramId = decodeURIComponent(params.userId);
+        console.log('Resolving user param:', paramId, 'original:', params.userId);
+        
+        // Check if it starts with @ (username format)
+        if (isUsernameParam(paramId)) {
+          // It's a username with @ prefix, resolve it (cached)
+          const username = stripUsernamePrefix(paramId);
+          console.log('Stripped username:', username);
+          // Skip cache for debugging
+          const resolvedId = await getUserIdByUsername(username, true);
+          console.log('Resolved ID:', resolvedId);
+          if (resolvedId) {
+            setActualUserId(resolvedId);
+          } else {
+            // Not found
+            console.log('Username not found:', username);
+            setActualUserId('');
+            setUserLoading(false);
+            setLoading(false);
+          }
+        } else {
+          // No @ prefix means it's a Firebase ID, use directly (0 reads!)
+          console.log('Using Firebase ID directly:', paramId);
+          setActualUserId(paramId);
+        }
+      } catch (error) {
+        console.error('Error resolving user:', error);
+        setActualUserId('');
+        setUserLoading(false);
+        setLoading(false);
+      }
+    };
+
+    resolveUser();
+  }, [params.userId]);
 
   // Fetch user profile
   useEffect(() => {
-    if (!params.userId) return;
+    if (!actualUserId) return;
 
     const loadUser = async () => {
       try {
-        const userSnap = await getDoc(userRef(params.userId));
+        const userSnap = await getDoc(userRef(actualUserId));
         if (userSnap.exists()) {
           setUser(userSnap.data());
         }
@@ -60,18 +119,18 @@ export default function UserProfilePage(props: { params: Promise<{ userId: strin
     };
 
     loadUser();
-  }, [params.userId]);
+  }, [actualUserId]);
 
   // Fetch user's public documents
   useEffect(() => {
-    if (!params.userId) return;
+    if (!actualUserId) return;
 
     const loadDocuments = async () => {
       try {
         // Query just by owner, then filter in memory to avoid composite index
         const q = query(
           allDocumentsRef(),
-          where('owner', '==', params.userId),
+          where('owner', '==', actualUserId),
           where('isPublic', '==', true),
           orderBy('lastUpdated', 'desc')
         );
@@ -97,11 +156,13 @@ export default function UserProfilePage(props: { params: Promise<{ userId: strin
     };
 
     loadDocuments();
-  }, [params.userId]);
+  }, [actualUserId]);
 
   const handleCardClick = (doc: Document) => {
-    if (doc.id && doc.slug) {
-      router.push(`/u/${params.userId}/${doc.id}-${doc.slug}`);
+    if (doc.id && doc.slug && user?.username) {
+      router.push(`/u/@${user.username}/${doc.id}-${doc.slug}`);
+    } else if (doc.id && user?.username) {
+      router.push(`/u/@${user.username}/${doc.id}`);
     } else if (doc.id) {
       router.push(`/u/${params.userId}/${doc.id}`);
     }
@@ -121,12 +182,32 @@ export default function UserProfilePage(props: { params: Promise<{ userId: strin
 
   const displayName = user?.name || params.userId;
 
+  // Not found state
+  if (!userLoading && !actualUserId) {
+    return (
+      <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
+        <Header />
+        <Container maxWidth="md" sx={{ py: 6, textAlign: 'center' }}>
+          <Typography variant="h4" gutterBottom>
+            User Not Found
+          </Typography>
+          <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
+            The user {displayParam} could not be found.
+          </Typography>
+          <Button variant="contained" onClick={() => router.push('/')}>
+            Go Home
+          </Button>
+        </Container>
+      </Box>
+    );
+  }
+
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
       <Header />
       <Container maxWidth="md" sx={{ py: 6 }}>
         {/* User Profile Header */}
-        <Stack spacing={3} sx={{ mb: 6 }}>
+        <Stack spacing={3} sx={{ mb: 3 }}>
           {userLoading ? (
             <Stack direction="row" spacing={2} alignItems="center">
               <Skeleton variant="circular" width={80} height={80} />
@@ -136,43 +217,101 @@ export default function UserProfilePage(props: { params: Promise<{ userId: strin
               </Box>
             </Stack>
           ) : (
-            <Stack direction="row" spacing={2} alignItems="center" justifyContent="space-between">
-              <Stack direction="row" spacing={2} alignItems="center" sx={{ flex: 1 }}>
-                <Avatar
-                  src={user?.image}
-                  sx={{
-                    width: 80,
-                    height: 80,
-                    fontSize: '2rem',
-                    bgcolor: 'primary.main',
-                  }}
-                >
-                  {!user?.image && getInitials(user?.name, params.userId)}
-                </Avatar>
-                <Box>
-                  <Typography variant="h4" fontWeight={700}>
-                    {displayName}
-                  </Typography>
-                  <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 1 }}>
-                    <ArticleIcon fontSize="small" color="action" />
-                    <Typography variant="body2" color="text.secondary">
-                      {documents.length} {documents.length === 1 ? 'story' : 'stories'}
+            <>
+              <Stack direction="row" spacing={2} alignItems="center" justifyContent="space-between">
+                <Stack direction="row" spacing={2} alignItems="center" sx={{ flex: 1 }}>
+                  <Avatar
+                    src={user?.image || undefined}
+                    sx={{
+                      width: 80,
+                      height: 80,
+                      fontSize: '2rem',
+                      bgcolor: 'primary.main',
+                    }}
+                  >
+                    {!user?.image && getInitials(user?.name, params.userId)}
+                  </Avatar>
+                  <Box>
+                    <Typography variant="h4" fontWeight={700}>
+                      {displayName}
                     </Typography>
-                  </Stack>
-                </Box>
+                    {user?.username && (
+                      <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                        @{user.username}
+                      </Typography>
+                    )}
+                    {user?.bio && (
+                      <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                        {user.bio}
+                      </Typography>
+                    )}
+                  </Box>
+                </Stack>
+                {isOwnProfile && (
+                  <>
+                    <IconButton
+                      onClick={(e) => setAnchorEl(e.currentTarget)}
+                      sx={{ alignSelf: 'flex-start' }}
+                    >
+                      <MoreVertIcon />
+                    </IconButton>
+                    <Menu
+                      anchorEl={anchorEl}
+                      open={menuOpen}
+                      onClose={() => setAnchorEl(null)}
+                      anchorOrigin={{
+                        vertical: 'bottom',
+                        horizontal: 'right',
+                      }}
+                      transformOrigin={{
+                        vertical: 'top',
+                        horizontal: 'right',
+                      }}
+                    >
+                      <MenuItem onClick={() => {
+                        setAnchorEl(null);
+                        router.push('/stories');
+                      }}>
+                        <ListItemIcon>
+                          <AddIcon fontSize="small" />
+                        </ListItemIcon>
+                        <ListItemText>New Story</ListItemText>
+                      </MenuItem>
+                      <MenuItem onClick={() => {
+                        setAnchorEl(null);
+                        router.push('/settings');
+                      }}>
+                        <ListItemIcon>
+                          <SettingsIcon fontSize="small" />
+                        </ListItemIcon>
+                        <ListItemText>Settings</ListItemText>
+                      </MenuItem>
+                    </Menu>
+                  </>
+                )}
               </Stack>
-              {isOwnProfile && (
-                <Button
-                  variant="contained"
-                  startIcon={<AddIcon />}
-                  onClick={() => router.push('/stories')}
-                >
-                  Create New Story
-                </Button>
-              )}
-            </Stack>
+            </>
           )}
           <Divider />
+        </Stack>
+
+        {/* Public Stories Header */}
+        <Stack 
+          direction="row" 
+          spacing={2} 
+          alignItems="center" 
+          justifyContent="space-between"
+          sx={{ mt: 2, mb: 2 }}
+        >
+          <Typography variant="h5" fontWeight={600}>
+            Public Stories
+          </Typography>
+          <Stack direction="row" spacing={1} alignItems="center">
+            <ArticleIcon fontSize="small" color="action" />
+            <Typography variant="body2" color="text.secondary">
+              {documents.length} {documents.length === 1 ? 'story' : 'stories'}
+            </Typography>
+          </Stack>
         </Stack>
 
         {/* Stories List */}

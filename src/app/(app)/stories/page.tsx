@@ -125,21 +125,30 @@ export default function StoriesPage() {
       const docData = createInitialDocument(newTitle.trim(), user.id);
 
       // Add missing fields required by security rules for creation
-      const completeDocData = {
+      const completeDocData: Omit<Document, 'id' | 'ref'> = {
         ...docData,
+        owner: user.id,
+        writeAccess: [],
+        readAccess: [],
+        isPublic: false,
         title: newTitle.trim(),
         created: Timestamp.now(),
         lastUpdated: Timestamp.now(),
         lastUpdatedBy: user.id,
         isArchived: false,
+        // Denormalized author data
+        ownerName: user.name || undefined,
+        ownerUsername: user.username || undefined,
+        ownerImage: user.image || undefined,
       };
 
       const newDoc = await addDoc(allDocumentsRef(), completeDocData);
 
       setCreateDialogOpen(false);
       setNewTitle('');
-      // Navigate to the new story with user ID in URL
-      router.push(`/u/${user.id}/${newDoc.id}`);
+      // Navigate to the new story with username if available, otherwise user ID
+      const userIdentifier = user.username ? `@${user.username}` : user.id;
+      router.push(`/u/${userIdentifier}/${newDoc.id}`);
     } catch (error) {
       console.error('Error creating document:', error);
     }
@@ -176,7 +185,8 @@ export default function StoriesPage() {
   const handleCardClick = (doc: Document) => {
     if (doc.id && doc.owner) {
       const slug = doc.slug || 'untitled';
-      router.push(`/u/${doc.owner}/${doc.id}-${slug}`);
+      const userIdentifier = user?.username ? `@${user.username}` : doc.owner;
+      router.push(`/u/${userIdentifier}/${doc.id}-${slug}`);
     }
   };
 

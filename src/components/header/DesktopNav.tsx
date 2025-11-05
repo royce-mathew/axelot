@@ -65,15 +65,10 @@ export const DesktopNav = () => {
             component={Link}
             href="/stories"
             variant="outlined"
+            color="primary"
             startIcon={<DescriptionIcon />}
             sx={{ 
               textTransform: 'none',
-              borderColor: 'primary.main',
-              color: 'primary.main',
-              '&:hover': {
-                borderColor: 'primary.dark',
-                bgcolor: 'action.hover',
-              }
             }}
           >
             My Stories
@@ -119,7 +114,7 @@ export const DesktopNav = () => {
           >
             <MenuItem
               component={Link}
-              href={`/u/${user?.id}`}
+              href={user?.username ? `/u/@${user.username}` : `/u/${user?.id}`}
               onClick={handleMenuClose}
             >
               <ListItemIcon>
