@@ -33,7 +33,17 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
     signIn: "/auth/sign-in",
   },
   callbacks: {
-    async session({ session }) {
+    async session({ session, user }) {
+      if (session.user) {
+        // Add user ID to session
+        session.user.id = user.id;
+        
+        // Add username to session if available
+        // The user object from adapter contains all fields from Firestore
+        if ('username' in user && user.username) {
+          session.user.username = user.username as string;
+        }
+      }
       return session;
     },
   },
