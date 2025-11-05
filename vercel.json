@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/trending/update?mode=recent&secret=$CRON_SECRET",
+      "schedule": "0 * * * *"
+    }
+  ]
+}

@@ -24,6 +24,11 @@ export interface Document {
   readAccess: string[]
   writeAccess: string[]
 
+  // Denormalized author data (for performance optimization)
+  ownerName?: string        // Author's display name
+  ownerUsername?: string    // Author's username (without @ prefix)
+  ownerImage?: string       // Author's avatar URL
+
   // Public/private visibility
   isPublic: boolean
 
@@ -45,4 +50,10 @@ export interface Document {
 
   // Version control (optional for future use)
   version?: number
+
+  // Engagement metrics for trending algorithm
+  viewCount?: number
+  lastViewed?: Timestamp
+  trendingScore?: number // Computed field for efficient queries
+  trendingLastComputed?: Timestamp
 }

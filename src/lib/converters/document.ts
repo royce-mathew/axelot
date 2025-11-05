@@ -31,6 +31,7 @@ const documentConverter: FirestoreDataConverter<Document> = {
       readAccess: data.readAccess || [],
       isPublic: data.isPublic ?? false,
       title: data.title || "Untitled",
+      description: data.description,
       slug: data.slug,
       created: data.created,
       lastUpdated: data.lastUpdated,
@@ -38,6 +39,15 @@ const documentConverter: FirestoreDataConverter<Document> = {
       tags: data.tags || [],
       isArchived: data.isArchived ?? false,
       version: data.version || 1,
+      // Denormalized author data
+      ownerName: data.ownerName,
+      ownerUsername: data.ownerUsername,
+      ownerImage: data.ownerImage,
+      // Trending algorithm fields
+      viewCount: data.viewCount,
+      lastViewed: data.lastViewed,
+      trendingScore: data.trendingScore,
+      trendingLastComputed: data.trendingLastComputed,
     }
   },
   toFirestore(document: Document): DocumentData {
@@ -55,8 +65,43 @@ const documentConverter: FirestoreDataConverter<Document> = {
       version: document.version || 1,
     }
 
+    // Optional fields - only include if defined
     if (document.slug !== undefined) {
       data.slug = document.slug
+    }
+    
+    if (document.description !== undefined) {
+      data.description = document.description
+    }
+
+    // Trending fields - only include if defined
+    if (document.viewCount !== undefined) {
+      data.viewCount = document.viewCount
+    }
+
+    if (document.lastViewed !== undefined) {
+      data.lastViewed = document.lastViewed
+    }
+
+    if (document.trendingScore !== undefined) {
+      data.trendingScore = document.trendingScore
+    }
+
+    if (document.trendingLastComputed !== undefined) {
+      data.trendingLastComputed = document.trendingLastComputed
+    }
+
+    // Denormalized author fields - only include if defined
+    if (document.ownerName !== undefined) {
+      data.ownerName = document.ownerName
+    }
+
+    if (document.ownerUsername !== undefined) {
+      data.ownerUsername = document.ownerUsername
+    }
+
+    if (document.ownerImage !== undefined) {
+      data.ownerImage = document.ownerImage
     }
     
     return data
