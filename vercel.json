@@ -1,7 +1,7 @@
 {
   "crons": [
     {
-      "path": "/api/trending/update?mode=recent&secret=$CRON_SECRET",
+      "path": "/api/trending/update?mode=recent",
       "schedule": "0 0 * * *"
     }
   ]

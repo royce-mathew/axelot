@@ -5,46 +5,43 @@ import { updateTrendingScores, updateRecentTrendingScores, getTrendingStats } fr
 /**
  * API Route to update trending scores
  * 
- * This endpoint should be called periodically by a cron job
+ * This endpoint is secured and called periodically by Vercel Cron
+ * 
+ * Security:
+ * - Requires CRON_SECRET environment variable to be set in Vercel
+ * - Vercel automatically sends the secret as Authorization: Bearer <CRON_SECRET>
  * 
  * Query parameters:
- * - mode: 'all' (default) or 'recent' - which documents to update
- * - secret: API secret for authentication (set in environment variables)
+ * - mode: 'all' | 'recent' | 'stats' (default: 'all')
  * 
  * Usage:
- * - Full update: GET /api/trending/update?mode=all&secret=YOUR_SECRET
- * - Recent only: GET /api/trending/update?mode=recent&secret=YOUR_SECRET
- * - Get stats: GET /api/trending/update?mode=stats&secret=YOUR_SECRET
+ * - Full update: GET /api/trending/update?mode=all
+ * - Recent only: GET /api/trending/update?mode=recent
+ * - Get stats: GET /api/trending/update?mode=stats
  * 
- * Setup cron job in vercel.json:
+ * Setup in vercel.json:
  * {
  *   "crons": [{
- *     "path": "/api/trending/update?mode=recent&secret=YOUR_SECRET",
- *     "schedule": "0 * * * *"
+ *     "path": "/api/trending/update?mode=recent",
+ *     "schedule": "0 0 * * *"
  *   }]
  * }
+ * 
+ * Environment Variables (in Vercel Dashboard):
+ * - CRON_SECRET: Random string (min 16 characters)
  */
 export async function GET(request: NextRequest) {
-  const searchParams = request.nextUrl.searchParams;
-  const mode = searchParams.get('mode') || 'all';
-  const secret = searchParams.get('secret');
-
-  // Simple authentication - check if secret matches
-  const expectedSecret = process.env.CRON_SECRET || process.env.TRENDING_UPDATE_SECRET;
-  
-  if (!expectedSecret) {
-    return NextResponse.json(
-      { error: 'Cron secret not configured' },
-      { status: 500 }
-    );
-  }
-
-  if (secret !== expectedSecret) {
+  // Verify the request is from Vercel Cron
+  const authHeader = request.headers.get('authorization');
+  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json(
       { error: 'Unauthorized' },
       { status: 401 }
     );
   }
+
+  const searchParams = request.nextUrl.searchParams;
+  const mode = searchParams.get('mode') || 'all';
 
   try {
     const startTime = Date.now();
