@@ -18,38 +18,35 @@
  * 3. Manual trigger via API endpoint (for testing)
  */
 
-import { collection, getDocs, writeBatch, doc, query, where, Timestamp } from 'firebase/firestore';
 import { calculateTrendingScore, shouldRecomputeTrendingScore } from './trending-algorithm';
 import { Document } from '@/types/document';
+import { Firestore, Timestamp } from 'firebase-admin/firestore';
 
 /**
  * Batch update trending scores for all public documents
  * This should be run periodically (every 15-60 minutes)
  * 
- * @param db - Firestore database instance (from firebase/firestore)
+ * @param db - Firestore database instance (from firebase-admin/firestore)
  * @param batchSize - Number of documents to update per batch (max 500)
  * @returns Number of documents updated
  */
 export async function updateTrendingScores(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  db: any,
+  db: Firestore,
   batchSize: number = 500
 ): Promise<{ updated: number; skipped: number; errors: number }> {
   try {
     // Query for public documents that need score updates
-    const storiesRef = collection(db, 'stories');
-    const publicStoriesQuery = query(
-      storiesRef,
-      where('isPublic', '==', true),
-      where('isArchived', '==', false)
-    );
+    const storiesRef = db.collection('stories');
+    const publicStoriesQuery = storiesRef
+      .where('isPublic', '==', true)
+      .where('isArchived', '==', false);
 
-    const snapshot = await getDocs(publicStoriesQuery);
+    const snapshot = await publicStoriesQuery.get();
     
     let updated = 0;
     let skipped = 0;
     let errors = 0;
-    let batch = writeBatch(db);
+    let batch = db.batch();
     let batchCount = 0;
 
     for (const docSnapshot of snapshot.docs) {
@@ -67,7 +64,7 @@ export async function updateTrendingScores(
         const newScore = calculateTrendingScore(docWithId);
         
         // Add to batch
-        const docRef = doc(db, 'stories', docSnapshot.id);
+        const docRef = db.collection('stories').doc(docSnapshot.id);
         batch.update(docRef, {
           trendingScore: newScore,
           trendingLastComputed: Timestamp.now(),
@@ -79,7 +76,7 @@ export async function updateTrendingScores(
         // Commit batch if we've reached the limit
         if (batchCount >= batchSize) {
           await batch.commit();
-          batch = writeBatch(db);
+          batch = db.batch();
           batchCount = 0;
         }
       } catch (error) {
@@ -107,27 +104,24 @@ export async function updateTrendingScores(
  * More efficient version that only updates documents modified in the last 24 hours
  */
 export async function updateRecentTrendingScores(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  db: any,
+  db: Firestore,
   hoursBack: number = 24
 ): Promise<{ updated: number; skipped: number; errors: number }> {
   try {
     const cutoffTime = Timestamp.fromMillis(Date.now() - hoursBack * 3600000);
     
-    const storiesRef = collection(db, 'stories');
-    const recentStoriesQuery = query(
-      storiesRef,
-      where('isPublic', '==', true),
-      where('isArchived', '==', false),
-      where('lastUpdated', '>=', cutoffTime)
-    );
+    const storiesRef = db.collection('stories');
+    const recentStoriesQuery = storiesRef
+      .where('isPublic', '==', true)
+      .where('isArchived', '==', false)
+      .where('lastUpdated', '>=', cutoffTime);
 
-    const snapshot = await getDocs(recentStoriesQuery);
+    const snapshot = await recentStoriesQuery.get();
     
     let updated = 0;
     const skipped = 0;
     let errors = 0;
-    const batch = writeBatch(db);
+    const batch = db.batch();
 
     for (const docSnapshot of snapshot.docs) {
       const docData = docSnapshot.data() as Document;
@@ -138,7 +132,7 @@ export async function updateRecentTrendingScores(
         const newScore = calculateTrendingScore(docWithId);
         
         // Add to batch
-        const docRef = doc(db, 'stories', docSnapshot.id);
+        const docRef = db.collection('stories').doc(docSnapshot.id);
         batch.update(docRef, {
           trendingScore: newScore,
           trendingLastComputed: Timestamp.now(),
@@ -170,8 +164,7 @@ export async function updateRecentTrendingScores(
  * Useful for monitoring and debugging
  */
 export async function getTrendingStats(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  db: any
+  db: Firestore
 ): Promise<{
   total: number;
   withScores: number;
@@ -179,14 +172,12 @@ export async function getTrendingStats(
   recentlyUpdated: number;
 }> {
   try {
-    const storiesRef = collection(db, 'stories');
-    const publicStoriesQuery = query(
-      storiesRef,
-      where('isPublic', '==', true),
-      where('isArchived', '==', false)
-    );
+    const storiesRef = db.collection('stories');
+    const publicStoriesQuery = storiesRef
+      .where('isPublic', '==', true)
+      .where('isArchived', '==', false);
 
-    const snapshot = await getDocs(publicStoriesQuery);
+    const snapshot = await publicStoriesQuery.get();
     
     let withScores = 0;
     let needingUpdate = 0;
