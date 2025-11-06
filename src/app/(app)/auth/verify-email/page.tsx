@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import {
   Box,
@@ -16,7 +16,7 @@ import { firebaseApp } from '@/lib/firebase/client';
 import { signIn } from 'next-auth/react';
 import { Header } from '@/components/header';
 
-export default function VerifyEmailPage() {
+function VerifyEmailContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [status, setStatus] = useState<'verifying' | 'success' | 'error'>('verifying');
@@ -146,5 +146,27 @@ export default function VerifyEmailPage() {
         </Paper>
       </Container>
     </Box>
+  );
+}
+
+export default function VerifyEmailPage() {
+  return (
+    <Suspense
+      fallback={
+        <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
+          <Header />
+          <Container maxWidth="sm" sx={{ py: 8 }}>
+            <Paper elevation={3} sx={{ p: 4, textAlign: 'center' }}>
+              <CircularProgress size={60} sx={{ mb: 3 }} />
+              <Typography variant="h5" gutterBottom>
+                Loading...
+              </Typography>
+            </Paper>
+          </Container>
+        </Box>
+      }
+    >
+      <VerifyEmailContent />
+    </Suspense>
   );
 }
