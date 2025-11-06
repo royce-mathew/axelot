@@ -73,6 +73,16 @@ service cloud.firestore {
     }
     
     // =================================================================
+    // Credentials collection (Server-Only/Admin SDK)
+    // =================================================================
+    // This collection stores password hashes for users with email/password auth
+    // Completely isolated from public users collection for security
+    match /credentials/{credentialId} {
+      // No client access allowed - only Firebase Admin SDK can access
+      allow read, write: if false;
+    }
+    
+    // =================================================================
     // NextAuth Collections (Server-Only/Admin SDK)
     // =================================================================
     

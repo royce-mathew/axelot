@@ -153,6 +153,9 @@ importers:
       '@uiw/react-color':
         specifier: ^2.9.2
         version: 2.9.2(@babel/runtime@7.28.4)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
+      bcryptjs:
+        specifier: ^3.0.3
+        version: 3.0.3
       date-fns:
         specifier: ^4.1.0
         version: 4.1.0
@@ -198,6 +201,9 @@ importers:
       yjs:
         specifier: ^13.6.27
         version: 13.6.27
+      zod:
+        specifier: ^4.1.12
+        version: 4.1.12
     devDependencies:
       '@commitlint/cli':
         specifier: ^20.1.0
@@ -1963,6 +1969,10 @@ packages:
 
   baseline-browser-mapping@2.8.19:
     resolution: {integrity: sha512-zoKGUdu6vb2jd3YOq0nnhEDQVbPcHhco3UImJrv5dSkvxTc2pl2WjOPsjZXDwPDSl5eghIMuY3R6J9NDKF3KcQ==}
+    hasBin: true
+
+  bcryptjs@3.0.3:
+    resolution: {integrity: sha512-GlF5wPWnSa/X5LKM1o0wz0suXIINz1iHRLvTS+sLyi7XPbe5ycmYI3DlZqVGZZtDgl4DmasFg7gOB3JYbphV5g==}
     hasBin: true
 
   bignumber.js@9.3.1:
@@ -5876,6 +5886,8 @@ snapshots:
   base64-js@1.5.1: {}
 
   baseline-browser-mapping@2.8.19: {}
+
+  bcryptjs@3.0.3: {}
 
   bignumber.js@9.3.1: {}
 

@@ -59,6 +59,7 @@
     "@tiptap/pm": "^3.6.1",
     "@tiptap/react": "^3.6.1",
     "@uiw/react-color": "^2.9.2",
+    "bcryptjs": "^3.0.3",
     "date-fns": "^4.1.0",
     "firebase": "^12.4.0",
     "firebase-admin": "^13.5.0",
@@ -73,7 +74,8 @@
     "simple-peer-light": "^9.10.0",
     "unist-util-visit": "^5.0.0",
     "y-protocols": "^1.0.6",
-    "yjs": "^13.6.27"
+    "yjs": "^13.6.27",
+    "zod": "^4.1.12"
   },
   "devDependencies": {
     "@commitlint/cli": "^20.1.0",

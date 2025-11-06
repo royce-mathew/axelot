@@ -1,374 +1,175 @@
 'use client';
 
-import React, { useState } from 'react';
-import { 
-  Box, 
-  Container, 
-  Paper, 
-  Typography, 
-  Button,
+import { useState, useTransition } from 'react';
+import {
+  Box,
+  Container,
   TextField,
-  Stack,
-  CircularProgress,
+  Button,
+  Typography,
+  Paper,
+  Link as MuiLink,
   Alert,
-  InputAdornment,
+  Divider,
+  Stack,
 } from '@mui/material';
-import { signIn, useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
-import GoogleIcon from '@mui/icons-material/Google';
-import GitHubIcon from '@mui/icons-material/GitHub';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import ErrorIcon from '@mui/icons-material/Error';
-import { 
-  isValidUsername, 
-  isUsernameAvailable, 
-  generateUniqueUsername,
-  isReservedUsername 
-} from '@/lib/username-utils';
-import { doc, setDoc, getDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase/client';
+import Link from 'next/link';
+import { Header } from '@/components/header';
+import { signUpAction } from './actions';
+import { signIn } from 'next-auth/react';
+import { getAuth, sendSignInLinkToEmail } from 'firebase/auth';
+import { firebaseApp } from '@/lib/firebase/client';
 
 export default function SignUpPage() {
-  const { data: session, status } = useSession();
-  const router = useRouter();
-  
-  const [step, setStep] = useState<'auth' | 'profile'>('auth');
-  const [username, setUsername] = useState('');
-  const [bio, setBio] = useState('');
-  const [usernameError, setUsernameError] = useState('');
-  const [usernameValid, setUsernameValid] = useState(false);
-  const [checkingUsername, setCheckingUsername] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [isPending, startTransition] = useTransition();
+  const [error, setError] = useState<string>('');
+  const [success, setSuccess] = useState<string>('');
+  const [emailSent, setEmailSent] = useState(false);
 
-  // Validate username function
-  const validateUsername = async (value: string) => {
-    setUsername(value);
-    setCheckingUsername(true);
-    setUsernameError('');
-    setUsernameValid(false);
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setError('');
+    setSuccess('');
 
-    if (!value) {
-      setCheckingUsername(false);
-      return;
-    }
+    const formData = new FormData(event.currentTarget);
 
-    if (value.length < 3) {
-      setUsernameError('Username must be at least 3 characters');
-      setCheckingUsername(false);
-      return;
-    }
+    startTransition(async () => {
+      // First create the user account
+      const result = await signUpAction(formData);
 
-    if (value.length > 20) {
-      setUsernameError('Username must be 20 characters or less');
-      setCheckingUsername(false);
-      return;
-    }
-
-    if (!isValidUsername(value)) {
-      setUsernameError('Username can only contain letters, numbers, underscores, and hyphens');
-      setCheckingUsername(false);
-      return;
-    }
-
-    if (isReservedUsername(value)) {
-      setUsernameError('This username is reserved');
-      setCheckingUsername(false);
-      return;
-    }
-
-    // Check availability
-    const available = await isUsernameAvailable(value);
-    if (!available) {
-      setUsernameError('This username is already taken');
-      setCheckingUsername(false);
-      return;
-    }
-
-    setUsernameValid(true);
-    setCheckingUsername(false);
-  };
-
-  // Check if user needs to complete profile
-  React.useEffect(() => {
-    const checkUserProfile = async () => {
-      if (status === 'authenticated' && session?.user?.email) {
+      if (result.success && result.email) {
         try {
-          const userId = (session.user as Record<string, unknown>).id as string;
-          if (!userId) {
-            console.error('No user ID found');
-            return;
-          }
+          // Send verification email link using Firebase
+          const auth = getAuth(firebaseApp);
+          const actionCodeSettings = {
+            url: `${window.location.origin}/auth/verify-email?email=${encodeURIComponent(result.email)}`,
+            handleCodeInApp: true,
+          };
 
-          const userDoc = await getDoc(doc(db, 'users', userId));
+          await sendSignInLinkToEmail(auth, result.email, actionCodeSettings);
           
-          if (userDoc.exists()) {
-            const userData = userDoc.data();
-            if (userData.username) {
-              // User already has a username, redirect
-              router.push('/');
-              return;
-            }
-          }
+          // Save email locally for verification completion
+          window.localStorage.setItem('emailForSignIn', result.email);
           
-          // User needs to set up profile
-          setStep('profile');
-          
-          // Generate suggested username
-          const suggested = await generateUniqueUsername(session.user.name || 'user');
-          setUsername(suggested);
-          await validateUsername(suggested);
-        } catch (error) {
-          console.error('Error checking user profile:', error);
+          setSuccess('Account created! Check your email for a verification link.');
+          setEmailSent(true);
+        } catch (emailError) {
+          console.error('Error sending verification email:', emailError);
+          setError('Account created but failed to send verification email. Please try signing in.');
         }
+      } else {
+        setError(result.error || 'Sign up failed');
       }
-    };
-
-    checkUserProfile();
-  }, [session, status, router]);
-
-  const handleGoogleSignIn = async () => {
-    setLoading(true);
-    await signIn('google', { callbackUrl: '/auth/sign-up' });
+    });
   };
 
-  const handleGitHubSignIn = async () => {
-    setLoading(true);
-    await signIn('github', { callbackUrl: '/auth/sign-up' });
+  const handleOAuthSignIn = (provider: 'google' | 'github') => {
+    signIn(provider, { callbackUrl: '/auth/username-setup' });
   };
 
-  const handleCompleteProfile = async () => {
-    if (!usernameValid || !session?.user) {
-      return;
-    }
-
-    setLoading(true);
-
-    try {
-      const userId = (session.user as Record<string, unknown>).id as string;
-      
-      // Update user document with username and bio
-      await setDoc(
-        doc(db, 'users', userId),
-        {
-          username: username.toLowerCase(),
-          bio: bio || '',
-          updatedAt: new Date(),
-        },
-        { merge: true }
-      );
-
-      // Redirect to homepage
-      router.push('/');
-    } catch (error) {
-      console.error('Error updating profile:', error);
-      setUsernameError('Failed to create profile. Please try again.');
-      setLoading(false);
-    }
-  };
-
-  if (step === 'auth') {
-    return (
-      <Box 
-        sx={{ 
-          minHeight: '100vh',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-        }}
-      >
-        <Container maxWidth="sm">
-          <Paper 
-            elevation={3}
-            sx={{
-              p: 4,
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              borderRadius: 3,
-            }}
-          >
-            <Typography 
-              variant="h3" 
-              component="h1" 
-              gutterBottom 
-              fontWeight="bold"
-              sx={{ mb: 1 }}
-            >
-              Join Axelot
-            </Typography>
-            
-            <Typography 
-              variant="body1" 
-              color="text.secondary"
-              textAlign="center"
-              sx={{ mb: 4 }}
-            >
-              Create your developer portfolio and share your stories
-            </Typography>
-
-            <Stack spacing={2} sx={{ width: '100%', maxWidth: 400 }}>
-              <Button
-                variant="contained"
-                size="large"
-                startIcon={loading ? <CircularProgress size={20} /> : <GoogleIcon />}
-                onClick={handleGoogleSignIn}
-                disabled={loading}
-                sx={{
-                  py: 1.5,
-                  textTransform: 'none',
-                  fontSize: '1rem',
-                  backgroundColor: '#fff',
-                  color: '#000',
-                  border: '1px solid #ddd',
-                  '&:hover': {
-                    backgroundColor: '#f5f5f5',
-                  },
-                }}
-              >
-                Continue with Google
-              </Button>
-
-              <Button
-                variant="contained"
-                size="large"
-                startIcon={loading ? <CircularProgress size={20} /> : <GitHubIcon />}
-                onClick={handleGitHubSignIn}
-                disabled={loading}
-                sx={{
-                  py: 1.5,
-                  textTransform: 'none',
-                  fontSize: '1rem',
-                  backgroundColor: '#24292e',
-                  color: '#fff',
-                  '&:hover': {
-                    backgroundColor: '#1a1e22',
-                  },
-                }}
-              >
-                Continue with GitHub
-              </Button>
-            </Stack>
-
-            <Typography 
-              variant="body2" 
-              color="text.secondary"
-              textAlign="center"
-              sx={{ mt: 3 }}
-            >
-              Already have an account?{' '}
-              <Button 
-                size="small" 
-                onClick={() => router.push('/auth/sign-in')}
-                sx={{ textTransform: 'none' }}
-              >
-                Sign In
-              </Button>
-            </Typography>
-          </Paper>
-        </Container>
-      </Box>
-    );
-  }
-
-  // Profile setup step
   return (
-    <Box 
-      sx={{ 
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-      }}
-    >
-      <Container maxWidth="sm">
-        <Paper 
-          elevation={3}
-          sx={{
-            p: 4,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            borderRadius: 3,
-          }}
-        >
-          <Typography 
-            variant="h4" 
-            component="h1" 
-            gutterBottom 
-            fontWeight="bold"
-            sx={{ mb: 1 }}
-          >
-            Complete Your Profile
+    <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
+      <Header />
+      <Container maxWidth="sm" sx={{ py: 8 }}>
+        <Paper elevation={3} sx={{ p: 4 }}>
+          <Typography variant="h4" component="h1" gutterBottom fontWeight={700} textAlign="center">
+            Create Account
           </Typography>
-          
-          <Typography 
-            variant="body1" 
-            color="text.secondary"
-            textAlign="center"
-            sx={{ mb: 4 }}
-          >
-            Choose a unique username for your profile URL
+          <Typography variant="body2" color="text.secondary" textAlign="center" sx={{ mb: 3 }}>
+            Sign up to start writing and sharing your stories
           </Typography>
 
-          <Stack spacing={3} sx={{ width: '100%' }}>
-            <TextField
-              label="Username"
-              value={username}
-              onChange={(e) => validateUsername(e.target.value)}
-              error={!!usernameError}
-              helperText={
-                usernameError || 
-                (usernameValid ? 'Username is available!' : 'Your unique identifier')
-              }
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">@</InputAdornment>
-                ),
-                endAdornment: checkingUsername ? (
-                  <CircularProgress size={20} />
-                ) : usernameValid ? (
-                  <CheckCircleIcon color="success" />
-                ) : usernameError ? (
-                  <ErrorIcon color="error" />
-                ) : null,
-              }}
-              fullWidth
-            />
+          {error && (
+            <Alert severity="error" sx={{ mb: 2 }}>
+              {error}
+            </Alert>
+          )}
 
-            {username && (
-              <Alert severity="info" sx={{ alignItems: 'center' }}>
-                Your profile will be at: <strong>axelot.io/u/@{username}</strong>
-              </Alert>
-            )}
+          {success && (
+            <Alert severity="success" sx={{ mb: 2 }}>
+              {success}
+              {emailSent && (
+                <Typography variant="body2" sx={{ mt: 1 }}>
+                  Click the link in the email to verify your account and complete sign-up.
+                </Typography>
+              )}
+            </Alert>
+          )}
 
-            <TextField
-              label="Bio (Optional)"
-              value={bio}
-              onChange={(e) => setBio(e.target.value)}
-              multiline
-              rows={3}
-              placeholder="Tell us about yourself..."
-              helperText={`${bio.length}/160 characters`}
-              inputProps={{ maxLength: 160 }}
-              fullWidth
-            />
+          {!emailSent && (
+            <>
+              <form onSubmit={handleSubmit}>
+                <Stack spacing={2}>
+                  <TextField
+                    fullWidth
+                    label="Name"
+                    name="name"
+                    type="text"
+                    required
+                    disabled={isPending}
+                    autoComplete="name"
+                  />
+                  <TextField
+                    fullWidth
+                    label="Email"
+                    name="email"
+                    type="email"
+                    required
+                    disabled={isPending}
+                    autoComplete="email"
+                  />
+                  <TextField
+                    fullWidth
+                    label="Password"
+                    name="password"
+                    type="password"
+                    required
+                    disabled={isPending}
+                    autoComplete="new-password"
+                    helperText="Must be at least 8 characters"
+                  />
+                  <Button
+                    type="submit"
+                    variant="contained"
+                    size="large"
+                    fullWidth
+                    disabled={isPending}
+                    sx={{ mt: 2 }}
+                  >
+                    {isPending ? 'Creating Account...' : 'Sign Up'}
+                  </Button>
+                </Stack>
+              </form>
 
-            <Button
-              variant="contained"
-              size="large"
-              onClick={handleCompleteProfile}
-              disabled={!usernameValid || loading}
-              sx={{
-                py: 1.5,
-                textTransform: 'none',
-                fontSize: '1rem',
-              }}
-            >
-              {loading ? <CircularProgress size={24} /> : 'Complete Profile'}
-            </Button>
-          </Stack>
+              <Divider sx={{ my: 3 }}>OR</Divider>
+
+              <Stack spacing={2}>
+                <Button
+                  variant="outlined"
+                  fullWidth
+                  onClick={() => handleOAuthSignIn('google')}
+                  disabled={isPending}
+                >
+                  Continue with Google
+                </Button>
+                <Button
+                  variant="outlined"
+                  fullWidth
+                  onClick={() => handleOAuthSignIn('github')}
+                  disabled={isPending}
+                >
+                  Continue with GitHub
+                </Button>
+              </Stack>
+            </>
+          )}
+
+          <Typography variant="body2" textAlign="center" sx={{ mt: 3 }}>
+            Already have an account?{' '}
+            <MuiLink component={Link} href="/auth/sign-in" underline="hover">
+              Sign in
+            </MuiLink>
+          </Typography>
         </Paper>
       </Container>
     </Box>
