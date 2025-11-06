@@ -99,7 +99,7 @@ export default function SignUpPage() {
           {!emailSent && (
             <>
               <form onSubmit={handleSubmit}>
-                <Stack spacing={2}>
+                <Stack spacing={2.5}>
                   <TextField
                     fullWidth
                     label="Name"
@@ -108,6 +108,7 @@ export default function SignUpPage() {
                     required
                     disabled={isPending}
                     autoComplete="name"
+                    variant="outlined"
                   />
                   <TextField
                     fullWidth
@@ -117,6 +118,7 @@ export default function SignUpPage() {
                     required
                     disabled={isPending}
                     autoComplete="email"
+                    variant="outlined"
                   />
                   <TextField
                     fullWidth
@@ -127,6 +129,7 @@ export default function SignUpPage() {
                     disabled={isPending}
                     autoComplete="new-password"
                     helperText="Must be at least 8 characters"
+                    variant="outlined"
                   />
                   <Button
                     type="submit"
@@ -134,7 +137,7 @@ export default function SignUpPage() {
                     size="large"
                     fullWidth
                     disabled={isPending}
-                    sx={{ mt: 2 }}
+                    sx={{ mt: 1 }}
                   >
                     {isPending ? 'Creating Account...' : 'Sign Up'}
                   </Button>

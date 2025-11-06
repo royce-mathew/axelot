@@ -1,9 +1,6 @@
 /* Global styles for the application */
 /* Material UI provides most styling through the theme and sx props */
 
-* {
-  box-sizing: border-box;
-}
 
 html {
   -webkit-text-size-adjust: 100%;
@@ -22,7 +19,6 @@ body {
 
 body {
   font-family: var(--font-dm-sans), system-ui, -apple-system, sans-serif;
-  line-height: 1.6;
 }
 
 #__next {

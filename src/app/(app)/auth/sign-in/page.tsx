@@ -128,7 +128,7 @@ function SignInContent() {
           )}
 
           <Box component="form" onSubmit={handleCredentialsSignIn} sx={{ width: '100%', maxWidth: 400 }}>
-            <Stack spacing={2}>
+            <Stack spacing={2.5}>
               <TextField
                 fullWidth
                 label="Email"
@@ -138,6 +138,7 @@ function SignInContent() {
                 required
                 disabled={isLoading}
                 autoComplete="email"
+                variant="outlined"
               />
               <TextField
                 fullWidth
@@ -148,6 +149,7 @@ function SignInContent() {
                 required
                 disabled={isLoading}
                 autoComplete="current-password"
+                variant="outlined"
               />
               <Button
                 type="submit"
