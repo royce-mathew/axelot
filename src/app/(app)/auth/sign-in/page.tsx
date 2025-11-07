@@ -12,11 +12,14 @@ import {
   CircularProgress,
   TextField,
   Alert,
+  Link as MuiLink,
 } from '@mui/material';
+import Link from 'next/link';
 import { signIn } from 'next-auth/react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import GoogleIcon from '@mui/icons-material/Google';
 import GitHubIcon from '@mui/icons-material/GitHub';
+import { Header } from '@/components/header';
 
 function SignInContent() {
   const searchParams = useSearchParams();
@@ -64,70 +67,42 @@ function SignInContent() {
   };
 
   return (
-    <Box 
-      sx={{ 
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-      }}
-    >
-      <Container maxWidth="sm">
-        <Paper 
-          elevation={3}
-          sx={{
-            p: 4,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            borderRadius: 2,
-          }}
-        >
-          <Typography 
-            variant="h4" 
-            component="h1" 
-            gutterBottom 
-            fontWeight="bold"
-            sx={{ mb: 3 }}
-          >
-            Welcome to Axelot.io
+    <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
+      <Header />
+      <Container maxWidth="sm" sx={{ py: 8 }}>
+        <Paper elevation={3} sx={{ p: 4 }}>
+          <Typography variant="h4" component="h1" gutterBottom fontWeight={700} textAlign="center">
+            Welcome Back
           </Typography>
-          
-          <Typography 
-            variant="body1" 
-            color="text.secondary"
-            textAlign="center"
-            sx={{ mb: 4 }}
-          >
+          <Typography variant="body2" color="text.secondary" textAlign="center" sx={{ mb: 3 }}>
             Sign in to continue to your account
           </Typography>
 
           {registered && (
-            <Alert severity="success" sx={{ mb: 2, width: '100%' }}>
+            <Alert severity="success" sx={{ mb: 2 }}>
               Account created successfully! Please sign in.
             </Alert>
           )}
 
           {verified && (
-            <Alert severity="success" sx={{ mb: 2, width: '100%' }}>
+            <Alert severity="success" sx={{ mb: 2 }}>
               Email verified! You can now sign in with your credentials.
             </Alert>
           )}
 
           {error === 'CredentialsSignin' && (
-            <Alert severity="error" sx={{ mb: 2, width: '100%' }}>
+            <Alert severity="error" sx={{ mb: 2 }}>
               Invalid email or password
             </Alert>
           )}
 
           {loginError && (
-            <Alert severity="error" sx={{ mb: 2, width: '100%' }}>
+            <Alert severity="error" sx={{ mb: 2 }}>
               {loginError}
             </Alert>
           )}
 
-          <Box component="form" onSubmit={handleCredentialsSignIn} sx={{ width: '100%', maxWidth: 400 }}>
+          <Box component="form" onSubmit={handleCredentialsSignIn}>
             <Stack spacing={2.5}>
               <TextField
                 fullWidth
@@ -139,6 +114,8 @@ function SignInContent() {
                 disabled={isLoading}
                 autoComplete="email"
                 variant="outlined"
+                InputLabelProps={{ shrink: true }}
+                placeholder="Enter your email"
               />
               <TextField
                 fullWidth
@@ -150,6 +127,8 @@ function SignInContent() {
                 disabled={isLoading}
                 autoComplete="current-password"
                 variant="outlined"
+                InputLabelProps={{ shrink: true }}
+                placeholder="Enter your password"
               />
               <Button
                 type="submit"
@@ -157,77 +136,41 @@ function SignInContent() {
                 size="large"
                 fullWidth
                 disabled={isLoading}
-                sx={{ py: 1.5 }}
+                sx={{ mt: 1 }}
               >
                 {isLoading ? 'Signing in...' : 'Sign In'}
               </Button>
             </Stack>
           </Box>
 
-          <Divider sx={{ my: 3, width: '100%' }}>OR</Divider>
+          <Divider sx={{ my: 3 }}>OR</Divider>
 
-          <Stack spacing={2} sx={{ width: '100%', maxWidth: 400 }}>
+          <Stack spacing={2}>
             <Button
               variant="outlined"
-              size="large"
+              fullWidth
               startIcon={<GoogleIcon />}
               onClick={handleGoogleSignIn}
-              sx={{
-                py: 1.5,
-                textTransform: 'none',
-                fontSize: '1rem',
-                borderColor: 'divider',
-                color: 'text.primary',
-                '&:hover': {
-                  borderColor: 'primary.main',
-                  backgroundColor: 'action.hover',
-                },
-              }}
+              disabled={isLoading}
             >
               Continue with Google
             </Button>
-
             <Button
               variant="outlined"
-              size="large"
+              fullWidth
               startIcon={<GitHubIcon />}
               onClick={handleGitHubSignIn}
-              sx={{
-                py: 1.5,
-                textTransform: 'none',
-                fontSize: '1rem',
-                borderColor: 'divider',
-                color: 'text.primary',
-                '&:hover': {
-                  borderColor: 'primary.main',
-                  backgroundColor: 'action.hover',
-                },
-              }}
+              disabled={isLoading}
             >
               Continue with GitHub
             </Button>
           </Stack>
 
-          <Divider sx={{ my: 3, width: '100%' }} />
-
-          <Typography 
-            variant="body2" 
-            color="text.secondary"
-            textAlign="center"
-            sx={{ mb: 2 }}
-          >
+          <Typography variant="body2" textAlign="center" sx={{ mt: 3 }}>
             Don&apos;t have an account?{' '}
-            <Button 
-              size="small" 
-              onClick={() => router.push('/auth/sign-up')}
-              sx={{ textTransform: 'none' }}
-            >
-              Sign Up
-            </Button>
-          </Typography>
-
-          <Typography variant="body2" color="text.secondary" textAlign="center">
-            By signing in, you agree to our Terms of Service and Privacy Policy
+            <MuiLink component={Link} href="/auth/sign-up" underline="hover">
+              Sign up
+            </MuiLink>
           </Typography>
         </Paper>
       </Container>
@@ -245,7 +188,7 @@ export default function SignInPage() {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            bgcolor: 'background.default',
           }}
         >
           <CircularProgress />

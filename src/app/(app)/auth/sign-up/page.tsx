@@ -109,6 +109,8 @@ export default function SignUpPage() {
                     disabled={isPending}
                     autoComplete="name"
                     variant="outlined"
+                    InputLabelProps={{ shrink: true }}
+                    placeholder="Enter your name"
                   />
                   <TextField
                     fullWidth
@@ -119,6 +121,8 @@ export default function SignUpPage() {
                     disabled={isPending}
                     autoComplete="email"
                     variant="outlined"
+                    InputLabelProps={{ shrink: true }}
+                    placeholder="Enter your email"
                   />
                   <TextField
                     fullWidth
@@ -130,6 +134,8 @@ export default function SignUpPage() {
                     autoComplete="new-password"
                     helperText="Must be at least 8 characters"
                     variant="outlined"
+                    InputLabelProps={{ shrink: true }}
+                    placeholder="Enter your password"
                   />
                   <Button
                     type="submit"

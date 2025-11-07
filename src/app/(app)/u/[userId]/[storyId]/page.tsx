@@ -2,6 +2,7 @@
 
 import { use, useEffect, useState, useRef } from 'react';
 import dynamic from 'next/dynamic';
+import Link from 'next/link';
 import {
   Box,
   Container,
@@ -70,18 +71,26 @@ import { getUserIdByUsername, isUsernameParam, stripUsernamePrefix } from '@/lib
 
 const Tiptap = dynamic(() => import('@/components/tiptap/tiptap'), {
   ssr: false,
+  loading: () => (
+    <Box sx={{ p: 3, display: 'flex', alignItems: 'center', gap: 2 }}>
+      <CircularProgress size={20} />
+      <Typography variant="body2" color="text.secondary">
+        Loading editor...
+      </Typography>
+    </Box>
+  ),
 });
 
-export default function StoryPage(props: { params: Promise<{ userId: string; storyId: string }> }) {
-  const params = use(props.params);
+export default function StoryPage({ params }: { params: Promise<{ userId: string; storyId: string }> }) {
+  const unwrappedParams = use(params);
   const { user } = useAuth();
   const router = useRouter();
   
   // Extract storyId from the title-slug format (everything before the first dash is the storyId)
   // URL format: /u/userId/storyId-slug-text-here
-  const storyId = params.storyId.includes('-') 
-    ? params.storyId.split('-')[0] 
-    : params.storyId;
+  const storyId = unwrappedParams.storyId.includes('-') 
+    ? unwrappedParams.storyId.split('-')[0] 
+    : unwrappedParams.storyId;
   
   const [actualUserId, setActualUserId] = useState<string>('');
   const [access, setAccess] = useState<boolean | undefined>(undefined);
@@ -123,7 +132,7 @@ export default function StoryPage(props: { params: Promise<{ userId: string; sto
     const resolveUser = async () => {
       try {
         // Decode the parameter in case it's URL-encoded (%40masq -> @masq)
-        const paramId = decodeURIComponent(params.userId);
+        const paramId = decodeURIComponent(unwrappedParams.userId);
         
         // Check if it starts with @ (username format)
         if (isUsernameParam(paramId)) {
@@ -147,11 +156,12 @@ export default function StoryPage(props: { params: Promise<{ userId: string; sto
     };
 
     resolveUser();
-  }, [params.userId]);
+  }, [unwrappedParams.userId]);
 
   // Initialize Y.js provider
   useEffect(() => {
-    if (!storyId || !user?.id || !actualUserId) return;
+    // Allow initialization for anonymous users viewing public documents
+    if (!storyId || !actualUserId) return;
 
     // Create a new Y.Doc for this story
     const yDoc = new Y.Doc();
@@ -191,9 +201,9 @@ export default function StoryPage(props: { params: Promise<{ userId: string; sto
     };
   }, [storyId, user?.id, actualUserId]);
 
-  // Fetch the document metadata (single read)
+  // Fetch the document metadata (single read) - optimized with parallel loading
   useEffect(() => {
-    if (!storyId || !user?.id || !actualUserId) return;
+    if (!storyId || !actualUserId) return;
 
     const loadDocument = async () => {
       try {
@@ -207,10 +217,10 @@ export default function StoryPage(props: { params: Promise<{ userId: string; sto
 
         const data = docSnap.data();
 
-        // Check access
-        const userId = user.id;
-        const hasWritePermission = data.owner === userId || (userId && data.writeAccess?.includes(userId));
-        const hasReadPermission = data.isPublic || data.owner === userId || (userId && data.readAccess?.includes(userId)) || hasWritePermission;
+        // Check access - allow anonymous users to view public documents
+        const userId = user?.id;
+        const hasWritePermission = userId && (data.owner === userId || data.writeAccess?.includes(userId));
+        const hasReadPermission = data.isPublic || (userId && (data.owner === userId || data.readAccess?.includes(userId))) || hasWritePermission;
         
         if (hasReadPermission) {
           setAccess(hasWritePermission ? true : false);  // true for write, false for read-only
@@ -222,7 +232,8 @@ export default function StoryPage(props: { params: Promise<{ userId: string; sto
         } else {
           setAccess(undefined);  // undefined means no access at all
         }
-
+        
+        // Only set loading to false after access check is complete
         setLoading(false);
       } catch (error) {
         console.error('Error loading document:', error);
@@ -263,7 +274,7 @@ export default function StoryPage(props: { params: Promise<{ userId: string; sto
         lastSavedTitleRef.current = title;
         
         // Update URL if slug changed (format: /u/userId/storyId-slug)
-        const newUrl = `/u/${params.userId}/${storyId}-${newSlug}`;
+        const newUrl = `/u/${unwrappedParams.userId}/${storyId}-${newSlug}`;
         if (window.location.pathname !== newUrl) {
           window.history.replaceState(null, '', newUrl);
         }
@@ -274,7 +285,7 @@ export default function StoryPage(props: { params: Promise<{ userId: string; sto
 
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [title, storyId, user?.id, document, provider, params.userId]);
+  }, [title, storyId, user?.id, document, provider, unwrappedParams.userId]);
 
   // Update document visibility
   const handleVisibilityChange = async (checked: boolean) => {
@@ -435,7 +446,7 @@ export default function StoryPage(props: { params: Promise<{ userId: string; sto
 
   // Copy public link to clipboard
   const handleCopyLink = async () => {
-    const publicLink = `${window.location.origin}/u/${params.userId}/${storyId}-${document?.slug || 'untitled'}`;
+    const publicLink = `${window.location.origin}/u/${unwrappedParams.userId}/${storyId}-${document?.slug || 'untitled'}`;
     try {
       await navigator.clipboard.writeText(publicLink);
       setLinkCopied(true);
@@ -603,22 +614,22 @@ export default function StoryPage(props: { params: Promise<{ userId: string; sto
     setShareDialogOpen(true);
   };
 
-  if (loading || !provider) {
+  // Show skeleton while provider is initializing (improved UX)
+  if (!provider) {
     return (
       <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
         <Header />
         <Container maxWidth="lg" sx={{ py: 6 }}>
-          <Typography>Loading story...</Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 4 }}>
+            <CircularProgress size={24} />
+            <Typography>Loading story...</Typography>
+          </Box>
         </Container>
       </Box>
     );
   }
 
-  if (!user?.id) {
-    router.push('/auth/sign-in');
-    return null;
-  }
-
+  // Show access denied for users without permission (after loading completes)
   if (access === undefined && !loading) {
     return (
       <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
@@ -833,18 +844,53 @@ export default function StoryPage(props: { params: Promise<{ userId: string; sto
               px: { xs: 0.5, sm: 0 }, // Slight padding on mobile for better text alignment
             }}
           >
+            {/* Title with fixed height to prevent layout shift */}
             <Typography 
-              variant="h3" 
-              sx={{ 
-                fontSize: { xs: '1.75rem', sm: '2rem' }, // Slightly smaller on mobile
-                fontWeight: 700,
-                mb: { xs: 1.5, sm: 2 },
-                lineHeight: 1.2,
-                wordBreak: 'break-word', // Prevent text overflow
-              }}
-            >
-              {title || 'Untitled Story'}
-            </Typography>
+                variant="h3" 
+                sx={{ 
+                  fontSize: { xs: '1.75rem', sm: '2rem' }, // Slightly smaller on mobile
+                  fontWeight: 700,
+                  mb: { xs: 1.5, sm: 2 },
+                  lineHeight: 1.2,
+                  wordBreak: 'break-word', // Prevent text overflow
+                }}
+              >
+                {title || 'Untitled Story'}
+              </Typography>
+            
+            {/* Authors Display - Show for read-only users with clickable owner link */}
+            {document.authorNames && document.authorNames.length > 0 && (
+              <Typography 
+                variant="body2" 
+                color="text.secondary"
+                sx={{ 
+                  mb: 1.5,
+                  fontStyle: 'italic',
+                }}
+              >
+                By{' '}
+                {document.owner && (
+                  <>
+                    <Typography
+                      component={Link}
+                      href={`/u/${actualUserId}`}
+                      variant="body2"
+                      sx={{
+                        color: 'primary.main',
+                        textDecoration: 'none',
+                        '&:hover': {
+                          textDecoration: 'underline',
+                        },
+                      }}
+                    >
+                      {document.authorNames[0]}
+                    </Typography>
+                    {document.authorNames.length > 1 && `, ${document.authorNames.slice(1).join(', ')}`}
+                  </>
+                )}
+              </Typography>
+            )}
+            
             <Stack 
               direction="row" 
               spacing={{ xs: 0.75, sm: 1 }} 
@@ -979,24 +1025,33 @@ export default function StoryPage(props: { params: Promise<{ userId: string; sto
         )}
 
         {/* Editor */}
-        <Tiptap
-          editable={access === true}
-          onEditorReady={setCurrentEditor}
-          readOnly={access !== true}
-          passedExtensions={[
-            Collaboration.configure({
-              document: provider.doc,
-            }),
-            CollaborationCaret.configure({
-              provider: provider,
-              user: {
-                name: user.name || 'Anonymous',
-                color: userColor,
-                userId: user.id,
-              },
-            }),
-          ]}
-        />
+        <Box
+          sx={{
+            minHeight: '60vh', // Prevent layout shift by reserving space
+            '& .ProseMirror': {
+              minHeight: '60vh',
+            },
+          }}
+        >
+          <Tiptap
+            editable={access === true}
+            onEditorReady={setCurrentEditor}
+            readOnly={access !== true}
+            passedExtensions={[
+              Collaboration.configure({
+                document: provider.doc,
+              }),
+              CollaborationCaret.configure({
+                provider: provider,
+                user: {
+                  name: user?.name || 'Anonymous',
+                  color: userColor,
+                  userId: user?.id || 'anonymous',
+                },
+              }),
+            ]}
+          />
+        </Box>
 
         {/* Share Dialog */}
         <Dialog
@@ -1256,7 +1311,7 @@ export default function StoryPage(props: { params: Promise<{ userId: string; sto
                     Public Link
                   </Typography>
                   <Typography variant="caption" sx={{ wordBreak: 'break-all', display: 'block', pr: 1 }}>
-                    {window.location.origin}/u/{params.userId}/{storyId}-{document?.slug || 'untitled'}
+                    {window.location.origin}/u/{unwrappedParams.userId}/{storyId}-{document?.slug || 'untitled'}
                   </Typography>
                 </Alert>
               )}

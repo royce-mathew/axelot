@@ -14,6 +14,8 @@ import {
   Typography,
   Avatar,
   ListItemIcon,
+  useColorScheme,
+  useTheme,
 } from '@mui/material';
 import Link from 'next/link';
 import MenuIcon from '@mui/icons-material/Menu';
@@ -26,12 +28,12 @@ import PersonIcon from '@mui/icons-material/Person';
 import ThemeToggle from '@/components/ThemeToggle';
 import { useAuth } from '@/hooks/use-auth';
 import { signIn, signOut } from 'next-auth/react';
-import { useTheme } from '@mui/material/styles';
 
 export const MobileNav = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const { isAuthenticated, isLoading, user } = useAuth();
-  const theme = useTheme();
+  const { mode } = useColorScheme();
+  const theme = useTheme(); // Still needed for palette colors
 
   const handleSignIn = () => {
     setDrawerOpen(false);
@@ -137,22 +139,18 @@ export const MobileNav = () => {
                     <ListItemText primary="My Stories" />
                   </ListItemButton>
                 </ListItem>
-                <ListItem>
-                  <Box sx={{ width: '100%' }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-                      <ListItemIcon sx={{ minWidth: '30px' }}>
-                        {theme.palette.mode === 'dark' ? (
-                          <LightModeIcon fontSize="small" />
-                        ) : (
-                          <DarkModeIcon fontSize="small" />
-                        )}
-                      </ListItemIcon>
-                      <Typography variant="body2">Theme</Typography>
-                    </Box>
-                    <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-                      <ThemeToggle />
-                    </Box>
+                <ListItem sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', px: 2 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <ListItemIcon sx={{ minWidth: '30px' }}>
+                      {mode === 'dark' ? (
+                        <DarkModeIcon fontSize="small" />
+                      ) : (
+                        <LightModeIcon fontSize="small" />
+                      )}
+                    </ListItemIcon>
+                    <Typography variant="body2">Theme</Typography>
                   </Box>
+                  <ThemeToggle />
                 </ListItem>
                 <ListItem disablePadding>
                   <ListItemButton onClick={handleSignOut}>

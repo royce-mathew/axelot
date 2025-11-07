@@ -11,7 +11,6 @@ import {
   ListItemIcon,
   ListItemText,
   Divider,
-  Typography,
   Tooltip,
   Avatar,
   useColorScheme,
@@ -123,21 +122,19 @@ export const DesktopNav = () => {
               <ListItemText>My Profile</ListItemText>
             </MenuItem>
             <Divider />
-            <Box sx={{ px: 2, py: 1.5 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-                <ListItemIcon sx={{ minWidth: '20px' }}>
+            <MenuItem sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <ListItemIcon>
                   {mode === 'dark' ? (
-                     <DarkModeIcon fontSize="small" />
+                    <DarkModeIcon fontSize="small" />
                   ) : (
-                   <LightModeIcon fontSize="small" />
+                    <LightModeIcon fontSize="small" />
                   )}
                 </ListItemIcon>
-                <Typography variant="body2">Theme</Typography>
+                <ListItemText>Theme</ListItemText>
               </Box>
-              <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-                <ThemeToggle />
-              </Box>
-            </Box>
+              <ThemeToggle />
+            </MenuItem>
             <Divider />
             <MenuItem onClick={handleSignOut}>
               <ListItemIcon>

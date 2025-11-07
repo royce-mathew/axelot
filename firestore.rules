@@ -41,11 +41,15 @@ service cloud.firestore {
       allow list: if isSignedIn() || resource.data.isPublic == true;
 
       // CREATE - Only authenticated users can create stories for themselves
-      allow create: if isOwner(request.resource.data) &&
+      // Required fields: owner, isPublic, readAccess, writeAccess, title, created, lastUpdated, lastUpdatedBy, isArchived
+      allow create: if isSignedIn() &&
+                       isOwner(request.resource.data) &&
                        request.resource.data.keys().hasAll(['owner', 'isPublic', 'readAccess', 'writeAccess', 'title', 'created', 'lastUpdated', 'lastUpdatedBy', 'isArchived']) &&
                        request.resource.data.isPublic is bool &&
+                       request.resource.data.isArchived is bool &&
                        request.resource.data.readAccess is list &&
-                       request.resource.data.writeAccess is list;
+                       request.resource.data.writeAccess is list &&
+                       request.resource.data.owner == request.auth.uid;
 
       // UPDATE - Only owner or users with write access can update
       allow update: if hasWriteAccess(resource.data);

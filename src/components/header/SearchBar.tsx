@@ -129,7 +129,8 @@ export const SearchBar = () => {
             right: 0,
             maxHeight: '400px',
             overflowY: 'auto',
-            zIndex: 1000,
+            zIndex: (theme) => theme.zIndex.modal + 1,
+            boxShadow: (theme) => theme.shadows[8],
           }}
           elevation={8}
         >

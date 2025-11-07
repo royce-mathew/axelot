@@ -32,6 +32,14 @@ body {
   text-align: inherit;
 }
 
+/* Prevent layout shift during editor loading */
+.ProseMirror {
+  min-height: inherit;
+  outline: none;
+  /* Ensure content starts rendering immediately */
+  content-visibility: auto;
+}
+
 /* TipTap Table Styles */
 .tiptap-editor-content .tableWrapper,
 .tableWrapper {

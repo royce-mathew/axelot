@@ -1,15 +1,25 @@
 'use client';
 
-import { AppBar, Toolbar, Box, useTheme, IconButton } from '@mui/material';
+import { AppBar, Toolbar, Box, IconButton, useColorScheme } from '@mui/material';
 import Image from 'next/image';
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { DesktopNav } from './DesktopNav';
 import { MobileNav } from './MobileNav';
 import { SearchBar } from './SearchBar';
+import { useAuth } from '@/hooks/use-auth';
 
 export const Header = () => {
-  const theme = useTheme();
-  const isDark = theme.palette.mode === 'dark';
+  const { mode } = useColorScheme();
+  const isDark = mode === 'dark';
+  const { isAuthenticated, isLoading } = useAuth();
+  const router = useRouter();
+
+  const handleLogoClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (!isLoading) {
+      router.push(isAuthenticated ? '/dashboard' : '/');
+    }
+  };
   
   return (
     <AppBar 
@@ -17,8 +27,9 @@ export const Header = () => {
       elevation={0}
       sx={{
         boxShadow: 3,
-        bgcolor: 'rgba(var(--mui-palette-background-paperChannel) / 0.9)',
-        backdropFilter: 'blur(12px)',
+        bgcolor: 'background.paper',
+        borderBottom: 1,
+        borderColor: 'divider',
       }}
     >
       <Toolbar sx={{ 
@@ -31,8 +42,7 @@ export const Header = () => {
       }}>
        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%', maxWidth: 448 }}>
             <IconButton
-              component={Link}
-              href="/"
+              onClick={handleLogoClick}
               sx={{
                 width: 50,
                 height: 50,
@@ -50,7 +60,7 @@ export const Header = () => {
                 height={50}
                 priority
                 style={{
-                  filter: isDark ? 'brightness(0.9)' : 'brightness(0.25)',
+                  filter: isDark ? 'brightness(1.8)' : 'brightness(0.25)',
                   maxWidth: '100%',
                   height: 'auto',
                 }}

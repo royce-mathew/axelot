@@ -1,57 +1,114 @@
 'use client';
 
-
-import { Typography, Button, Container, Box, Stack, Card, CardContent, CardActions, Chip, Fab, Skeleton } from '@mui/material';
+import { useState, useEffect } from 'react';
+import { Typography, Button, Container, Box, Stack } from '@mui/material';
 import { Header } from '@/components/header';
-import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import CodeIcon from '@mui/icons-material/Code';
 import FolderIcon from '@mui/icons-material/Folder';
 import StarIcon from '@mui/icons-material/Star';
-import TrendingUpIcon from '@mui/icons-material/TrendingUp';
-import AccessTimeIcon from '@mui/icons-material/AccessTime';
-import VisibilityIcon from '@mui/icons-material/Visibility';
-import RefreshIcon from '@mui/icons-material/Refresh';
-import PersonIcon from '@mui/icons-material/Person';
-import { Add as AddIcon, Description as DescriptionIcon } from '@mui/icons-material';
-import { signIn } from 'next-auth/react';
-import { getDocs, query, where, orderBy, limit } from 'firebase/firestore';
-import { allDocumentsRef } from '@/lib/converters/document';
-import { Document } from '@/types/document';
-import { timeAgo } from '@/lib/utils';
-import { useStoriesCache } from '@/hooks/use-stories-cache';
+import NumberFlow, { continuous } from '@number-flow/react';
+import { Card } from '@mui/material';
 
 const HeroSection = () => {
-  const handleGetStarted = () => {
-    signIn();
-  };
+  const router = useRouter();
+  const [animatedStories, setAnimatedStories] = useState(0);
+  const [animatedUsers, setAnimatedUsers] = useState(0);
+
+  useEffect(() => {
+    // Animate numbers on mount
+    const timer = setTimeout(() => {
+      setAnimatedStories(1000);
+      setAnimatedUsers(100);
+    }, 50);
+    return () => clearTimeout(timer);
+  }, []);
 
   return (
     <Box
       sx={{
-        minHeight: '85vh',
+        position: 'relative',
+        minHeight: '90vh',
         display: 'flex',
         alignItems: 'center',
-        background: 'linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.02) 100%)',
+        overflow: 'hidden',
+        background: (theme) =>
+          theme.palette.mode === 'dark'
+            ? 'radial-gradient(ellipse 80% 50% at 50% -20%, rgba(120, 119, 198, 0.3), transparent), linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.05) 100%)'
+            : 'radial-gradient(ellipse 80% 50% at 50% -20%, rgba(120, 119, 198, 0.15), transparent)',
       }}
     >
-      <Container maxWidth="md">
-        <Stack spacing={4} alignItems="center" textAlign="center">
+      {/* Animated background elements */}
+      <Box
+        sx={{
+          position: 'absolute',
+          top: '10%',
+          left: '10%',
+          width: 400,
+          height: 400,
+          background: 'radial-gradient(circle, rgba(59, 130, 246, 0.1) 0%, transparent 70%)',
+          borderRadius: '50%',
+          animation: 'float 6s ease-in-out infinite',
+          '@keyframes float': {
+            '0%, 100%': { transform: 'translateY(0px)' },
+            '50%': { transform: 'translateY(-20px)' },
+          },
+        }}
+      />
+      <Box
+        sx={{
+          position: 'absolute',
+          bottom: '10%',
+          right: '10%',
+          width: 300,
+          height: 300,
+          background: 'radial-gradient(circle, rgba(139, 92, 246, 0.1) 0%, transparent 70%)',
+          borderRadius: '50%',
+          animation: 'float 8s ease-in-out infinite',
+          animationDelay: '1s',
+        }}
+      />
+
+      <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 1 }}>
+        <Stack spacing={5} alignItems="center" textAlign="center">
+          <Box>
+            <Typography
+              component="span"
+              sx={{
+                display: 'inline-block',
+                px: 2,
+                py: 0.5,
+                mb: 3,
+                borderRadius: '20px',
+                bgcolor: 'primary.main',
+                color: 'primary.contrastText',
+                fontSize: '0.875rem',
+                fontWeight: 600,
+              }}
+            >
+              ✨ The future of developer documentation
+            </Typography>
+          </Box>
+
           <Typography
             variant="h1"
             sx={{
-              fontSize: { xs: '2.5rem', sm: '3.5rem', md: '4.5rem' },
-              fontWeight: 700,
+              fontSize: { xs: '2.5rem', sm: '3.5rem', md: '5rem' },
+              fontWeight: 800,
               lineHeight: 1.1,
               letterSpacing: '-0.02em',
-              background: 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 50%, #ec4899 100%)',
+              maxWidth: 900,
+              background: (theme) =>
+                theme.palette.mode === 'dark'
+                  ? 'linear-gradient(135deg, #ffffff 0%, #a0a0a0 100%)'
+                  : 'linear-gradient(135deg, #1e40af 0%, #7c3aed 50%, #ec4899 100%)',
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
               backgroundClip: 'text',
             }}
           >
-            Your work, beautifully centralized
+            Write, Share, & Showcase Your Work
           </Typography>
 
           <Typography
@@ -59,13 +116,13 @@ const HeroSection = () => {
             sx={{
               fontSize: { xs: '1.1rem', sm: '1.3rem', md: '1.5rem' },
               fontWeight: 400,
-              lineHeight: 1.6,
+              lineHeight: 1.7,
               color: 'text.secondary',
-              maxWidth: '650px',
+              maxWidth: '700px',
             }}
           >
-            Store your documentation, showcase your skills, and build your developer
-            portfolio—all in one place. Simple, elegant, and powerful.
+            The all-in-one platform for developers to document their journey,
+            collaborate in real-time, and build a stunning portfolio.
           </Typography>
 
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ pt: 2 }}>
@@ -73,19 +130,76 @@ const HeroSection = () => {
               variant="contained"
               size="large"
               endIcon={<ArrowForwardIcon />}
-              onClick={handleGetStarted}
+              onClick={() => router.push('/auth/sign-up')}
               sx={{
                 px: 4,
                 py: 1.5,
                 borderRadius: '12px',
                 textTransform: 'none',
-                fontSize: '1rem',
+                fontSize: '1.1rem',
                 fontWeight: 600,
-                boxShadow: '0 4px 14px 0 rgba(0,0,0,0.1)',
+                boxShadow: '0 8px 24px rgba(59, 130, 246, 0.3)',
+                '&:hover': {
+                  boxShadow: '0 12px 32px rgba(59, 130, 246, 0.4)',
+                },
               }}
             >
-              Get Started Free
+              Start Writing Free
             </Button>
+            <Button
+              variant="outlined"
+              size="large"
+              onClick={() => router.push('/stories')}
+              sx={{
+                px: 4,
+                py: 1.5,
+                borderRadius: '12px',
+                textTransform: 'none',
+                fontSize: '1.1rem',
+                fontWeight: 600,
+                borderWidth: 2,
+                '&:hover': {
+                  borderWidth: 2,
+                },
+              }}
+            >
+              Explore Stories
+            </Button>
+          </Stack>
+
+          {/* Stats with NumberFlow animations */}
+          <Stack
+            direction={{ xs: 'column', sm: 'row' }}
+            spacing={6}
+            sx={{
+              pt: 4,
+              opacity: 0.8,
+            }}
+          >
+            <Box sx={{ textAlign: 'center' }}>
+              <Typography variant="h4" fontWeight={700} sx={{ fontVariantNumeric: 'tabular-nums' }}>
+                <NumberFlow 
+                  value={animatedUsers} 
+                  format={{ notation: 'compact' }} 
+                  plugins={[continuous]}
+                />+
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Active Writers
+              </Typography>
+            </Box>
+            <Box sx={{ textAlign: 'center' }}>
+              <Typography variant="h4" fontWeight={700} sx={{ fontVariantNumeric: 'tabular-nums' }}>
+                <NumberFlow 
+                  value={animatedStories} 
+                  format={{ notation: 'compact' }} 
+                  plugins={[continuous]}
+                />+
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Stories Published
+              </Typography>
+            </Box>
           </Stack>
         </Stack>
       </Container>
@@ -103,15 +217,35 @@ const FeatureCard = ({
   description: string;
 }) => {
   return (
-    <Box sx={{ textAlign: 'center', px: 2 }}>
+    <Card
+      elevation={0}
+      sx={{
+        p: 3,
+        height: '100%',
+        borderRadius: 3,
+        border: 1,
+        borderColor: 'divider',
+        transition: 'all 0.3s ease',
+        '&:hover': {
+          borderColor: 'primary.main',
+          boxShadow: 3,
+          transform: 'translateY(-4px)',
+        },
+      }}
+    >
       <Box
         sx={{
-          mb: 3,
+          mb: 2,
+          width: 56,
+          height: 56,
           display: 'flex',
+          alignItems: 'center',
           justifyContent: 'center',
+          borderRadius: 2,
+          bgcolor: 'primary.main',
+          color: 'primary.contrastText',
           '& svg': {
-            fontSize: '2.5rem',
-            color: 'primary.main',
+            fontSize: '2rem',
           },
         }}
       >
@@ -132,64 +266,78 @@ const FeatureCard = ({
         sx={{
           color: 'text.secondary',
           lineHeight: 1.7,
-          fontSize: '1rem',
         }}
       >
         {description}
       </Typography>
-    </Box>
+    </Card>
   );
 };
 
 const FeaturesSection = () => {
   const features = [
     {
-      icon: <FolderIcon />,
-      title: 'Centralized Documentation',
+      icon: <CodeIcon />,
+      title: 'Rich Editor',
       description:
-        'Keep all your project documentation, notes, and technical writing in one organized space.',
+        'Write with a powerful editor supporting Markdown, syntax highlighting, tables, and real-time collaboration.',
+    },
+    {
+      icon: <FolderIcon />,
+      title: 'Organized Workspace',
+      description:
+        'Keep all your documentation, notes, and projects organized in one beautiful, accessible space.',
     },
     {
       icon: <StarIcon />,
-      title: 'Showcase Your Skills',
+      title: 'Public Portfolios',
       description:
-        'Build a beautiful portfolio that highlights your expertise, projects, and achievements.',
-    },
-    {
-      icon: <CodeIcon />,
-      title: 'Developer-First',
-      description:
-        'Built by developers, for developers. Markdown support, syntax highlighting, and more.',
+        'Showcase your best work to the world. Share your knowledge and build your developer brand.',
     },
   ];
 
   return (
-    <Box sx={{ py: { xs: 8, md: 12 }, bgcolor: 'background.paper' }}>
+    <Box sx={{ py: { xs: 10, md: 14 }, bgcolor: 'background.default' }}>
       <Container maxWidth="lg">
         <Stack spacing={8}>
-          <Box textAlign="center">
+          <Box textAlign="center" sx={{ maxWidth: 800, mx: 'auto' }}>
+            <Typography
+              component="span"
+              sx={{
+                display: 'inline-block',
+                px: 2,
+                py: 0.5,
+                mb: 2,
+                borderRadius: '20px',
+                border: 1,
+                borderColor: 'primary.main',
+                color: 'primary.main',
+                fontSize: '0.875rem',
+                fontWeight: 600,
+              }}
+            >
+              FEATURES
+            </Typography>
             <Typography
               variant="h2"
               sx={{
-                fontSize: { xs: '2rem', sm: '2.5rem', md: '3rem' },
-                fontWeight: 700,
+                fontSize: { xs: '2rem', sm: '2.5rem', md: '3.5rem' },
+                fontWeight: 800,
                 mb: 2,
                 letterSpacing: '-0.02em',
               }}
             >
-              Everything you need
+              Everything you need to succeed
             </Typography>
             <Typography
               variant="h6"
               sx={{
                 color: 'text.secondary',
                 fontWeight: 400,
-                maxWidth: '600px',
-                mx: 'auto',
                 lineHeight: 1.6,
               }}
             >
-              A complete platform designed to help developers organize, share, and grow
+              Professional tools designed for developers who want to create, share, and grow
             </Typography>
           </Box>
 
@@ -197,7 +345,7 @@ const FeaturesSection = () => {
             sx={{
               display: 'grid',
               gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' },
-              gap: 6,
+              gap: 4,
             }}
           >
             {features.map((feature, index) => (
@@ -242,348 +390,13 @@ const Footer = () => {
 };
 
 export default function Home() {
-  const { isAuthenticated, isLoading, user } = useAuth();
-  const router = useRouter();
-  
-  // Use caching hook to fetch stories with 5-minute cache
-  const { data: storiesData, loading: loadingStories, refresh: refreshStories } = useStoriesCache(
-    async () => {
-      // Fetch recently published public stories
-      const recentQuery = query(
-        allDocumentsRef(),
-        where('isPublic', '==', true),
-        orderBy('created', 'desc'),
-        limit(6)
-      );
-
-      // Fetch trending stories (pre-computed by cron job)
-      // The cron job updates trendingScore field every hour
-      const trendingQuery = query(
-        allDocumentsRef(),
-        where('isPublic', '==', true),
-        orderBy('trendingScore', 'desc'),
-        limit(6)
-      );
-
-      // Fetch both queries in parallel for better performance
-      const [recentSnapshot, trendingSnapshot] = await Promise.all([
-        getDocs(recentQuery),
-        getDocs(trendingQuery)
-      ]);
-
-      const recentDocs = recentSnapshot.docs.map((doc) => doc.data());
-      const trendingDocs = trendingSnapshot.docs.map((doc) => doc.data());
-      
-      // No need to fetch user data separately - using denormalized data!
-      // No need to calculate trending - using pre-computed scores from cron job!
-      return {
-        recent: recentDocs,
-        trending: trendingDocs,
-      };
-    },
-    [isAuthenticated, user?.id],
-    'homepage-stories'
-  );
-
-  // Extract stories from cached data
-  const recentStories = storiesData?.recent ?? [];
-  const trendingStories = storiesData?.trending ?? [];
-
-  const handleCardClick = (doc: Document) => {
-    // Navigate to story using owner ID
-    router.push(`/u/${doc.owner}/${doc.id}`);
-  };
-
-  const handleCreateNew = () => {
-    router.push('/stories');
-  };
-
-  if (isLoading) {
-    return (
-      <Box sx={{ minHeight: '100vh' }}>
-        <Header />
-      </Box>
-    );
-  }
-
-  // Show Hero section for non-authenticated users
-  if (!isAuthenticated) {
-    return (
-      <Box sx={{ minHeight: '100vh' }}>
-        <Header />
-        <HeroSection />
-        <FeaturesSection />
-        <Footer />
-      </Box>
-    );
-  }
-
-  // Show recommended stories for authenticated users
+  // Show Hero section to all users
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
+    <Box sx={{ minHeight: '100vh' }}>
       <Header />
-      <Container maxWidth="lg" sx={{ py: 4 }}>
-        {/* Welcome Section */}
-        <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
-          <Box>
-            <Typography variant="h4" fontWeight={700} gutterBottom>
-              Welcome back, {user?.name?.split(' ')[0] || 'there'}! 👋
-            </Typography>
-            <Typography variant="body1" color="text.secondary">
-              Discover new stories and continue where you left off
-            </Typography>
-          </Box>
-          <Button
-            variant="outlined"
-            startIcon={<RefreshIcon />}
-            onClick={refreshStories}
-            disabled={loadingStories}
-            sx={{ borderRadius: 2 }}
-          >
-            Refresh
-          </Button>
-        </Box>
-
-        {loadingStories ? (
-          <Stack spacing={4}>
-            {[1, 2, 3].map((i) => (
-              <Box key={i}>
-                <Skeleton variant="text" width="30%" height={40} sx={{ mb: 2 }} />
-                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' }, gap: 3 }}>
-                  {[1, 2, 3].map((j) => (
-                    <Card key={j}>
-                      <CardContent>
-                        <Skeleton variant="text" width="80%" height={30} />
-                        <Skeleton variant="text" width="60%" />
-                        <Skeleton variant="text" width="40%" />
-                      </CardContent>
-                    </Card>
-                  ))}
-                </Box>
-              </Box>
-            ))}
-          </Stack>
-        ) : (
-          <Stack spacing={6}>
-            {/* Trending Stories Section */}
-            {trendingStories.length > 0 && (
-              <Box>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
-                  <TrendingUpIcon color="primary" />
-                  <Typography variant="h5" fontWeight={600}>
-                    Trending Stories
-                  </Typography>
-                </Box>
-                <Box
-                  sx={{
-                    display: 'grid',
-                    gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' },
-                    gap: 3,
-                  }}
-                >
-                  {trendingStories.slice(0, 6).map((doc: Document) => (
-                    <Card
-                      key={doc.id}
-                      sx={{
-                        cursor: 'pointer',
-                        transition: 'all 0.2s',
-                        '&:hover': {
-                          boxShadow: 4,
-                          transform: 'translateY(-2px)',
-                        },
-                      }}
-                      onClick={() => handleCardClick(doc)}
-                    >
-                      <CardContent>
-                        <Typography variant="h6" fontWeight={600} gutterBottom noWrap>
-                          {doc.title}
-                        </Typography>
-                        {doc.description && (
-                          <Typography
-                            variant="body2"
-                            color="text.secondary"
-                            sx={{
-                              mb: 2,
-                              display: '-webkit-box',
-                              WebkitLineClamp: 2,
-                              WebkitBoxOrient: 'vertical',
-                              overflow: 'hidden',
-                            }}
-                          >
-                            {doc.description}
-                          </Typography>
-                        )}
-                        <Stack direction="row" spacing={1} flexWrap="wrap" gap={1}>
-                          <Chip 
-                            icon={<PersonIcon />} 
-                            label={
-                              doc.authorNames && doc.authorNames.length > 0
-                                ? doc.authorNames.length === 1
-                                  ? doc.authorNames[0]
-                                  : `${doc.authorNames[0]} +${doc.authorNames.length - 1}`
-                                : 'Anonymous'
-                            }
-                            size="small"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              router.push(`/u/${doc.owner}`);
-                            }}
-                            sx={{ cursor: 'pointer' }}
-                          />
-                          <Chip 
-                            icon={<VisibilityIcon />} 
-                            label={`${(doc.viewCount || 0).toLocaleString()} views`} 
-                            size="small" 
-                            variant="outlined"
-                          />
-                          {doc.tags &&
-                            doc.tags.slice(0, 2).map((tag: string, index: number) => (
-                              <Chip key={index} label={tag} size="small" />
-                            ))}
-                        </Stack>
-                      </CardContent>
-                      <CardActions sx={{ px: 2, pb: 2 }}>
-                        <Typography variant="caption" color="text.secondary">
-                          Updated {timeAgo(doc.lastUpdated)}
-                        </Typography>
-                      </CardActions>
-                    </Card>
-                  ))}
-                </Box>
-              </Box>
-            )}
-
-            {/* Recently Published Section */}
-            {recentStories.length > 0 && (
-              <Box>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
-                  <AccessTimeIcon color="primary" />
-                  <Typography variant="h5" fontWeight={600}>
-                    Recently Published
-                  </Typography>
-                </Box>
-                <Box
-                  sx={{
-                    display: 'grid',
-                    gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' },
-                    gap: 3,
-                  }}
-                >
-                  {recentStories.slice(0, 6).map((doc: Document) => (
-                    <Card
-                      key={doc.id}
-                      sx={{
-                        cursor: 'pointer',
-                        transition: 'all 0.2s',
-                        '&:hover': {
-                          boxShadow: 4,
-                          transform: 'translateY(-2px)',
-                        },
-                      }}
-                      onClick={() => handleCardClick(doc)}
-                    >
-                      <CardContent>
-                        <Typography variant="h6" fontWeight={600} gutterBottom noWrap>
-                          {doc.title}
-                        </Typography>
-                        {doc.description && (
-                          <Typography
-                            variant="body2"
-                            color="text.secondary"
-                            sx={{
-                              mb: 2,
-                              display: '-webkit-box',
-                              WebkitLineClamp: 2,
-                              WebkitBoxOrient: 'vertical',
-                              overflow: 'hidden',
-                            }}
-                          >
-                            {doc.description}
-                          </Typography>
-                        )}
-                        <Stack direction="row" spacing={1} flexWrap="wrap" gap={1}>
-                          <Chip 
-                            icon={<PersonIcon />} 
-                            label={
-                              doc.authorNames && doc.authorNames.length > 0
-                                ? doc.authorNames.length === 1
-                                  ? doc.authorNames[0]
-                                  : `${doc.authorNames[0]} +${doc.authorNames.length - 1}`
-                                : 'Anonymous'
-                            }
-                            size="small"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              router.push(`/u/${doc.owner}`);
-                            }}
-                            sx={{ cursor: 'pointer' }}
-                          />
-                          <Chip 
-                            icon={<VisibilityIcon />} 
-                            label={`${(doc.viewCount || 0).toLocaleString()} views`} 
-                            size="small" 
-                            variant="outlined"
-                          />
-                          {doc.tags &&
-                            doc.tags.slice(0, 2).map((tag: string, index: number) => (
-                              <Chip key={index} label={tag} size="small" />
-                            ))}
-                        </Stack>
-                      </CardContent>
-                      <CardActions sx={{ px: 2, pb: 2 }}>
-                        <Typography variant="caption" color="text.secondary">
-                          Published {timeAgo(doc.created)}
-                        </Typography>
-                      </CardActions>
-                    </Card>
-                  ))}
-                </Box>
-              </Box>
-            )}
-
-            {/* Empty State */}
-            {recentStories.length === 0 && trendingStories.length === 0 && (
-              <Card
-                sx={{
-                  textAlign: 'center',
-                  py: 8,
-                  bgcolor: 'background.paper',
-                }}
-              >
-                <DescriptionIcon sx={{ fontSize: 80, color: 'text.disabled', mb: 2 }} />
-                <Typography variant="h5" gutterBottom color="text.secondary">
-                  No stories yet
-                </Typography>
-                <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
-                  Create your first story to get started
-                </Typography>
-                <Button
-                  variant="contained"
-                  startIcon={<AddIcon />}
-                  onClick={handleCreateNew}
-                >
-                  Create Story
-                </Button>
-              </Card>
-            )}
-          </Stack>
-        )}
-      </Container>
-
-      {/* Floating Action Button for mobile */}
-      <Fab
-        color="primary"
-        aria-label="add"
-        sx={{
-          position: 'fixed',
-          bottom: 24,
-          right: 24,
-          display: { xs: 'flex', sm: 'none' },
-        }}
-        onClick={handleCreateNew}
-      >
-        <AddIcon />
-      </Fab>
+      <HeroSection />
+      <FeaturesSection />
+      <Footer />
     </Box>
   );
 }

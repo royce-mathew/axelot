@@ -51,7 +51,7 @@ import { createInitialDocument } from '@/lib/content-utils';
 import { timeAgo } from '@/lib/utils';
 
 export default function StoriesPage() {
-  const { user, isAuthenticated, isLoading, session } = useAuth();
+  const { user, isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
   const [documents, setDocuments] = useState<Document[]>([]);
   const [loading, setLoading] = useState(true);
@@ -71,15 +71,18 @@ export default function StoriesPage() {
 
   // Fetch user's documents
   useEffect(() => {
-    console.log(session);
-    if (!user?.id) return;
+    if (!user?.id) {
+      // User not loaded yet, keep current loading state
+      return;
+    }
 
-    console.log("USER EXISTS", user.id)
+    console.log("Fetching documents for user:", user.id);
 
     const unsubscribe = onSnapshot(
       documentsByOwnerRef(user.id),
       (snapshot) => {
         const docs = snapshot.docs.map((doc) => doc.data());
+        console.log("Documents fetched:", docs.length);
         setDocuments(docs);
         setLoading(false);
       },
@@ -90,7 +93,7 @@ export default function StoriesPage() {
     );
 
     return () => unsubscribe();
-  }, [user?.id, session]);
+  }, [user?.id]);
 
   const handleMenuOpen = (
     event: React.MouseEvent<HTMLElement>,
