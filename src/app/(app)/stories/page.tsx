@@ -71,8 +71,15 @@ export default function StoriesPage() {
 
   // Fetch user's documents
   useEffect(() => {
-    if (!user?.id) {
-      // User not loaded yet, keep current loading state
+    // Wait for auth to fully load before attempting to fetch
+    if (isLoading) {
+      console.log("Auth still loading...");
+      return;
+    }
+
+    // If not authenticated after loading, don't try to fetch
+    if (!isAuthenticated || !user?.id) {
+      console.log("Not authenticated or no user ID", { isAuthenticated, userId: user?.id });
       return;
     }
 
@@ -82,7 +89,7 @@ export default function StoriesPage() {
       documentsByOwnerRef(user.id),
       (snapshot) => {
         const docs = snapshot.docs.map((doc) => doc.data());
-        console.log("Documents fetched:", docs.length);
+        console.log("Documents fetched:", docs.length, docs);
         setDocuments(docs);
         setLoading(false);
       },
@@ -92,8 +99,11 @@ export default function StoriesPage() {
       }
     );
 
-    return () => unsubscribe();
-  }, [user?.id]);
+    return () => {
+      console.log("Cleaning up documents subscription");
+      unsubscribe();
+    };
+  }, [user?.id, isAuthenticated, isLoading]);
 
   const handleMenuOpen = (
     event: React.MouseEvent<HTMLElement>,
@@ -191,6 +201,7 @@ export default function StoriesPage() {
     }
   };
 
+  // Show nothing while auth is loading or user is not authenticated
   if (isLoading || !isAuthenticated) {
     return null;
   }

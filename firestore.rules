@@ -48,8 +48,7 @@ service cloud.firestore {
                        request.resource.data.isPublic is bool &&
                        request.resource.data.isArchived is bool &&
                        request.resource.data.readAccess is list &&
-                       request.resource.data.writeAccess is list &&
-                       request.resource.data.owner == request.auth.uid;
+                       request.resource.data.writeAccess is list;
 
       // UPDATE - Only owner or users with write access can update
       allow update: if hasWriteAccess(resource.data);

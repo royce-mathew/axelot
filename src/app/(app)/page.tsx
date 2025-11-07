@@ -149,7 +149,7 @@ const HeroSection = () => {
             <Button
               variant="outlined"
               size="large"
-              onClick={() => router.push('/stories')}
+              onClick={() => router.push('/search')}
               sx={{
                 px: 4,
                 py: 1.5,
