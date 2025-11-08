@@ -25,7 +25,6 @@ import {
 } from '@mui/icons-material';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
-import { Header } from '@/components/header';
 import { getDocs, query, where, orderBy, limit } from 'firebase/firestore';
 import { allDocumentsRef } from '@/lib/converters/document';
 import { Document } from '@/types/document';
@@ -89,7 +88,6 @@ export default function DashboardPage() {
   if (isLoading || !isAuthenticated) {
     return (
       <Box sx={{ minHeight: '100vh' }}>
-        <Header />
         <Container maxWidth="lg" sx={{ py: 4 }}>
           <Skeleton variant="text" width="40%" height={60} sx={{ mb: 2 }} />
           <Skeleton variant="text" width="30%" height={30} sx={{ mb: 4 }} />
@@ -100,7 +98,6 @@ export default function DashboardPage() {
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
-      <Header />
       <Container maxWidth="lg" sx={{ py: 4 }}>
         {/* Welcome Section */}
         <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>

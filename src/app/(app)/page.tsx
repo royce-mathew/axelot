@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { Typography, Button, Container, Box, Stack } from '@mui/material';
-import { Header } from '@/components/header';
 import { useRouter } from 'next/navigation';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import CodeIcon from '@mui/icons-material/Code';
@@ -393,7 +392,6 @@ export default function Home() {
   // Show Hero section to all users
   return (
     <Box sx={{ minHeight: '100vh' }}>
-      <Header />
       <HeroSection />
       <FeaturesSection />
       <Footer />

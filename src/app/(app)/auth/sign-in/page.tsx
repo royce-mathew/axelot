@@ -19,7 +19,6 @@ import { signIn } from 'next-auth/react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import GoogleIcon from '@mui/icons-material/Google';
 import GitHubIcon from '@mui/icons-material/GitHub';
-import { Header } from '@/components/header';
 
 function SignInContent() {
   const searchParams = useSearchParams();
@@ -68,7 +67,6 @@ function SignInContent() {
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
-      <Header />
       <Container maxWidth="sm" sx={{ py: 8 }}>
         <Paper elevation={3} sx={{ p: 4 }}>
           <Typography variant="h4" component="h1" gutterBottom fontWeight={700} textAlign="center">

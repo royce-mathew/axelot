@@ -9,10 +9,18 @@ declare module 'next-auth' {
       image?: string | null;
       username?: string | null;
     };
+    firebaseToken?: string;
   }
 
   interface User {
     id: string;
     username?: string | null;
+  }
+}
+
+declare module 'next-auth/jwt' {
+  interface JWT {
+    id?: string;
+    username?: string;
   }
 }

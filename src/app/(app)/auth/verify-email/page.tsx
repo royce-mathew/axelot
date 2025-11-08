@@ -14,7 +14,6 @@ import {
 import { getAuth, isSignInWithEmailLink, signInWithEmailLink } from 'firebase/auth';
 import { firebaseApp } from '@/lib/firebase/client';
 import { signIn } from 'next-auth/react';
-import { Header } from '@/components/header';
 
 function VerifyEmailContent() {
   const searchParams = useSearchParams();
@@ -92,7 +91,6 @@ function VerifyEmailContent() {
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
-      <Header />
       <Container maxWidth="sm" sx={{ py: 8 }}>
         <Paper elevation={3} sx={{ p: 4, textAlign: 'center' }}>
           {status === 'verifying' && (
@@ -154,7 +152,6 @@ export default function VerifyEmailPage() {
     <Suspense
       fallback={
         <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
-          <Header />
           <Container maxWidth="sm" sx={{ py: 8 }}>
             <Paper elevation={3} sx={{ p: 4, textAlign: 'center' }}>
               <CircularProgress size={60} sx={{ mb: 3 }} />

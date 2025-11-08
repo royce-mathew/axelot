@@ -29,7 +29,6 @@ import {
   MoreVert as MoreVertIcon,
 } from '@mui/icons-material';
 import { useRouter } from 'next/navigation';
-import { Header } from '@/components/header';
 import { query, where, orderBy, getDoc, getDocs } from 'firebase/firestore';
 import { allDocumentsRef } from '@/lib/converters/document';
 import { userRef } from '@/lib/converters/user';
@@ -66,28 +65,23 @@ export default function UserProfilePage(props: { params: Promise<{ userId: strin
       try {
         // Decode the parameter in case it's URL-encoded (%40masq -> @masq)
         const paramId = decodeURIComponent(params.userId);
-        console.log('Resolving user param:', paramId, 'original:', params.userId);
         
         // Check if it starts with @ (username format)
         if (isUsernameParam(paramId)) {
           // It's a username with @ prefix, resolve it (cached)
           const username = stripUsernamePrefix(paramId);
-          console.log('Stripped username:', username);
           // Skip cache for debugging
-          const resolvedId = await getUserIdByUsername(username, true);
-          console.log('Resolved ID:', resolvedId);
+          const resolvedId = await getUserIdByUsername(username);
           if (resolvedId) {
             setActualUserId(resolvedId);
           } else {
             // Not found
-            console.log('Username not found:', username);
             setActualUserId('');
             setUserLoading(false);
             setLoading(false);
           }
         } else {
           // No @ prefix means it's a Firebase ID, use directly (0 reads!)
-          console.log('Using Firebase ID directly:', paramId);
           setActualUserId(paramId);
         }
       } catch (error) {
@@ -135,18 +129,11 @@ export default function UserProfilePage(props: { params: Promise<{ userId: strin
           orderBy('lastUpdated', 'desc')
         );
 
-        console.log(q);
-
         const snapshot = await getDocs(q);
-        console.log('All documents for user:', snapshot.docs.length);
-        
         const allDocs = snapshot.docs.map((doc) => doc.data());
-        console.log('Document visibility:', allDocs.map(d => ({ id: d.id, isPublic: d.isPublic })));
         
         // Filter for public stories only
         const docs = allDocs.filter((doc) => doc.isPublic === true);
-        
-        console.log('Filtered public documents:', docs.length, docs);
         setDocuments(docs);
       } catch (error) {
         console.error('Error fetching user documents:', error);
@@ -186,7 +173,6 @@ export default function UserProfilePage(props: { params: Promise<{ userId: strin
   if (!userLoading && !actualUserId) {
     return (
       <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
-        <Header />
         <Container maxWidth="md" sx={{ py: 6, textAlign: 'center' }}>
           <Typography variant="h4" gutterBottom>
             User Not Found
@@ -204,7 +190,6 @@ export default function UserProfilePage(props: { params: Promise<{ userId: strin
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
-      <Header />
       <Container maxWidth="md" sx={{ py: 6 }}>
         {/* User Profile Header */}
         <Stack spacing={3} sx={{ mb: 3 }}>

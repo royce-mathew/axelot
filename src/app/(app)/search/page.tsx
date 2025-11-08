@@ -17,7 +17,7 @@ import Link from 'next/link';
 import { collection, query, where, getDocs, orderBy, limit } from 'firebase/firestore';
 import SearchIcon from '@mui/icons-material/Search';
 import ArticleIcon from '@mui/icons-material/Article';
-import { Header } from '@/components/header/Header';
+
 import { Document } from '@/types/document';
 import { db } from '@/lib/firebase/client';
 import { timeAgo, getInitials } from '@/lib/utils';
@@ -97,11 +97,9 @@ export default function SearchPage() {
   const displayStories = searchQuery ? results : recentPublic;
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
-      <Header />
 
+    <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
       <Container maxWidth="lg" sx={{ py: 6 }}>
-        {/* Header */}
         <Box sx={{ mb: 6, textAlign: 'center' }}>
           <Typography
             variant="h3"

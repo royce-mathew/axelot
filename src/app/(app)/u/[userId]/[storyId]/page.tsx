@@ -57,7 +57,6 @@ import { documentRef } from '@/lib/converters/document';
 import { timeAgo } from '@/lib/utils';
 import { generateSlug } from '@/lib/content-utils';
 import { syncAuthorNames } from '@/lib/update-author-data';
-import { Header } from '@/components/header';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
 import { useDocumentView } from '@/hooks/use-document-view';
@@ -618,7 +617,6 @@ export default function StoryPage({ params }: { params: Promise<{ userId: string
   if (!provider) {
     return (
       <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
-        <Header />
         <Container maxWidth="lg" sx={{ py: 6 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 4 }}>
             <CircularProgress size={24} />
@@ -633,7 +631,6 @@ export default function StoryPage({ params }: { params: Promise<{ userId: string
   if (access === undefined && !loading) {
     return (
       <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
-        <Header />
         <Container
           maxWidth="lg"
           sx={{
@@ -665,7 +662,6 @@ export default function StoryPage({ params }: { params: Promise<{ userId: string
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
-      <Header />
       
       {/* Main Layout with Sidebar */}
       <Box 

@@ -14,7 +14,6 @@ import {
   Stack,
 } from '@mui/material';
 import Link from 'next/link';
-import { Header } from '@/components/header';
 import { signUpAction } from './actions';
 import { signIn } from 'next-auth/react';
 import { getAuth, sendSignInLinkToEmail } from 'firebase/auth';
@@ -69,7 +68,6 @@ export default function SignUpPage() {
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
-      <Header />
       <Container maxWidth="sm" sx={{ py: 8 }}>
         <Paper elevation={3} sx={{ p: 4 }}>
           <Typography variant="h4" component="h1" gutterBottom fontWeight={700} textAlign="center">

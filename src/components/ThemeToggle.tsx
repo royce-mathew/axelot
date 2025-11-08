@@ -4,15 +4,14 @@ import React from 'react';
 import { Box, useTheme } from '@mui/material';
 import { LightMode, DarkMode } from '@mui/icons-material';
 import { useColorScheme } from '@mui/material/styles';
-import { useMounted } from '@/hooks/use-mounted';
 
 const ThemeToggle: React.FC = () => {
     const { mode, setMode } = useColorScheme();
     const theme = useTheme();
-    const isMounted = useMounted();
+    const isDark = mode === 'dark';
 
-    // Prevent SSR flickering by not rendering until mounted
-    if (!isMounted) {
+    // The mode is always undefined on first render, so make sure to handle this case as shown in the demo below—otherwise you may encounter a hydration mismatch error.
+    if (!mode) {
         return (
             <Box
                 sx={{
@@ -38,11 +37,11 @@ const ThemeToggle: React.FC = () => {
         );
     }
 
-    const isDark = mode === 'dark';
 
     const handleToggle = () => {
         setMode(isDark ? 'light' : 'dark');
     };
+
 
     return (
         <Box

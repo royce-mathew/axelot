@@ -1,13 +1,6 @@
 import { getDocs, query, where } from 'firebase/firestore';
 import { usersCollectionRef } from '@/lib/converters/user';
 
-// In-memory cache for username to ID mappings (persists during session)
-const usernameCache = new Map<string, string | null>();
-
-// Cache TTL (5 minutes)
-const CACHE_TTL = 5 * 60 * 1000;
-const cacheTimestamps = new Map<string, number>();
-
 /**
  * Validates username format
  * - 3-20 characters
@@ -58,60 +51,23 @@ export async function isUsernameAvailable(username: string): Promise<boolean> {
 }
 
 /**
- * Gets user ID by username (with caching)
+ * Gets user ID by username
  */
-export async function getUserIdByUsername(username: string, skipCache = false): Promise<string | null> {
+export async function getUserIdByUsername(username: string): Promise<string | null> {
   const lowerUsername = username.toLowerCase();
-  console.log('[getUserIdByUsername] Looking up username:', lowerUsername, 'skipCache:', skipCache);
-  
-  // Check cache first (unless skipCache is true)
-  const now = Date.now();
-  const cachedTimestamp = cacheTimestamps.get(lowerUsername);
-  
-  if (!skipCache && cachedTimestamp && (now - cachedTimestamp) < CACHE_TTL) {
-    const cached = usernameCache.get(lowerUsername);
-    if (cached !== undefined) {
-      console.log('[getUserIdByUsername] Cache hit:', cached);
-      return cached;
-    }
-  }
-  
-  // Not in cache or expired, fetch from Firestore
-  console.log('[getUserIdByUsername] Cache miss, querying Firestore...');
   try {
     const collectionRef = usersCollectionRef();
-    console.log('[getUserIdByUsername] Collection path:', collectionRef.path);
-    
     const q = query(
       collectionRef,
       where('username', '==', lowerUsername)
     );
     
-    console.log('[getUserIdByUsername] Executing query for username:', lowerUsername);
     const snapshot = await getDocs(q);
-    
-    console.log('[getUserIdByUsername] Query result - empty?', snapshot.empty, 'docs:', snapshot.docs.length);
-    
-    if (!snapshot.empty) {
-      snapshot.docs.forEach((doc) => {
-        console.log('[getUserIdByUsername] Found doc:', doc.id, 'data:', doc.data());
-      });
-    }
-    
     if (snapshot.empty) {
-      // Cache the negative result too
-      usernameCache.set(lowerUsername, null);
-      cacheTimestamps.set(lowerUsername, now);
       return null;
     }
     
     const userId = snapshot.docs[0].id;
-    console.log('[getUserIdByUsername] Found user ID:', userId);
-    
-    // Cache the result
-    usernameCache.set(lowerUsername, userId);
-    cacheTimestamps.set(lowerUsername, now);
-    
     return userId;
   } catch (error) {
     console.error('Error getting user by username:', error);

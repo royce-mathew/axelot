@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Box,
   Container,
@@ -15,7 +15,7 @@ import {
   InputAdornment,
   Divider,
 } from '@mui/material';
-import { Header } from '@/components/header';
+
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
@@ -165,7 +165,7 @@ export default function SettingsPage() {
   if (authLoading || loading) {
     return (
       <Box sx={{ minHeight: '100vh' }}>
-        <Header />
+
         <Container maxWidth="md" sx={{ py: 4, display: 'flex', justifyContent: 'center' }}>
           <CircularProgress />
         </Container>
@@ -183,7 +183,7 @@ export default function SettingsPage() {
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
-      <Header />
+
       <Container maxWidth="md" sx={{ py: 4 }}>
         <Typography variant="h4" fontWeight={700} gutterBottom>
           Profile Settings

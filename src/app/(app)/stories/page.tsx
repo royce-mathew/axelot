@@ -33,7 +33,6 @@ import {
 } from '@mui/icons-material';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
-import { Header } from '@/components/header';
 import {
   addDoc,
   onSnapshot,
@@ -62,34 +61,18 @@ export default function StoriesPage() {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [newTitle, setNewTitle] = useState('');
 
-  // Redirect if not authenticated
-  useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      router.push('/auth/sign-in');
-    }
-  }, [isAuthenticated, isLoading, router]);
 
   // Fetch user's documents
   useEffect(() => {
-    // Wait for auth to fully load before attempting to fetch
-    if (isLoading) {
-      console.log("Auth still loading...");
+    // If the user is not available, skip fetch
+    if (!user) {
       return;
     }
-
-    // If not authenticated after loading, don't try to fetch
-    if (!isAuthenticated || !user?.id) {
-      console.log("Not authenticated or no user ID", { isAuthenticated, userId: user?.id });
-      return;
-    }
-
-    console.log("Fetching documents for user:", user.id);
 
     const unsubscribe = onSnapshot(
       documentsByOwnerRef(user.id),
       (snapshot) => {
         const docs = snapshot.docs.map((doc) => doc.data());
-        console.log("Documents fetched:", docs.length, docs);
         setDocuments(docs);
         setLoading(false);
       },
@@ -103,7 +86,7 @@ export default function StoriesPage() {
       console.log("Cleaning up documents subscription");
       unsubscribe();
     };
-  }, [user?.id, isAuthenticated, isLoading]);
+  }, [isAuthenticated, isLoading, user, user?.id]);
 
   const handleMenuOpen = (
     event: React.MouseEvent<HTMLElement>,
@@ -208,7 +191,6 @@ export default function StoriesPage() {
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
-      <Header />
       <Container maxWidth="lg" sx={{ py: 6 }}>
         <Stack
           direction="row"

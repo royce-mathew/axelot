@@ -5,7 +5,7 @@ import Google from "next-auth/providers/google"
 import Credentials from "next-auth/providers/credentials"
 import { ZodError } from "zod"
 // Import the Firebase Admin SDK
-import { firebaseAdminFirestore } from "@/lib/firebase/server"
+import { firebaseAdminFirestore, adminAuth } from "@/lib/firebase/server"
 import { signInSchema } from "@/lib/validations/auth"
 import { verifyPassword } from "@/lib/password"
 
@@ -87,12 +87,6 @@ const providers = [
   }),
 ]
 
-export const providerMap = providers
-  .filter((provider) => provider.type === 'oauth' || provider.type === 'oidc')
-  .map((provider) => {
-    return { id: provider.id, name: provider.name }
-  })
-
 // Export the NextAuth configuration
 export const { auth, handlers, signIn, signOut } = NextAuth({
   providers: providers,
@@ -107,19 +101,24 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
     async jwt({ token, user }) {
       // Add user data to JWT token on sign-in
       if (user) {
-        token.id = user.id;
-        token.username = user.username;
+        token.sub = user.id;
+        if (user.username) {
+          token.username = user.username;
+        }
       }
       return token;
     },
     async session({ session, token }) {
       // Add token data to session
-      if (session.user) {
-        session.user.id = token.id as string;
-        if (token.username) {
-          session.user.username = token.username as string;
-        }
+      if (session.user && token.sub) {
+        session.user.id = token.sub;
+        session.user.username = token.username as string;
+
+        // Create a custom Firebase token for client-side authentication
+        const firebaseToken = await adminAuth.createCustomToken(token.sub as string);
+        session.firebaseToken = firebaseToken;
       }
+      
       return session;
     },
   },
