@@ -61,7 +61,6 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
 import { useDocumentView } from '@/hooks/use-document-view';
 import { firebaseApp, db } from '@/lib/firebase/client';
-import { yProvider } from '@/components/tiptap/providers/firebase-sync';
 import { FireProvider } from '@/lib/y-fire';
 import { TableOfContents } from '@/components/tiptap/TableOfContents';
 import { Editor } from '@tiptap/react';
@@ -82,7 +81,7 @@ const Tiptap = dynamic(() => import('@/components/tiptap/tiptap'), {
 
 export default function StoryPage({ params }: { params: Promise<{ userId: string; storyId: string }> }) {
   const unwrappedParams = use(params);
-  const { user } = useAuth();
+  const { user, session } = useAuth();
   const router = useRouter();
   
   // Extract storyId from the title-slug format (everything before the first dash is the storyId)
@@ -121,7 +120,7 @@ export default function StoryPage({ params }: { params: Promise<{ userId: string
   // Track last saved title to avoid unnecessary writes
   const lastSavedTitleRef = useRef<string>('');
 
-  // Track document view for trending algorithm
+  // Track document view 
   useDocumentView(storyId, user?.id);
 
   const menuOpen = Boolean(menuAnchorEl);
@@ -166,7 +165,7 @@ export default function StoryPage({ params }: { params: Promise<{ userId: string
     const yDoc = new Y.Doc();
     yDocRef.current = yDoc;
 
-    const newProvider = yProvider({
+    const newProvider = new FireProvider({
       firebaseApp: firebaseApp,
       path: `stories/${storyId}`,
       ydoc: yDoc,
@@ -179,14 +178,6 @@ export default function StoryPage({ params }: { params: Promise<{ userId: string
 
     newProvider.onSaving = (status: boolean) => {
       setSaving(status);
-    };
-
-    newProvider.onSetMetadata = (meta: Partial<Document>) => {
-      console.log('Metadata updated:', meta);
-      if (meta.title) setTitle(meta.title);
-      if (meta.isArchived !== undefined || meta.isPublic !== undefined) {
-        setDocument(meta as Document);
-      }
     };
 
     newProvider.onDeleted = () => {

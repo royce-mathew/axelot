@@ -74,7 +74,7 @@ export const initiateInstance = async (db: Firestore, path: string) => {
 export const deleteInstance = async (
   db: Firestore,
   path: string,
-  uid: string
+  uid?: string
 ) => {
   try {
     if (!uid) throw `instance id is empty`

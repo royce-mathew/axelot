@@ -165,6 +165,9 @@ importers:
       firebase-admin:
         specifier: ^13.6.0
         version: 13.6.0
+      idb-keyval:
+        specifier: ^6.2.2
+        version: 6.2.2
       katex:
         specifier: ^0.16.25
         version: 0.16.25
@@ -2666,6 +2669,9 @@ packages:
     resolution: {integrity: sha512-5gs5ytaNjBrh5Ow3zrvdUUY+0VxIuWVL4i9irt6friV+BqdCfmV11CQTWMiBYWHbXhco+J1kHfTOUkePhCDvMA==}
     engines: {node: '>=18'}
     hasBin: true
+
+  idb-keyval@6.2.2:
+    resolution: {integrity: sha512-yjD9nARJ/jb1g+CvD0tlhUHOrJ9Sy0P8T9MF3YaLlHnSRpwPfpTX0XIvpmw3gAJUmEu3FiICLBDPXVwyEvrleg==}
 
   idb@7.1.1:
     resolution: {integrity: sha512-gchesWBzyvGHRO9W8tzUWFDycow5gwjvFKfyV9FF32Y7F50yZMp7mP+T2mJIWFx49zicqyC4uefHM17o6xKIVQ==}
@@ -6844,6 +6850,8 @@ snapshots:
       - supports-color
 
   husky@9.1.7: {}
+
+  idb-keyval@6.2.2: {}
 
   idb@7.1.1: {}
 
