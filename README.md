@@ -1,11 +1,104 @@
-# Setup Instructions
+<div align="center">
+
+<img src="public/axolotl.svg" alt="Axelot" width="160" />
+
+# Axelot
+<strong>Collaborative, AI‑augmented document & knowledge workspace powered by Next.js 16, Firebase, Yjs & TipTap.</strong>
+
+[![CI Status](https://img.shields.io/badge/build-passing-brightgreen?style=flat-square)](#) 
+[![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg?style=flat-square)](LICENSE) 
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?style=flat-square)](#) 
+[![Next.js](https://img.shields.io/badge/Next.js-16-black?style=flat-square)](#) 
+[![Firebase](https://img.shields.io/badge/Firebase-Admin%20&%20Client-FFCA28?style=flat-square)](#) 
+[![Yjs](https://img.shields.io/badge/CRDT-Yjs-007acc?style=flat-square)](#)
+
+</div>
+
+---
+
+## Table of Contents
+1. [Overview](#overview)
+2. [Feature Highlights](#feature-highlights)
+3. [Architecture](#architecture)
+4. [Tech Stack](#tech-stack)
+5. [Quick Start](#quick-start)
+6. [Environment Variables](#environment--api-keys)
+7. [Scripts](#scripts)
+8. [Folder Structure](#folder-structure)
+9. [Trending Algorithm](#trending-algorithm)
+10. [Cron & Background Jobs](#cron--background-jobs)
+11. [Security Notes](#security-notes)
+12. [Contribution Guidelines](#contribution-guidelines)
+13. [License](#license)
+
+---
+
+## Overview
+Axelot is a modern, real‑time collaborative document platform combining:
+- Rich text editing (TipTap 3) with tables, math (KaTeX), code blocks & autocompletion.
+- AI assisted content generation & transformation via OpenRouter models.
+- Multi‑provider authentication (Google, GitHub, Email/Password) with enforced email verification.
+- Real‑time presence & conflict‑free syncing (Yjs + WebRTC + Firestore persistence).
+- Trending discovery, user dashboards, search and profile pages.
+
+## Feature Highlights
+| Domain | Features |
+| ------ | -------- |
+| Editing | TipTap extensions (tables, headings, typography, font size, line height, bubble menu, table picker, math, code syntax highlighting via Shiki) |
+| Collaboration | Yjs CRDT documents, WebRTC peers (simple-peer-light), presence carets, character count popup |
+| AI | `/api/completion` streaming chat completions, text transform endpoint, autocomplete hooks |
+| Auth | NextAuth v5 (beta) + Firebase Firestore adapter + credentials provider (with password hashing via bcryptjs & Zod validation) |
+| Data Layer | Firebase Admin (server) + Firebase JS SDK (client), Firestore security rules, server utilities for auth tokens |
+| Discovery | Trending score computation + scheduled cron job; search; user profile stories |
+| Theming | Light/dark theme toggle (MUI theme integration) |
+| Validation | Zod schemas for auth and inputs |
+| DX | Turbopack dev/build, ESLint, Prettier formatting script, Husky + Commitlint |
+
+## Architecture
+High‑level flow:
+1. User authenticates through NextAuth (OAuth or credentials). Credentials flow validates against Firestore `users` + `credentials` collections; verified email required.
+2. A Firebase custom token is minted server‑side and attached to the session for secure client SDK usage.
+3. Document editing uses TipTap bound to a Yjs document; Yjs sync layer uses WebRTC for peer mesh and can persist snapshots/metadata in Firestore.
+4. AI endpoints proxy to OpenRouter streaming completions (serverless route handler streaming Response.body).
+5. Trending computation cron (Vercel) calls a protected route updating scores based on recency, views and activity.
+6. Frontend pages under `src/app/(app)` provide dashboard, search, stories, per‑user documents, etc.
+
+### Data & Realtime Components
+- Firestore collections: `users`, `credentials`, `documents` (inferred), trending metadata fields: `viewCount`, `trendingScore`, `trendingLastComputed`, timestamps.
+- Yjs provider utilities in `src/lib/y-fire/` manage awareness, graph propagation & WebRTC signaling.
+
+## Tech Stack
+**Runtime & Framework**: Next.js 16 App Router, React 19, TypeScript 5.
+
+**Collaboration & Editor**: TipTap 3, Yjs, simple-peer-light, Shiki (syntax highlighting), KaTeX (math), custom extensions (font-size, line-height, table of contents, print, indent).
+
+**Backend / APIs**: Next.js route handlers, Firebase Admin SDK, OpenRouter (LLM), Cron (Vercel).
+
+**Auth**: NextAuth v5 beta, Google, GitHub, Credentials (password hashed via bcryptjs), Firestore Adapter, email verification flow.
+
+**UI / UX**: MUI (Material UI 7), Emotion, custom theming, responsive header & nav components.
+
+**Quality / Tooling**: ESLint 9, Commitlint + Husky, Prettier formatting, Turbopack, Zod validation.
+
+**Other Libraries**: date-fns, idb-keyval (local caching), unist-util-visit (MD/AST utils).
+
+## Quick Start
+```bash
+pnpm install
+cp .env.local.example .env.local # then fill in required values
+pnpm dev
+```
+Navigate to http://localhost:3000.
+
 ## Environment & API keys
 
 This project requires several API keys and credentials. Copy `.env.local.example` to `.env.local` and fill in the values before running the app locally or deploying.
 
+```bash
 cp .env.local.example .env.local
+```
 
-Below are short instructions for obtaining each key and how to set them:
+Below are short instructions for obtaining each key and how to set them (original content preserved and extended):
 
 - **NEXTAUTH_SECRET**
 	- Used by NextAuth to sign session cookies. Generate a random 32-byte base64 string:
@@ -19,33 +112,102 @@ Below are short instructions for obtaining each key and how to set them:
 			```
 
 - **Google OAuth (AUTH_GOOGLE_ID, AUTH_GOOGLE_SECRET)**
-	- Go to Google Cloud Console -> APIs & Services -> Credentials -> Create Credentials -> OAuth client ID.
-	- Choose "Web application" and set the authorized redirect URI to `http://localhost:3000/api/auth/callback/google` (and your production URL when deploying).
-	- Copy the Client ID and Client Secret into `AUTH_GOOGLE_ID` and `AUTH_GOOGLE_SECRET`.
+	- Google Cloud Console → APIs & Services → Credentials → Create Credentials → OAuth client ID.
+	- App type: Web application. Redirect URI: `http://localhost:3000/api/auth/callback/google` (plus production URL later).
+	- Paste values into env vars.
 
 - **GitHub OAuth (AUTH_GITHUB_ID, AUTH_GITHUB_SECRET)**
-	- Go to GitHub -> Settings -> Developer settings -> OAuth Apps -> New OAuth App.
-	- Set the Authorization callback URL to `http://localhost:3000/api/auth/callback/github` (and add your production URL later).
-	- Copy the Client ID and Client Secret into `AUTH_GITHUB_ID` and `AUTH_GITHUB_SECRET`.
+	- GitHub → Settings → Developer settings → OAuth Apps → New OAuth App.
+	- Callback URL: `http://localhost:3000/api/auth/callback/github` (add production later).
+	- Paste values into env vars.
 
 - **Firebase client config (NEXT_PUBLIC_FIREBASE_*)**
-	- In the Firebase Console, open your project -> Project settings -> Your apps -> Add web app (if not present).
-	- Copy the config values (apiKey, authDomain, projectId, storageBucket, messagingSenderId, appId) into the matching `NEXT_PUBLIC_FIREBASE_...` variables.
-	- These are public values used by the client SDK.
+	- Firebase Console → Project settings → Your apps → Web app config.
+	- Copy apiKey, authDomain, projectId, storageBucket, messagingSenderId, appId.
+	- Public values (safe in client bundle).
 
 - **Firebase Admin SDK (FIREBASE_CLIENT_EMAIL, FIREBASE_PRIVATE_KEY, FIREBASE_PROJECT_ID)**
-	- In Firebase Console -> Project settings -> Service accounts -> Generate new private key. This downloads a JSON file containing the private key and client email.
-	- For local development, set `FIREBASE_PROJECT_ID` and `FIREBASE_CLIENT_EMAIL` from the JSON and paste the private key into `FIREBASE_PRIVATE_KEY` as a single string with newline escapes (or set it in your host provider's secret manager as a multi-line secret). Example format:
+	- Firebase Console → Project settings → Service accounts → Generate new private key (JSON).
+	- Set `FIREBASE_PROJECT_ID`, `FIREBASE_CLIENT_EMAIL`, and format `FIREBASE_PRIVATE_KEY` with newline escapes:
 		```env
 		FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nMIIEv...\n-----END PRIVATE KEY-----\n"
 		```
-	- Keep these values secret. Do NOT commit them to source control.
+	- Keep secret: never commit.
 
 - **NEXT_PUBLIC_ANALYTICS_ID**
-	- Add your Google Analytics / Measurement ID (if used) to track usage.
+	- Optional Google Analytics / GA4 Measurement ID.
 
 - **CRON_SECRET**
-	- A random string used to protect cron endpoints. Generate one with OpenSSL or PowerShell as shown above and add it to `CRON_SECRET`.
+	- Random string protecting cron endpoint. Supply in Vercel project env + local dev.
 
 - **OPENROUTER_API_KEY**
-	- Sign up at OpenRouter (or your chosen LLM gateway) and create an API key. Paste it into `OPENROUTER_API_KEY`.
+	- Obtain from OpenRouter (or compatible gateway) & paste.
+
+> Tip: Use a password manager or `direnv` / 1Password CLI for local secret management.
+
+## Scripts
+| Script | Description |
+| ------ | ----------- |
+| `pnpm dev` | Start dev server (Next.js 16 with Turbopack) |
+| `pnpm build` | Production build |
+| `pnpm start` | Start built app |
+| `pnpm lint` | Run ESLint over repo |
+| `pnpm lint:fix` | Auto-fix lint issues |
+| `pnpm format` | Prettier format selected directories |
+| `pnpm prepare` | Husky git hook install |
+
+## Folder Structure
+```
+src/
+	app/                # App Router pages & route handlers (API under api/)
+	components/         # UI components (header, tiptap editor suite, navigation)
+	hooks/              # Custom React hooks (auth, stories cache, mount utils)
+	lib/                # Core logic: firebase, trending, validations, y-fire, converters
+	styles/             # Global CSS
+	types/              # TypeScript type definitions (auth, document, user, css)
+public/images/        # Static assets (404.webp, Error.gif)
+firebase/             # Firestore rules & indexes
+patches/              # Patch files (e.g., rehype-pretty-code customization)
+```
+
+## Trending Algorithm
+The trending score (see `src/lib/trending-algorithm.ts`) blends recency, logarithmic view scaling, and activity boosts:
+- Recency decay: recent updates get temporary boosts.
+- View count: `log10(views + 1) * 4` caps runaway popularity.
+- Activity: additional boost for fresh edits (first 1–6 hours).
+Cron job periodically recalculates selective or full sets via `/api/trending/update` with modes `all | recent | stats`.
+
+## Cron & Background Jobs
+- Defined in `vercel.json`:
+	```json
+	{"crons":[{"path":"/api/trending/update?mode=recent","schedule":"0 0 * * *"}]}
+	```
+- Protected by `Authorization: Bearer <CRON_SECRET>` header.
+- Manual trigger supported via GET/POST.
+
+## Security Notes
+- Credentials provider enforces email verification before login success.
+- Firestore Admin private key kept only in env (AGPL implies network users get source, not secrets).
+- Cron endpoint guarded by secret bearer token.
+- Passwords hashed with bcryptjs; Zod schema validation to mitigate malformed input.
+- JWT session enrichment adds `firebaseToken` for secure client SDK access.
+
+## Contribution Guidelines
+1. Fork & create a feature branch (`feat/your-thing`).
+2. Add or update tests/docs where relevant (future improvement area: add formal test suite; currently focus on type safety).
+3. Run `pnpm lint` and `pnpm format` before committing.
+4. Conventional commits encouraged (Commitlint enforced). Example: `feat(editor): add math inline rendering`.
+5. Open a PR; describe motivation & screenshots if UI related.
+
+### Roadmap / Nice‑to‑Haves
+- Add automated testing (Playwright + Vitest / Jest) for editor & API.
+- Implement role-based access & per-document permissions.
+- Add offline sync queue & diff merging for intermittent connectivity.
+- Export formats: Markdown, PDF (print extension partial), HTML.
+- Real-time commenting & inline annotations.
+
+## License
+Distributed under the AGPL-3.0 License. See `LICENSE` for more information.
+
+---
+<sub>© 2025 Royce Mathew & Sunny Patel. Built with ❤️ for developers. Contributions welcome.</sub>
