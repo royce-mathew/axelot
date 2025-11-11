@@ -219,12 +219,35 @@ export class FireProvider extends ObservableV2<any> {
   };
 
   reconnect = () => {
+    // Debounced reconnect: wait a short window and re-check connection state
+    // to avoid rapid reconnect thrashing when peers are transiently unreachable.
     if (this.recreateTimeout) clearTimeout(this.recreateTimeout);
     this.recreateTimeout = setTimeout(async () => {
-      this.consoleHandler("triggering reconnect", this.uid);
-      this.destroy();
-      this.init();
-    }, 200);
+      try {
+        // Re-evaluate connectivity before tearing down
+        const clients = this.clients.length;
+        let connected = 0;
+        Object.values(this.peersRTC.receivers).forEach((receiver) => {
+          if (receiver.connection !== 'closed') connected++;
+        });
+        Object.values(this.peersRTC.senders).forEach((sender) => {
+          if (sender.connection !== 'closed') connected++;
+        });
+
+        // Only reconnect if we still have peers but no open connections
+        if (clients > 1 && connected <= 0) {
+          this.consoleHandler('triggering reconnect', this.uid);
+          this.destroy();
+          // Small backoff before init to give network a moment to settle
+          setTimeout(() => this.init().catch((err) => this.consoleHandler('re-init error', err)), 500);
+        }
+      } catch (err) {
+        this.consoleHandler('reconnect check failed', err);
+        // Fallback: attempt a reconnect
+        this.destroy();
+        setTimeout(() => this.init().catch((err2) => this.consoleHandler('re-init error', err2)), 1000);
+      }
+    }, 2000);
   };
 
   trackConnections = async () => {

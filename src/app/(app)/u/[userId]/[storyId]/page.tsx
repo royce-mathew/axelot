@@ -1,8 +1,7 @@
 'use client';
 
-import { use, useEffect, useState, useRef } from 'react';
+import { use, useEffect, useState, useRef, memo } from 'react';
 import dynamic from 'next/dynamic';
-import Link from 'next/link';
 import {
   Box,
   Container,
@@ -50,11 +49,11 @@ import {
 } from '@mui/icons-material';
 import Collaboration from '@tiptap/extension-collaboration';
 import CollaborationCaret from '@tiptap/extension-collaboration-caret';
-import { updateDoc, getDoc, Timestamp, collection, query, where, getDocs, doc } from 'firebase/firestore';
+import { updateDoc, getDoc, Timestamp, collection, query, where, getDocs, doc, Bytes } from 'firebase/firestore';
 import * as Y from 'yjs';
 import { Document } from '@/types/document';
 import { documentRef } from '@/lib/converters/document';
-import { timeAgo } from '@/lib/utils';
+import { stringToHslColor, timeAgo } from '@/lib/utils';
 import { generateSlug } from '@/lib/content-utils';
 import { syncAuthorNames } from '@/lib/update-author-data';
 import { useRouter } from 'next/navigation';
@@ -62,10 +61,10 @@ import { useAuth } from '@/hooks/use-auth';
 import { useDocumentView } from '@/hooks/use-document-view';
 import { firebaseApp, db } from '@/lib/firebase/client';
 import { FireProvider } from '@/lib/y-fire';
-import { TableOfContents } from '@/components/tiptap/TableOfContents';
+import { TableOfContents, TocAnchor } from '@/components/tiptap/TableOfContents';
 import { Editor } from '@tiptap/react';
 import { User } from '@/types/user';
-import { getUserIdByUsername, isUsernameParam, stripUsernamePrefix } from '@/lib/username-utils';
+import TableOfContentsExtension from '@tiptap/extension-table-of-contents';
 
 const Tiptap = dynamic(() => import('@/components/tiptap/tiptap'), {
   ssr: false,
@@ -79,9 +78,19 @@ const Tiptap = dynamic(() => import('@/components/tiptap/tiptap'), {
   ),
 });
 
+const MemoizedToC = memo(TableOfContents);
+
+interface AwarenessUser {
+  name: string;
+  color: string;
+  clientId: number;
+  userId: string;
+  image?: string;
+}
+
 export default function StoryPage({ params }: { params: Promise<{ userId: string; storyId: string }> }) {
   const unwrappedParams = use(params);
-  const { user, session } = useAuth();
+  const { user } = useAuth();
   const router = useRouter();
   
   // Extract storyId from the title-slug format (everything before the first dash is the storyId)
@@ -90,29 +99,28 @@ export default function StoryPage({ params }: { params: Promise<{ userId: string
     ? unwrappedParams.storyId.split('-')[0] 
     : unwrappedParams.storyId;
   
-  const [actualUserId, setActualUserId] = useState<string>('');
   const [access, setAccess] = useState<boolean | undefined>(undefined);
   const [saving, setSaving] = useState<boolean>(false);
   const [isPublic, setIsPublic] = useState<boolean>(false);
   const [title, setTitle] = useState<string>('');
+  const [linkCopied, setLinkCopied] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(true);
   const [document, setDocument] = useState<Document | null>(null);
-  const [shareDialogOpen, setShareDialogOpen] = useState<boolean>(false);
-  const [sharingEmail, setSharingEmail] = useState<string>('');
-  const [sharingRole, setSharingRole] = useState<'viewer' | 'editor'>('viewer');
+  
+  // State for searching users to share with
   const [searchedUser, setSearchedUser] = useState<(User & { id: string }) | null>(null);
   const [searchingUser, setSearchingUser] = useState<boolean>(false);
   const [shareError, setShareError] = useState<string>('');
-  const [linkCopied, setLinkCopied] = useState<boolean>(false);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [shareDialogOpen, setShareDialogOpen] = useState<boolean>(false);
+  const [sharingEmail, setSharingEmail] = useState<string>('');
+  const [sharingRole, setSharingRole] = useState<'viewer' | 'editor'>('viewer');
+  
   const [menuAnchorEl, setMenuAnchorEl] = useState<null | HTMLElement>(null);
   const yDocRef = useRef<Y.Doc | null>(null);
   const [provider, setProvider] = useState<FireProvider | null>(null);
-  const [userColor] = useState(
-    () => '#' + Math.floor(Math.random() * 16777215).toString(16)
-  );
   const [currentEditor, setCurrentEditor] = useState<Editor | null>(null);
-  const [activeUsers, setActiveUsers] = useState<Array<{ name: string; color: string; clientId: number; userId?: string }>>([]);
-  const [activeUsersData, setActiveUsersData] = useState<Array<User & { clientId: number; color: string }>>([]);
+  const [activeUsers, setActiveUsers] = useState<Array<AwarenessUser>>([]);
+  const [tableOfContents, setTableOfContents] = useState<Array<TocAnchor>>([]);
   
   // Persistent cache for user data to avoid redundant Firestore reads
   const userCacheRef = useRef<Map<string, User>>(new Map());
@@ -125,41 +133,11 @@ export default function StoryPage({ params }: { params: Promise<{ userId: string
 
   const menuOpen = Boolean(menuAnchorEl);
 
-  // Resolve username or Firebase ID to actual user ID
-  useEffect(() => {
-    const resolveUser = async () => {
-      try {
-        // Decode the parameter in case it's URL-encoded (%40masq -> @masq)
-        const paramId = decodeURIComponent(unwrappedParams.userId);
-        
-        // Check if it starts with @ (username format)
-        if (isUsernameParam(paramId)) {
-          // It's a username with @ prefix, resolve it (cached)
-          const username = stripUsernamePrefix(paramId);
-          const resolvedId = await getUserIdByUsername(username);
-          if (resolvedId) {
-            setActualUserId(resolvedId);
-          } else {
-            // Not found
-            setActualUserId('');
-          }
-        } else {
-          // No @ prefix means it's a Firebase ID, use directly (0 reads!)
-          setActualUserId(paramId);
-        }
-      } catch (error) {
-        console.error('Error resolving user:', error);
-        setActualUserId('');
-      }
-    };
-
-    resolveUser();
-  }, [unwrappedParams.userId]);
-
+ 
   // Initialize Y.js provider
   useEffect(() => {
     // Allow initialization for anonymous users viewing public documents
-    if (!storyId || !actualUserId) return;
+    if (!storyId) return;
 
     // Create a new Y.Doc for this story
     const yDoc = new Y.Doc();
@@ -169,6 +147,10 @@ export default function StoryPage({ params }: { params: Promise<{ userId: string
       firebaseApp: firebaseApp,
       path: `stories/${storyId}`,
       ydoc: yDoc,
+      docMapper: (bytes: Bytes) => ({
+        content: bytes,
+        lastUpdated: Timestamp.now(),
+      }),
     });
 
     newProvider.onReady = () => {
@@ -189,15 +171,16 @@ export default function StoryPage({ params }: { params: Promise<{ userId: string
       newProvider.destroy();
       yDocRef.current = null;
     };
-  }, [storyId, user?.id, actualUserId]);
+  }, [storyId]);
 
-  // Fetch the document metadata (single read) - optimized with parallel loading
+  // Fetch the document metadata
   useEffect(() => {
-    if (!storyId || !actualUserId) return;
+    if (!storyId) return;
 
     const loadDocument = async () => {
       try {
         const docSnap = await getDoc(documentRef(storyId));
+        console.log("GETTING DOCUMENT DATA");
 
         if (!docSnap.exists()) {
           setAccess(false);
@@ -214,6 +197,7 @@ export default function StoryPage({ params }: { params: Promise<{ userId: string
         
         if (hasReadPermission) {
           setAccess(hasWritePermission ? true : false);  // true for write, false for read-only
+          console.log(data);
           setDocument(data);
           setTitle(data.title || '');
           setIsPublic(data.isPublic || false);
@@ -233,7 +217,7 @@ export default function StoryPage({ params }: { params: Promise<{ userId: string
     };
 
     loadDocument();
-  }, [storyId, user?.id, actualUserId]);
+  }, [storyId, user?.id]);
 
   // Auto-save title and update slug (only for write access users)
   useEffect(() => {
@@ -264,9 +248,10 @@ export default function StoryPage({ params }: { params: Promise<{ userId: string
         lastSavedTitleRef.current = title;
         
         // Update URL if slug changed (format: /u/userId/storyId-slug)
+        // Use Next.js router.replace for better SPA navigation (avoids full reload)
         const newUrl = `/u/${unwrappedParams.userId}/${storyId}-${newSlug}`;
         if (window.location.pathname !== newUrl) {
-          window.history.replaceState(null, '', newUrl);
+          router.replace(newUrl, { scroll: false });
         }
       } catch (error) {
         console.error('Error saving title:', error);
@@ -274,8 +259,7 @@ export default function StoryPage({ params }: { params: Promise<{ userId: string
     }, 1000);
 
     return () => clearTimeout(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [title, storyId, user?.id, document, provider, unwrappedParams.userId]);
+  }, [title, storyId, user?.id, document, provider, unwrappedParams.userId, access, router]);
 
   // Update document visibility
   const handleVisibilityChange = async (checked: boolean) => {
@@ -300,7 +284,7 @@ export default function StoryPage({ params }: { params: Promise<{ userId: string
       await updateDoc(documentRef(storyId), {
         isArchived: newArchiveStatus,
         lastUpdated: Timestamp.now(),
-        lastUpdatedBy: user?.id || '',
+        lastUpdatedBy: user!.id,
       });
       setDocument({ ...document, isArchived: newArchiveStatus });
       setMenuAnchorEl(null);
@@ -453,6 +437,8 @@ export default function StoryPage({ params }: { params: Promise<{ userId: string
   useEffect(() => {
     const fetchSharedUsers = async () => {
       if (!document) return;
+
+      console.log('Fetching shared users for document:', document.id);
       
       const userIds = [
         ...(document.readAccess || []),
@@ -498,98 +484,44 @@ export default function StoryPage({ params }: { params: Promise<{ userId: string
     fetchSharedUsers();
   }, [document]);
 
-  // Track active collaboration users
+  // Track active collaboration users (subscribe to provider awareness even before
+  // the local editor instance exists so collaborators are visible on refresh)
   useEffect(() => {
-    if (!currentEditor || !provider) return;
+    if (!provider) return;
 
     const updateActiveUsers = () => {
       const awareness = provider.awareness;
-      if (!awareness) return;
+      if (!awareness || !user || !user.name || !user.id) return;
+
+      // Set local user info in awareness state
+      awareness.setLocalStateField('user', {
+        name: user.name,
+        userId: user.id,
+        color: stringToHslColor(user.name),
+        image: user.image || '',
+      });
 
       const states = Array.from(awareness.getStates().entries());
       const users = states
-        .filter(([clientId]) => clientId !== awareness.clientID)
-        .map(([clientId, state]: [number, Record<string, unknown>]) => ({
+        .filter(([_, state]) => state.user !== undefined)
+        .map(([clientId, state]: [number, Record<string, AwarenessUser>]) => ({
+          ...state.user as AwarenessUser,
           clientId,
-          name: (state.user as { name?: string })?.name || 'Anonymous',
-          color: (state.user as { color?: string })?.color || '#000000',
-          userId: (state.user as { userId?: string })?.userId,
         }));
 
-      setActiveUsers(users);
+
+      // Defer state update to avoid updating parent during child render
+      // (awareness events can fire synchronously during Tiptap render)
+      Promise.resolve().then(() => setActiveUsers(users));
     };
 
-    // Update on awareness changes
+    // Subscribe to awareness changes and run once to populate immediately
     provider.awareness?.on('change', updateActiveUsers);
     updateActiveUsers();
-
     return () => {
       provider.awareness?.off('change', updateActiveUsers);
     };
-  }, [currentEditor, provider]);
-
-  // Fetch user data for active users (optimized with persistent caching)
-  useEffect(() => {
-    const fetchActiveUsersData = async () => {
-      const usersWithData: Array<User & { clientId: number; color: string }> = [];
-      
-      // Use persistent cache from ref
-      const userCache = userCacheRef.current;
-      
-      // Batch fetch all user IDs that aren't cached
-      const userIdsToFetch = activeUsers
-        .filter(u => u.userId && !userCache.has(u.userId))
-        .map(u => u.userId!);
-      
-      // Fetch uncached users in parallel
-      if (userIdsToFetch.length > 0) {
-        await Promise.all(
-          userIdsToFetch.map(async (userId) => {
-            try {
-              const userDocRef = doc(db, 'users', userId);
-              const userDoc = await getDoc(userDocRef);
-              if (userDoc.exists()) {
-                userCache.set(userId, userDoc.data() as User);
-              }
-            } catch (error) {
-              console.error(`Error fetching user ${userId}:`, error);
-            }
-          })
-        );
-      }
-      
-      // Build the final array using cached data
-      for (const activeUser of activeUsers) {
-        if (activeUser.userId) {
-          const userData = userCache.get(activeUser.userId);
-          if (userData) {
-            usersWithData.push({
-              ...userData,
-              clientId: activeUser.clientId,
-              color: activeUser.color,
-            });
-          }
-        } else {
-          // For users without userId (anonymous), use basic data
-          usersWithData.push({
-            email: '',
-            emailVerified: false,
-            name: activeUser.name,
-            clientId: activeUser.clientId,
-            color: activeUser.color,
-          });
-        }
-      }
-      
-      setActiveUsersData(usersWithData);
-    };
-
-    if (activeUsers.length > 0) {
-      fetchActiveUsersData();
-    } else {
-      setActiveUsersData([]);
-    }
-  }, [activeUsers]);
+  }, [provider, user]);
 
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     setMenuAnchorEl(event.currentTarget);
@@ -605,7 +537,12 @@ export default function StoryPage({ params }: { params: Promise<{ userId: string
   };
 
   // Show skeleton while provider is initializing (improved UX)
-  if (!provider) {
+  // Wait until both the provider is ready and we've loaded document metadata
+  // (which determines access) before rendering the editor. This prevents a
+  // race where the provider is ready first and the editor mounts before we
+  // know the user's access level, causing the editor to appear read-only and
+  // the local cursor to be missing.
+  if (!provider || loading) {
     return (
       <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
         <Container maxWidth="lg" sx={{ py: 6 }}>
@@ -673,7 +610,7 @@ export default function StoryPage({ params }: { params: Promise<{ userId: string
             display: { xs: 'none', md: 'block' },
           }}
         >
-          <TableOfContents editor={currentEditor} />
+          <MemoizedToC editor={currentEditor} anchors={tableOfContents} />
         </Box>
 
         {/* Main Content Area */}
@@ -772,14 +709,14 @@ export default function StoryPage({ params }: { params: Promise<{ userId: string
                 )}
 
                 {/* Active Users - Show for all authenticated users */}
-                {(access === true || access === false) && activeUsersData.length > 0 && (
+                {(access === true || access === false) && activeUsers.length > 0 && (
                   <Tooltip
                     title={
                       <Box>
                         <Typography variant="caption" fontWeight="bold" display="block" mb={0.5}>
                           Active now:
                         </Typography>
-                        {activeUsersData.map((activeUser) => (
+                        {activeUsers.map((activeUser) => (
                           <Typography key={activeUser.clientId} variant="caption" display="block">
                             • {activeUser.name || 'Anonymous'}
                           </Typography>
@@ -789,7 +726,7 @@ export default function StoryPage({ params }: { params: Promise<{ userId: string
                     arrow
                   >
                     <AvatarGroup max={4} sx={{ cursor: 'pointer' }}>
-                      {activeUsersData.map((activeUser) => (
+                      {activeUsers.map((activeUser) => (
                         <Avatar
                           key={activeUser.clientId}
                           src={activeUser.image}
@@ -855,26 +792,7 @@ export default function StoryPage({ params }: { params: Promise<{ userId: string
                   fontStyle: 'italic',
                 }}
               >
-                By{' '}
-                {document.owner && (
-                  <>
-                    <Typography
-                      component={Link}
-                      href={`/u/${actualUserId}`}
-                      variant="body2"
-                      sx={{
-                        color: 'primary.main',
-                        textDecoration: 'none',
-                        '&:hover': {
-                          textDecoration: 'underline',
-                        },
-                      }}
-                    >
-                      {document.authorNames[0]}
-                    </Typography>
-                    {document.authorNames.length > 1 && `, ${document.authorNames.slice(1).join(', ')}`}
-                  </>
-                )}
+                By{' '} {document.authorNames[0]} {document.authorNames.length > 1 && `, ${document.authorNames.slice(1).join(', ')}`}
               </Typography>
             )}
             
@@ -919,14 +837,14 @@ export default function StoryPage({ params }: { params: Promise<{ userId: string
               )}
               
               {/* Active Users for readonly users */}
-              {activeUsersData.length > 0 && (
+              {activeUsers.length > 0 && (
                 <Tooltip
                   title={
                     <Box>
                       <Typography variant="caption" fontWeight="bold" display="block" mb={0.5}>
                         Active now:
                       </Typography>
-                      {activeUsersData.map((activeUser) => (
+                      {activeUsers.map((activeUser) => (
                         <Typography key={activeUser.clientId} variant="caption" display="block">
                           • {activeUser.name || 'Anonymous'}
                         </Typography>
@@ -936,7 +854,7 @@ export default function StoryPage({ params }: { params: Promise<{ userId: string
                   arrow
                 >
                   <AvatarGroup max={4} sx={{ cursor: 'pointer' }}>
-                    {activeUsersData.map((activeUser) => (
+                    {activeUsers.map((activeUser) => (
                       <Avatar
                         key={activeUser.clientId}
                         src={activeUser.image}
@@ -1031,9 +949,17 @@ export default function StoryPage({ params }: { params: Promise<{ userId: string
               CollaborationCaret.configure({
                 provider: provider,
                 user: {
-                  name: user?.name || 'Anonymous',
-                  color: userColor,
-                  userId: user?.id || 'anonymous',
+                  name: user!.name,
+                  image: user!.image,
+                  color: stringToHslColor(user!.name!),
+                  userId: user!.id,
+                },
+              }),
+              TableOfContentsExtension.configure({
+                onUpdate: (anchors) => {
+                 setTimeout(() => {
+                      setTableOfContents(anchors);
+                    }, 50);
                 },
               }),
             ]}

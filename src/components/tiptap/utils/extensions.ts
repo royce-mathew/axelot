@@ -19,7 +19,6 @@ import Strike from "@tiptap/extension-strike"
 import { Table } from "@tiptap/extension-table"
 import TableCell from "@tiptap/extension-table-cell"
 import TableHeader from "@tiptap/extension-table-header"
-import TableOfContents from "@tiptap/extension-table-of-contents"
 import TableRow from "@tiptap/extension-table-row"
 import Text from "@tiptap/extension-text"
 import TextAlign from "@tiptap/extension-text-align"
@@ -34,6 +33,7 @@ import { FontSize } from "../extensions/font-size"
 import { Indent } from "../extensions/indent"
 import { LineHeight } from "../extensions/line-height"
 import { Print } from "../extensions/print"
+import { AIAutocomplete } from "../extensions/autocomplete/main-index"
 
 export const extensions: Extensions = [
   // Core extensions
@@ -78,7 +78,14 @@ export const extensions: Extensions = [
   ListItem,
   
   // Link extension
-  Link,
+  Link.configure({
+    openOnClick: false,
+    enableClickSelection: true,
+    HTMLAttributes: {
+      rel: "noopener noreferrer",
+      target: null,
+    }
+  }),
   
   // Table extensions
   Table.configure({
@@ -108,7 +115,6 @@ export const extensions: Extensions = [
   InvisibleCharacters.configure({
     visible: false, // Hidden by default, toggle with toolbar button
   }),
-  TableOfContents,
   Print,
   
   // Special extensions
@@ -131,4 +137,17 @@ export const extensions: Extensions = [
       return "Start Writing..."
     },
   }),
+  // Autocomplete Extensions
+  // AIAutocomplete.configure({
+  //   enabled: true,                    // Enable/disable the extension
+  //   acceptKeys: ['Tab', 'Enter', 'ArrowRight'], // Keys to accept suggestions
+  //   dismissKey: 'Escape',             // Key to dismiss suggestions
+  //   requestKey: 'Tab',                // Key to request new suggestions
+  //   maxTokens: 60,                    // Max tokens for completions
+  //   temperature: 0.5,                 // AI creativity (0-1)
+  //   stopSequences: ['\n\n'],          // Stop generation at these sequences
+  //   model: 'openrouter/auto',         // AI model to use
+  //   promptTemplate: (text) => `...`,  // Custom prompt function
+  //   postProcess: (text) => text.trim() // Post-process completions
+  // })
 ]

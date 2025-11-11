@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import React, { useState } from 'react';
+import { useEditorState } from '@tiptap/react';
 import { Editor } from '@tiptap/react';
 import {
   Box,
@@ -81,7 +82,6 @@ const LINE_HEIGHTS = [
 ];
 
 const Toolbar2 = ({ editor, showCharacterCount = false, onToggleCharacterCount }: ToolbarProps) => {
-  const [, setUpdateTrigger] = useState(0);
   const [colorAnchor, setColorAnchor] = useState<HTMLButtonElement | null>(null);
   const [highlightAnchor, setHighlightAnchor] = useState<HTMLButtonElement | null>(null);
   const [invisibleCharsEnabled, setInvisibleCharsEnabled] = useState(false);
@@ -95,27 +95,41 @@ const Toolbar2 = ({ editor, showCharacterCount = false, onToggleCharacterCount }
   const [tablePickerAnchor, setTablePickerAnchor] = useState<HTMLElement | null>(null);
   const [alignMenuAnchor, setAlignMenuAnchor] = useState<HTMLElement | null>(null);
 
-  useEffect(() => {
-    if (!editor) return;
-
-    const handleUpdate = () => {
-      setUpdateTrigger((prev) => prev + 1);
-    };
-
-    editor.on('selectionUpdate', handleUpdate);
-    editor.on('transaction', handleUpdate);
-
-    return () => {
-      editor.off('selectionUpdate', handleUpdate);
-      editor.off('transaction', handleUpdate);
-    };
-  }, [editor]);
+  // Subscribe to the minimal editor state needed by the toolbar to avoid
+  // re-rendering on every transaction. useEditorState will only re-render this
+  // component when the selected slice changes.
+  const editorState = useEditorState({
+    editor,
+    selector: ({ editor: e }) => ({
+      isBold: e.isActive('bold'),
+      isItalic: e.isActive('italic'),
+      isUnderline: e.isActive('underline'),
+      isStrike: e.isActive('strike'),
+      isCode: e.isActive('code'),
+      canUndo: e.can().undo(),
+      canRedo: e.can().redo(),
+      heading1: e.isActive('heading', { level: 1 }),
+      heading2: e.isActive('heading', { level: 2 }),
+      heading3: e.isActive('heading', { level: 3 }),
+      heading4: e.isActive('heading', { level: 4 }),
+      fontFamily: e.getAttributes('textStyle').fontFamily || '',
+      fontSize: e.getAttributes('textStyle').fontSize || '',
+      lineHeight: e.getAttributes('paragraph').lineHeight || '',
+      alignLeft: e.isActive({ textAlign: 'left' }),
+      alignCenter: e.isActive({ textAlign: 'center' }),
+      alignRight: e.isActive({ textAlign: 'right' }),
+      alignJustify: e.isActive({ textAlign: 'justify' }),
+      inTable: e.can().addColumnAfter(),
+      characters: e.storage.characterCount?.characters() || 0,
+      words: e.storage.characterCount?.words() || 0,
+    }),
+  });
 
   const getActiveHeading = () => {
-    if (editor.isActive('heading', { level: 1 })) return 'h1';
-    if (editor.isActive('heading', { level: 2 })) return 'h2';
-    if (editor.isActive('heading', { level: 3 })) return 'h3';
-    if (editor.isActive('heading', { level: 4 })) return 'h4';
+    if (editorState.heading1) return 'h1';
+    if (editorState.heading2) return 'h2';
+    if (editorState.heading3) return 'h3';
+    if (editorState.heading4) return 'h4';
     return 'p';
   };
 
@@ -130,8 +144,7 @@ const Toolbar2 = ({ editor, showCharacterCount = false, onToggleCharacterCount }
   };
 
   const getFontFamily = () => {
-    const fontFamily = editor.getAttributes('textStyle').fontFamily;
-    return fontFamily || '';
+    return editorState.fontFamily || '';
   };
 
   const handleFontFamilyChange = (event: SelectChangeEvent<string>) => {
@@ -144,7 +157,7 @@ const Toolbar2 = ({ editor, showCharacterCount = false, onToggleCharacterCount }
   };
 
   const getFontSize = () => {
-    return editor.getAttributes('textStyle').fontSize || '';
+    return editorState.fontSize || '';
   };
 
   const handleFontSizeChange = (event: SelectChangeEvent<string>) => {
@@ -157,7 +170,7 @@ const Toolbar2 = ({ editor, showCharacterCount = false, onToggleCharacterCount }
   };
 
   const getLineHeight = () => {
-    return editor.getAttributes('paragraph').lineHeight || '150%';
+    return editorState.lineHeight || '150%';
   };
 
   const handleLineHeightChange = (event: SelectChangeEvent<string>) => {
@@ -166,10 +179,10 @@ const Toolbar2 = ({ editor, showCharacterCount = false, onToggleCharacterCount }
   };
 
   const getCurrentAlignment = () => {
-    if (editor.isActive({ textAlign: 'left' })) return 'left';
-    if (editor.isActive({ textAlign: 'center' })) return 'center';
-    if (editor.isActive({ textAlign: 'right' })) return 'right';
-    if (editor.isActive({ textAlign: 'justify' })) return 'justify';
+    if (editorState.alignCenter) return 'center';
+    if (editorState.alignRight) return 'right';
+    if (editorState.alignJustify) return 'justify';
+    if (editorState.alignLeft) return 'left';
     return 'left'; // default
   };
 
@@ -232,11 +245,11 @@ const Toolbar2 = ({ editor, showCharacterCount = false, onToggleCharacterCount }
   };
 
   const getCharacterCount = () => {
-    return editor.storage.characterCount?.characters() || 0;
+    return editorState.characters || 0;
   };
 
   const getWordCount = () => {
-    return editor.storage.characterCount?.words() || 0;
+    return editorState.words || 0;
   };
 
   return (
@@ -998,4 +1011,5 @@ const Toolbar2 = ({ editor, showCharacterCount = false, onToggleCharacterCount }
   );
 };
 
-export default Toolbar2;
+// Memoize toolbar so it doesn't re-render with unrelated parent updates.
+export default React.memo(Toolbar2);

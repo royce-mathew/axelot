@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { firebaseAdminFirestore, adminAuth } from '@/lib/firebase/server';
 import { increment, serverTimestamp } from 'firebase/firestore';
+import { Timestamp } from 'firebase-admin/firestore';
 
 // POST /api/document/view
 export async function POST(req: NextRequest) {
@@ -34,7 +35,7 @@ export async function POST(req: NextRequest) {
     const docRef = firebaseAdminFirestore.collection('stories').doc(documentId);
     await docRef.update({
       viewCount: increment(1),
-      lastViewed: serverTimestamp(),
+      lastViewed: Timestamp.now(),
     });
     return NextResponse.json({ success: true });
   } catch {

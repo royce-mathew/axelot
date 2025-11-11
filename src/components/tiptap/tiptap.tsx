@@ -39,7 +39,7 @@ const Tiptap2 = ({ passedExtensions, initialContent, editable = true, readOnly =
     ],
     content: initialContent,
     editable,
-    immediatelyRender: false,
+    immediatelyRender: true,
   });
 
   // Notify parent when editor is ready (using useEffect to avoid setState during render)

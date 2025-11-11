@@ -1,8 +1,8 @@
 'use client';
 
 import { List, ListItem, ListItemButton, ListItemText, Paper, Typography, Box } from '@mui/material';
-import { useEffect, useState } from 'react';
 import type { Editor } from '@tiptap/react';
+import { TextSelection } from '@tiptap/pm/state';
 
 export interface TocAnchor {
   id: string;
@@ -13,71 +13,42 @@ export interface TocAnchor {
   pos: number;
 }
 
+
+
 interface TableOfContentsProps {
   editor: Editor | null;
+  anchors: TocAnchor[];
 }
 
-export const TableOfContents = ({ editor }: TableOfContentsProps) => {
-  const [anchors, setAnchors] = useState<TocAnchor[]>([]);
+export const TableOfContents = ({ editor, anchors }: TableOfContentsProps) => {
+ 
+  const handleClick = (e: React.MouseEvent<HTMLDivElement, MouseEvent>, id: string): void => {
+    e.preventDefault();
 
-  useEffect(() => {
     if (!editor) return;
+    const element = editor.view.dom.querySelector(`[data-toc-id="${id}"`) as HTMLElement | null;
+    if (!element) return;
+    const pos: number = editor.view.posAtDOM(element, 0);
 
-    // Function to extract headings manually
-    const updateAnchors = () => {
-      const headings: TocAnchor[] = [];
-      
-      editor.state.doc.descendants((node, pos) => {
-        if (node.type.name === 'heading') {
-          const id = `heading-${pos}`;
-          headings.push({
-            id,
-            level: node.attrs.level,
-            textContent: node.textContent,
-            isActive: false,
-            isScrolledOver: false,
-            pos,
-          });
-        }
-      });
-      
-      // Only update if the structure changed (different count or content)
-      setAnchors(prev => {
-        if (prev.length !== headings.length) return headings;
-        
-        const hasChanged = headings.some((h, i) => 
-          h.textContent !== prev[i]?.textContent || 
-          h.level !== prev[i]?.level ||
-          h.pos !== prev[i]?.pos
-        );
-        
-        return hasChanged ? headings : prev;
-      });
-    };
+    // set focus
+    const tr = editor.view.state.tr;
 
-    // Update on editor content changes only (not selection)
-    updateAnchors();
-    editor.on('update', updateAnchors);
+    tr.setSelection(new TextSelection(tr.doc.resolve(pos)));
 
-    return () => {
-      editor.off('update', updateAnchors);
-    };
-  }, [editor]);
+    editor.view.dispatch(tr);
 
-  const handleClick = (anchor: TocAnchor) => {
-    if (!editor) return;
-    
-    // Focus editor and move cursor to heading content
-    editor.commands.focus();
-    editor.commands.setTextSelection(anchor.pos + 1);
-    
-    // Find and scroll to the heading element
-    const { node } = editor.view.domAtPos(anchor.pos);
-    const element = node.nodeType === Node.TEXT_NODE ? node.parentElement : node;
-    const heading = (element as HTMLElement)?.closest('h1, h2, h3, h4, h5, h6');
-    
-    heading?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    editor.view.focus();
+
+    if (history.pushState) {
+      history.pushState(null, '', `#${id}`);
+    }
+
+    window.scrollTo({
+      top: element.getBoundingClientRect().top + window.scrollY / 2, // Offset for fixed headers
+      behavior: 'smooth',
+    });
   };
+
 
   if (!editor || anchors.length === 0) {
     return null;
@@ -157,7 +128,7 @@ export const TableOfContents = ({ editor }: TableOfContentsProps) => {
             gap: 0.5,
           }}
         >
-        {anchors.map((anchor) => (
+        {anchors.map(anchor => (
           <ListItem
             key={anchor.id}
             disablePadding
@@ -166,24 +137,23 @@ export const TableOfContents = ({ editor }: TableOfContentsProps) => {
             }}
           >
             <ListItemButton
-              onClick={() => handleClick(anchor)}
+              onClick={e => handleClick(e, anchor.id)}
               sx={{
-                py: 0.75,
-                px: 1,
-                borderRadius: 1,
-                minHeight: 32,
-                transition: 'all 0.2s ease',
-                borderLeft: '2px solid transparent',
-                '&:hover': {
-                  backgroundColor: 'action.hover',
-                  borderLeftColor: 'primary.main',
-                },
+              py: 0.75,
+              px: 1,
+              transition: 'all 0.2s ease',
+              bgcolor: anchor.isActive
+                ? 'action.selected'
+                : 'transparent',
+             
               }}
+              data-toc-id={anchor.id}
             >
-              <ListItemText
-                primary={anchor.textContent}
-                primaryTypographyProps={{
-                  variant: anchor.level === 1 ? 'body2' : 'body2',
+            <ListItemText
+              primary={anchor.textContent}
+              slotProps={{
+                primary: {
+                  variant: 'body2',
                   fontWeight: anchor.level === 1 ? 600 : 400,
                   color: anchor.level === 1 ? 'text.primary' : 'text.secondary',
                   fontSize: anchor.level === 1 ? '0.875rem' : '0.8125rem',
@@ -195,7 +165,8 @@ export const TableOfContents = ({ editor }: TableOfContentsProps) => {
                     WebkitBoxOrient: 'vertical',
                     lineHeight: 1.4,
                   },
-                }}
+                },
+              }}
               />
             </ListItemButton>
           </ListItem>
