@@ -381,7 +381,7 @@ const Footer = () => {
             fontSize: '0.875rem',
           }}
         >
-          © 2025 Royce Mathew. Built with ❤️ for developers.
+          © 2025 Royce Mathew & Sunny Patel. Built with ❤️ for developers.
         </Typography>
       </Container>
     </Box>
