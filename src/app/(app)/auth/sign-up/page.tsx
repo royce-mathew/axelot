@@ -74,7 +74,9 @@ export default function SignUpPage() {
   };
 
   const handleOAuthSignIn = (provider: 'google' | 'github') => {
-    signIn(provider, { callbackUrl: '/auth/username-setup' });
+    // Route to a real page after OAuth completes. The previous '/auth/username-setup'
+    // path does not exist and caused a 404 after successful auth.
+    signIn(provider, { callbackUrl: '/stories' });
   };
 
   return (
