@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useState, useTransition } from 'react';
+import { useEffect, useState, useTransition } from 'react';
 import {
   Box,
   Container,
@@ -18,8 +18,19 @@ import { signUpAction } from './actions';
 import { signIn } from 'next-auth/react';
 import { getAuth, sendSignInLinkToEmail } from 'firebase/auth';
 import { firebaseApp } from '@/lib/firebase/client';
+import { useAuth } from '@/hooks/use-auth';
+import { useRouter } from 'next/navigation';
 
 export default function SignUpPage() {
+  const { isAuthenticated } = useAuth();
+  const router = useRouter();
+  // If a logged-in user lands here, send them to stories (avoid confusing sign-up state)
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.replace('/stories');
+    }
+  }, [isAuthenticated, router]);
+
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string>('');
   const [success, setSuccess] = useState<string>('');

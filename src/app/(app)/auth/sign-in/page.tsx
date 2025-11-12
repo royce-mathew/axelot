@@ -1,6 +1,6 @@
 'use client';
 
-import React, { Suspense, useState } from 'react';
+import React, { Suspense, useEffect, useState } from 'react';
 import { 
   Box, 
   Container, 
@@ -17,12 +17,14 @@ import {
 import Link from 'next/link';
 import { signIn } from 'next-auth/react';
 import { useSearchParams, useRouter } from 'next/navigation';
+import { useAuth } from '@/hooks/use-auth';
 import GoogleIcon from '@mui/icons-material/Google';
 import GitHubIcon from '@mui/icons-material/GitHub';
 
 function SignInContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const { isAuthenticated } = useAuth();
   const callbackUrl = searchParams.get('callbackUrl') || '/';
   const registered = searchParams.get('registered');
   const verified = searchParams.get('verified');
@@ -32,6 +34,13 @@ function SignInContent() {
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [loginError, setLoginError] = useState('');
+
+  // If already authenticated, avoid showing sign-in and redirect to stories
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.replace('/stories');
+    }
+  }, [isAuthenticated, router]);
 
   const handleCredentialsSignIn = async (e: React.FormEvent) => {
     e.preventDefault();

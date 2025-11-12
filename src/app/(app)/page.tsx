@@ -11,9 +11,11 @@ import FolderIcon from "@mui/icons-material/Folder"
 import StarIcon from "@mui/icons-material/Star"
 import NumberFlow, { continuous } from "@number-flow/react"
 import { Card } from "@mui/material"
+import { useAuth } from "@/hooks/use-auth"
 
 const HeroSection = () => {
   const router = useRouter()
+  const { isAuthenticated } = useAuth()
   const [animatedStories, setAnimatedStories] = useState(0)
   const [animatedUsers, setAnimatedUsers] = useState(0)
 
@@ -164,7 +166,14 @@ const HeroSection = () => {
               variant="contained"
               size="large"
               endIcon={<ArrowForwardIcon />}
-              onClick={() => router.push("/auth/sign-up")}
+              onClick={() => {
+                // If already signed in, take the user to create/browse stories instead of auth
+                if (isAuthenticated) {
+                  router.push("/stories")
+                } else {
+                  router.push("/auth/sign-up")
+                }
+              }}
               sx={{
                 px: 4,
                 py: 1.5,
