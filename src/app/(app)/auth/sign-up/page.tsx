@@ -107,6 +107,18 @@ export default function SignUpPage() {
             </Alert>
           )}
 
+          {/* Offer a clear next step after email is sent */}
+          {success && emailSent && (
+            <Stack direction="row" justifyContent="center" sx={{ mb: 2 }}>
+              <Button
+                variant="contained"
+                onClick={() => router.push('/auth/sign-in?registered=true')}
+              >
+                Go to Sign In
+              </Button>
+            </Stack>
+          )}
+
           {!emailSent && (
             <>
               <form onSubmit={handleSubmit}>
