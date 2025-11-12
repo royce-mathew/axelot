@@ -121,6 +121,7 @@ export default function StoryPage({ params }: { params: Promise<{ userId: string
   const [currentEditor, setCurrentEditor] = useState<Editor | null>(null);
   const [activeUsers, setActiveUsers] = useState<Array<AwarenessUser>>([]);
   const [tableOfContents, setTableOfContents] = useState<Array<TocAnchor>>([]);
+  const [previewMode, setPreviewMode] = useState<boolean>(false);
   
   // Persistent cache for user data to avoid redundant Firestore reads
   const userCacheRef = useRef<Map<string, User>>(new Map());
@@ -615,8 +616,8 @@ export default function StoryPage({ params }: { params: Promise<{ userId: string
 
         {/* Main Content Area */}
         <Box sx={{ flex: 1, minWidth: 0 }}>
-          {/* Title and Actions Bar - Only show for write access */}
-          {access === true && (
+          {/* Title and Actions Bar - Only show for write access when NOT previewing */}
+          {access === true && !previewMode && (
             <Paper elevation={0} sx={{ p: 3, mb: 3, border: 1, borderColor: 'divider' }}>
             <Stack spacing={2}>
             <TextField
@@ -746,22 +747,36 @@ export default function StoryPage({ params }: { params: Promise<{ userId: string
                 )}
               </Stack>
 
-              {/* Right side: Menu button */}
+              {/* Right side: Preview toggle and Menu button */}
               {access === true && (
-                <IconButton
-                  onClick={handleMenuOpen}
-                  size="small"
-                >
-                  <MoreVertIcon />
-                </IconButton>
+                <Stack direction="row" spacing={1} alignItems="center">
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={previewMode}
+                        onChange={(e) => setPreviewMode(e.target.checked)}
+                        size="small"
+                        color="primary"
+                      />
+                    }
+                    label={<Typography variant="body2">Preview</Typography>}
+                    sx={{ m: 0, mr: 1 }}
+                  />
+                  <IconButton
+                    onClick={handleMenuOpen}
+                    size="small"
+                  >
+                    <MoreVertIcon />
+                  </IconButton>
+                </Stack>
               )}
             </Stack>
           </Stack>
         </Paper>
           )}
 
-        {/* Read-only Title Display - Only show for read access */}
-        {access !== true && document && (
+        {/* Read-only Title Display - Show for read access OR when previewing own doc */}
+        {(access !== true || previewMode) && document && (
           <Box 
             sx={{ 
               mb: { xs: 2, sm: 3 },
@@ -883,6 +898,22 @@ export default function StoryPage({ params }: { params: Promise<{ userId: string
           open={menuOpen}
           onClose={handleMenuClose}
         >
+          {/* Preview Toggle - Mobile and menu control */}
+          <MenuItem 
+            onClick={() => setPreviewMode((v) => !v)}
+          >
+            <ListItemIcon>
+              <VisibilityIcon fontSize="small" />
+            </ListItemIcon>
+            <ListItemText>{previewMode ? 'Exit Preview' : 'Preview'}</ListItemText>
+            <Switch
+              edge="end"
+              checked={previewMode}
+              onChange={(e) => setPreviewMode(e.target.checked)}
+              size="small"
+            />
+          </MenuItem>
+          <Divider />
           {/* Public/Private Toggle - Mobile only */}
           <MenuItem 
             sx={{ 
@@ -939,9 +970,9 @@ export default function StoryPage({ params }: { params: Promise<{ userId: string
           }}
         >
           <Tiptap
-            editable={access === true}
+            editable={access === true && !previewMode}
             onEditorReady={setCurrentEditor}
-            readOnly={access !== true}
+            readOnly={access !== true || previewMode}
             passedExtensions={[
               Collaboration.configure({
                 document: provider.doc,

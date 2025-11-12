@@ -34,6 +34,8 @@ import { Indent } from "../extensions/indent"
 import { LineHeight } from "../extensions/line-height"
 import { Print } from "../extensions/print"
 import { AIAutocomplete } from "../extensions/autocomplete/main-index"
+import { PasteMarkdownTable } from "../extensions/paste-markdown-table"
+import PasteMarkdown from "../extensions/paste-markdown"
 
 export const extensions: Extensions = [
   // Core extensions
@@ -81,6 +83,7 @@ export const extensions: Extensions = [
   Link.configure({
     openOnClick: false,
     enableClickSelection: true,
+    autolink: true,
     HTMLAttributes: {
       rel: "noopener noreferrer",
       target: null,
@@ -116,6 +119,10 @@ export const extensions: Extensions = [
     visible: false, // Hidden by default, toggle with toolbar button
   }),
   Print,
+  // Paste: convert GitHub-flavored Markdown tables to live TipTap tables on paste
+  PasteMarkdownTable,
+  // Paste: convert common Markdown blocks to rich content on paste when only text is available
+  PasteMarkdown,
   
   // Special extensions
   MathExtension.configure({ evaluation: true }),
