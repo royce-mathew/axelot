@@ -3,7 +3,7 @@
 import type React from "react"
 
 import { useState, useEffect } from "react"
-import { Typography, Button, Container, Box, Stack } from "@mui/material"
+import { Typography, Button, Container, Box, Stack, Link as MuiLink } from "@mui/material"
 import { useRouter } from "next/navigation"
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward"
 import CodeIcon from "@mui/icons-material/Code"
@@ -465,7 +465,18 @@ const Footer = () => {
             letterSpacing: "-0.01em",
           }}
         >
-          © 2025 Royce Mathew & Sunny Patel. Built with{" "}
+          © 2025 Royce Mathew & {""}
+          <MuiLink
+            href="https://www.linkedin.com/in/sunny-patel-30b460204/"
+            target="_blank"
+            rel="noopener noreferrer"
+            underline="hover"
+            color="inherit"
+            sx={{ fontWeight: 600 }}
+          >
+            Sunny Patel
+          </MuiLink>
+          . Built with{" "}
           <Box
             component="span"
             sx={{
