@@ -31,6 +31,7 @@ import { allDocumentsRef } from "@/lib/converters/document"
 import type { Document } from "@/types/document"
 import { timeAgo } from "@/lib/utils"
 import { useStoriesCache } from "@/hooks/use-stories-cache"
+import HoverCard from "@/components/HoverCard"
 
 export default function DashboardPage() {
   const { isAuthenticated, isLoading, user } = useAuth()
@@ -207,17 +208,9 @@ export default function DashboardPage() {
                 >
                   {trendingStories.slice(0, 6).map((doc: Document, index: number) => (
                     <Fade key={doc.id} in timeout={800 + index * 100}>
-                      <Card
+                      <HoverCard
                         sx={{
                           cursor: "pointer",
-                          transition: "all 0.2s ease-in-out",
-                          border: "1px solid",
-                          borderColor: "divider",
-                          "&:hover": {
-                            boxShadow: 3,
-                            borderColor: "primary.main",
-                            transform: "translateY(-4px)",
-                          },
                         }}
                         onClick={() => handleCardClick(doc)}
                       >
@@ -274,7 +267,7 @@ export default function DashboardPage() {
                             Updated {timeAgo(doc.lastUpdated)}
                           </Typography>
                         </CardActions>
-                      </Card>
+                      </HoverCard>
                     </Fade>
                   ))}
                 </Box>
@@ -324,17 +317,9 @@ export default function DashboardPage() {
                 >
                   {recentFiltered.slice(0, 6).map((doc: Document, index: number) => (
                     <Fade key={doc.id} in timeout={(trendingStories.length > 0 ? 1600 : 800) + index * 100}>
-                      <Card
+                      <HoverCard
                         sx={{
                           cursor: "pointer",
-                          transition: "all 0.2s ease-in-out",
-                          border: "1px solid",
-                          borderColor: "divider",
-                          "&:hover": {
-                            boxShadow: 3,
-                            borderColor: "primary.main",
-                            transform: "translateY(-4px)",
-                          },
                         }}
                         onClick={() => handleCardClick(doc)}
                       >
@@ -391,7 +376,7 @@ export default function DashboardPage() {
                             Published {timeAgo(doc.created)}
                           </Typography>
                         </CardActions>
-                      </Card>
+                      </HoverCard>
                     </Fade>
                   ))}
                 </Box>

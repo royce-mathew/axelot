@@ -6,7 +6,6 @@ import {
   Container,
   Box,
   Stack,
-  Card,
   CardContent,
   TextField,
   InputAdornment,
@@ -21,6 +20,7 @@ import ArticleIcon from '@mui/icons-material/Article';
 import { Document } from '@/types/document';
 import { db } from '@/lib/firebase/client';
 import { timeAgo, getInitials } from '@/lib/utils';
+import HoverCard from '@/components/HoverCard';
 
 export default function SearchPage() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -179,22 +179,11 @@ export default function SearchPage() {
               {displayStories.map((story) => {
                 const storySlug = story.slug || 'untitled';
                 return (
-                  <Card
+                  <HoverCard
                     key={story.id}
                     component={Link}
                     href={`/u/${story.owner}/${story.id}-${storySlug}`}
                     elevation={0}
-                    sx={{
-                      textDecoration: 'none',
-                      border: 1,
-                      borderColor: 'divider',
-                      transition: 'all 0.2s ease-in-out',
-                      '&:hover': {
-                        boxShadow: 3,
-                        borderColor: 'primary.main',
-                        transform: 'translateY(-4px)',
-                      },
-                    }}
                   >
                   <CardContent sx={{ p: 3 }}>
                     <Typography
@@ -237,7 +226,7 @@ export default function SearchPage() {
                       }}
                     />
                   </CardContent>
-                </Card>
+                </HoverCard>
               );
               })}
             </Box>

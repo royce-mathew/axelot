@@ -61,9 +61,7 @@ export const extensions: Extensions = [
   // Block extensions
   Heading.configure({ levels: [1, 2, 3, 4] }),
   Blockquote,
-  CodeBlockShiki.configure({
-    themes: { light: 'github-light', dark: 'github-dark' },
-  }),
+  CodeBlockShiki,
   HorizontalRule,
   
   // List extensions
