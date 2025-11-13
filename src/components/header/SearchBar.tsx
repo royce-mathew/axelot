@@ -19,30 +19,26 @@ import SearchIcon from '@mui/icons-material/Search';
 import DescriptionIcon from '@mui/icons-material/Description';
 import PersonIcon from '@mui/icons-material/Person';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/hooks/use-auth';
+import { db } from '@/lib/firebase/client';
+import { collection, getDocs, limit, orderBy, query, where } from 'firebase/firestore';
+import type { Document as Story } from '@/types/document';
+import type { User } from '@/types/user';
+import { timeAgo } from '@/lib/utils';
 
-// Mock data - replace with actual API calls
-const searchResults = (query: string) => {
-  if (!query.trim()) return { documents: [], users: [] };
-  
-  return {
-    documents: [
-      { id: '1', title: 'Project Proposal', subtitle: 'Last edited 2 hours ago' },
-      { id: '2', title: 'Meeting Notes', subtitle: 'Last edited yesterday' },
-    ],
-    users: [
-      { id: '1', name: 'John Doe', email: 'john@example.com', avatar: null },
-      { id: '2', name: 'Jane Smith', email: 'jane@example.com', avatar: null },
-    ],
-  };
-};
+interface SearchResultState {
+  documents: Array<Story & { id: string }>
+  users: Array<(User & { id: string })>
+}
 
 export const SearchBar = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [showResults, setShowResults] = useState(false);
+  const [results, setResults] = useState<SearchResultState>({ documents: [], users: [] });
+  const [loading, setLoading] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
-
-  const results = searchResults(searchQuery);
+  const { isAuthenticated } = useAuth();
   const hasResults = results.documents.length > 0 || results.users.length > 0;
 
   useEffect(() => {
@@ -65,18 +61,78 @@ export const SearchBar = () => {
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
-    setShowResults(e.target.value.trim().length > 0);
+    const q = e.target.value;
+    setSearchQuery(q);
+    setShowResults(q.trim().length > 0);
   };
 
-  const handleResultClick = (type: 'document' | 'user', id: string) => {
+  // Real search for authenticated users; keep preview look for guests
+  useEffect(() => {
+    let cancelled = false;
+    const run = async () => {
+      const q = searchQuery.trim();
+      if (!q || !isAuthenticated) {
+        // guests or empty query: show no real results
+        setResults({ documents: [], users: [] });
+        return;
+      }
+      setLoading(true);
+      try {
+        // Fetch candidates and filter client-side
+        const [docSnap, userSnap] = await Promise.all([
+          getDocs(
+            query(
+              collection(db, 'stories'),
+              where('isPublic', '==', true),
+              orderBy('lastUpdated', 'desc'),
+              limit(30)
+            )
+          ),
+          getDocs(
+            query(
+              collection(db, 'users'),
+              orderBy('name'),
+              limit(30)
+            )
+          )
+        ]);
+
+        if (cancelled) return;
+
+        const docs = docSnap.docs.map(d => ({ id: d.id, ...(d.data() as any) })) as Array<Story & { id: string }>;
+        const filteredDocs = docs.filter(d => (d.title || '').toLowerCase().includes(q.toLowerCase())).slice(0, 8);
+
+        const users = userSnap.docs.map(u => ({ id: u.id, ...(u.data() as any) })) as Array<User & { id: string }>;
+        const filteredUsers = users
+          .filter(u => (u.name?.toLowerCase().includes(q.toLowerCase()) || (u.username || '').toLowerCase().includes(q.toLowerCase())))
+          .slice(0, 6);
+
+        setResults({ documents: filteredDocs, users: filteredUsers });
+      } catch (e) {
+        console.error('Search error:', e);
+        if (!cancelled) setResults({ documents: [], users: [] });
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+
+    const t = setTimeout(run, 300);
+    return () => {
+      cancelled = true;
+      clearTimeout(t);
+    };
+  }, [searchQuery, isAuthenticated]);
+
+  const handleResultClick = (type: 'document' | 'user', id: string, payload?: any) => {
     setShowResults(false);
     setSearchQuery('');
     // Navigate to the specific item
     if (type === 'document') {
-      router.push(`/documents/${id}`);
+      const story: Story & { id: string } = payload;
+      const slug = story.slug || 'untitled';
+      router.push(`/u/${story.owner}/${story.id}-${slug}`);
     } else {
-      router.push(`/users/${id}`);
+      router.push(`/u/${id}/dashboard`);
     }
   };
 
@@ -120,7 +176,7 @@ export const SearchBar = () => {
       </Paper>
 
       {/* Search Results Popup */}
-      {showResults && hasResults && (
+      {showResults && (
         <Paper
           sx={{
             position: 'absolute',
@@ -134,6 +190,8 @@ export const SearchBar = () => {
           }}
           elevation={8}
         >
+          {isAuthenticated ? (
+            <>
           {results.documents.length > 0 && (
             <>
               <Box sx={{ px: 2, py: 1, backgroundColor: 'action.hover' }}>
@@ -144,15 +202,15 @@ export const SearchBar = () => {
               <List disablePadding>
                 {results.documents.map((doc) => (
                   <ListItem key={doc.id} disablePadding>
-                    <ListItemButton onClick={() => handleResultClick('document', doc.id)}>
+                    <ListItemButton onClick={() => handleResultClick('document', doc.id, doc)}>
                       <ListItemAvatar>
                         <Avatar sx={{ bgcolor: 'primary.main' }}>
                           <DescriptionIcon fontSize="small" />
                         </Avatar>
                       </ListItemAvatar>
                       <ListItemText
-                        primary={doc.title}
-                        secondary={doc.subtitle}
+                        primary={doc.title || 'Untitled Story'}
+                        secondary={`Updated ${timeAgo(doc.lastUpdated as any)}`}
                         primaryTypographyProps={{ variant: 'body2' }}
                         secondaryTypographyProps={{ variant: 'caption' }}
                       />
@@ -182,7 +240,7 @@ export const SearchBar = () => {
                       </ListItemAvatar>
                       <ListItemText
                         primary={user.name}
-                        secondary={user.email}
+                        secondary={user.username ? `@${user.username}` : ''}
                         primaryTypographyProps={{ variant: 'body2' }}
                         secondaryTypographyProps={{ variant: 'caption' }}
                       />
@@ -191,6 +249,27 @@ export const SearchBar = () => {
                 ))}
               </List>
             </>
+          )}
+          {/* Empty authenticated state */}
+          {isAuthenticated && !loading && !hasResults && (
+            <Box sx={{ px: 2, py: 2 }}>
+              <Typography variant="body2" color="text.secondary">No results</Typography>
+            </Box>
+          )}
+          </>
+          ) : (
+            // Guest preview with CTA
+            <Box sx={{ px: 2, py: 2 }}>
+              <Typography variant="body2" sx={{ mb: 0.5 }}>Sign in to search real documents and users.</Typography>
+              <Typography
+                variant="body2"
+                color="primary"
+                sx={{ cursor: 'pointer' }}
+                onClick={() => router.push('/auth/sign-in')}
+              >
+                Sign in or create an account
+              </Typography>
+            </Box>
           )}
         </Paper>
       )}

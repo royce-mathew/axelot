@@ -209,12 +209,14 @@ export default function DashboardPage() {
                   {trendingStories.slice(0, 6).map((doc: Document, index: number) => (
                     <Fade key={doc.id} in timeout={800 + index * 100}>
                       <HoverCard
+                        elevation={0}
                         sx={{
                           cursor: "pointer",
+                          transition: "all 0.25s ease",
                         }}
                         onClick={() => handleCardClick(doc)}
                       >
-                        <CardContent sx={{ pb: 1 }}>
+                        <CardContent sx={{ pb: 1, p: 3 }}>
                           <Typography variant="h6" fontWeight={600} gutterBottom noWrap sx={{ mb: 1.5 }}>
                             {doc.title}
                           </Typography>
@@ -318,12 +320,14 @@ export default function DashboardPage() {
                   {recentFiltered.slice(0, 6).map((doc: Document, index: number) => (
                     <Fade key={doc.id} in timeout={(trendingStories.length > 0 ? 1600 : 800) + index * 100}>
                       <HoverCard
+                        elevation={0}
                         sx={{
                           cursor: "pointer",
+                          transition: "all 0.25s ease",
                         }}
                         onClick={() => handleCardClick(doc)}
                       >
-                        <CardContent sx={{ pb: 1 }}>
+                        <CardContent sx={{ pb: 1, p: 3 }}>
                           <Typography variant="h6" fontWeight={600} gutterBottom noWrap sx={{ mb: 1.5 }}>
                             {doc.title}
                           </Typography>
