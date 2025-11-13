@@ -106,6 +106,7 @@ export default function StoryPage({ params }: { params: Promise<{ userId: string
   const [linkCopied, setLinkCopied] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
   const [document, setDocument] = useState<Document | null>(null);
+  const [previewMode, setPreviewMode] = useState<boolean>(false);
   
   // State for searching users to share with
   const [searchedUser, setSearchedUser] = useState<(User & { id: string }) | null>(null);
@@ -615,26 +616,52 @@ export default function StoryPage({ params }: { params: Promise<{ userId: string
 
         {/* Main Content Area */}
         <Box sx={{ flex: 1, minWidth: 0 }}>
-          {/* Title and Actions Bar - Only show for write access */}
+          {/* Title and Actions Bar - Visible for owners; adapts to preview mode */}
           {access === true && (
             <Paper elevation={0} sx={{ p: 3, mb: 3, border: 1, borderColor: 'divider' }}>
             <Stack spacing={2}>
-            <TextField
-              fullWidth
-              variant="standard"
-              placeholder="Untitled Story"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              disabled={access !== true}
-              InputProps={{
-                sx: {
-                  fontSize: '2rem',
-                  fontWeight: 700,
-                  '&:before': { borderBottom: 'none' },
-                  '&:hover:not(.Mui-disabled):before': { borderBottom: 'none' },
-                },
-              }}
-            />
+            {previewMode ? (
+              <Box>
+                <Typography 
+                  variant="h3" 
+                  sx={{ 
+                    fontSize: { xs: '1.75rem', sm: '2rem' },
+                    fontWeight: 700,
+                    mb: { xs: 1.5, sm: 2 },
+                    lineHeight: 1.2,
+                    wordBreak: 'break-word',
+                  }}
+                >
+                  {title || 'Untitled Story'}
+                </Typography>
+                {document?.authorNames && document.authorNames.length > 0 && (
+                  <Typography 
+                    variant="body2" 
+                    color="text.secondary"
+                    sx={{ mb: 1.5, fontStyle: 'italic' }}
+                  >
+                    By {document.authorNames[0]} {document.authorNames.length > 1 && `, ${document.authorNames.slice(1).join(', ')}`}
+                  </Typography>
+                )}
+              </Box>
+            ) : (
+              <TextField
+                fullWidth
+                variant="standard"
+                placeholder="Untitled Story"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                disabled={access !== true}
+                InputProps={{
+                  sx: {
+                    fontSize: '2rem',
+                    fontWeight: 700,
+                    '&:before': { borderBottom: 'none' },
+                    '&:hover:not(.Mui-disabled):before': { borderBottom: 'none' },
+                  },
+                }}
+              />
+            )}
 
             <Divider />
 
@@ -746,22 +773,32 @@ export default function StoryPage({ params }: { params: Promise<{ userId: string
                 )}
               </Stack>
 
-              {/* Right side: Menu button */}
+              {/* Right side: Preview toggle + Menu button */}
               {access === true && (
-                <IconButton
-                  onClick={handleMenuOpen}
-                  size="small"
-                >
-                  <MoreVertIcon />
-                </IconButton>
+                <Stack direction="row" spacing={1} alignItems="center">
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={previewMode}
+                        onChange={(e) => setPreviewMode(e.target.checked)}
+                        size="small"
+                      />
+                    }
+                    label={<Typography variant="body2">Preview</Typography>}
+                    sx={{ m: 0 }}
+                  />
+                  <IconButton onClick={handleMenuOpen} size="small">
+                    <MoreVertIcon />
+                  </IconButton>
+                </Stack>
               )}
             </Stack>
           </Stack>
         </Paper>
           )}
 
-        {/* Read-only Title Display - Only show for read access */}
-        {access !== true && document && (
+        {/* Read-only Title Display - Show for read access or when owner toggles preview */}
+        {(access !== true || previewMode) && document && (
           <Box 
             sx={{ 
               mb: { xs: 2, sm: 3 },
@@ -876,13 +913,26 @@ export default function StoryPage({ params }: { params: Promise<{ userId: string
           </Box>
         )}
 
-        {/* Options Menu - Only for write access */}
+  {/* Options Menu - Only for write access */}
         {access === true && (
         <Menu
           anchorEl={menuAnchorEl}
           open={menuOpen}
           onClose={handleMenuClose}
         >
+          {/* Preview Toggle */}
+          <MenuItem onClick={() => setPreviewMode(!previewMode)}>
+            <ListItemIcon>
+              <VisibilityIcon fontSize="small" />
+            </ListItemIcon>
+            <ListItemText>{previewMode ? 'Exit Preview' : 'Preview mode'}</ListItemText>
+            <Switch
+              checked={previewMode}
+              onChange={(e) => setPreviewMode(e.target.checked)}
+              size="small"
+            />
+          </MenuItem>
+          <Divider />
           {/* Public/Private Toggle - Mobile only */}
           <MenuItem 
             sx={{ 
@@ -939,9 +989,9 @@ export default function StoryPage({ params }: { params: Promise<{ userId: string
           }}
         >
           <Tiptap
-            editable={access === true}
+            editable={access === true && !previewMode}
             onEditorReady={setCurrentEditor}
-            readOnly={access !== true}
+            readOnly={access !== true || previewMode}
             passedExtensions={[
               Collaboration.configure({
                 document: provider.doc,
