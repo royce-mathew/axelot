@@ -72,6 +72,9 @@ export default function DashboardPage() {
 
   const recentStories = storiesData?.recent ?? []
   const trendingStories = storiesData?.trending ?? []
+  // Dedupe: remove items from Recent that already appear in Trending
+  const trendingIds = new Set(trendingStories.map((d: Document) => d.id))
+  const recentFiltered = recentStories.filter((d: Document) => !trendingIds.has(d.id))
 
   const handleCardClick = (doc: Document) => {
     router.push(`/u/${doc.owner}/${doc.id}`)
@@ -279,7 +282,7 @@ export default function DashboardPage() {
             )}
 
             {/* Recently Published */}
-            {recentStories.length > 0 && (
+            {recentFiltered.length > 0 && (
               <Box>
                 <Fade in timeout={trendingStories.length > 0 ? 1400 : 600}>
                   <Box
@@ -319,7 +322,7 @@ export default function DashboardPage() {
                     gap: 3,
                   }}
                 >
-                  {recentStories.slice(0, 6).map((doc: Document, index: number) => (
+                  {recentFiltered.slice(0, 6).map((doc: Document, index: number) => (
                     <Fade key={doc.id} in timeout={(trendingStories.length > 0 ? 1600 : 800) + index * 100}>
                       <Card
                         sx={{
@@ -396,7 +399,7 @@ export default function DashboardPage() {
             )}
 
             {/* Empty State */}
-            {recentStories.length === 0 && trendingStories.length === 0 && (
+            {recentFiltered.length === 0 && trendingStories.length === 0 && (
               <Fade in timeout={600}>
                 <Card
                   sx={{

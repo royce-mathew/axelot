@@ -9,6 +9,7 @@ import ArrowForwardIcon from "@mui/icons-material/ArrowForward"
 import CodeIcon from "@mui/icons-material/Code"
 import FolderIcon from "@mui/icons-material/Folder"
 import StarIcon from "@mui/icons-material/Star"
+import GitHubIcon from "@mui/icons-material/GitHub"
 import NumberFlow, { continuous } from "@number-flow/react"
 import { Card } from "@mui/material"
 import { useAuth } from "@/hooks/use-auth"
@@ -454,7 +455,20 @@ const Footer = () => {
         bgcolor: (theme) => (theme.palette.mode === "dark" ? "rgba(0, 0, 0, 0.2)" : "rgba(0, 0, 0, 0.02)"),
       }}
     >
-      <Container maxWidth="lg">
+      <Container maxWidth="lg" sx={{ position: "relative" }}>
+        {/* GitHub repo link (top-right of footer) */}
+        <Box sx={{ position: "absolute", right: 8, top: 8 }}>
+          <MuiLink
+            href="https://github.com/royce-mathew/axelot"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="GitHub repository"
+            color="inherit"
+            sx={{ display: "inline-flex", alignItems: "center", opacity: 0.8, '&:hover': { opacity: 1 } }}
+          >
+            <GitHubIcon fontSize="small" />
+          </MuiLink>
+        </Box>
         <Typography
           variant="body1"
           align="center"
