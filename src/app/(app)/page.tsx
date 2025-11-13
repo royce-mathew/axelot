@@ -91,7 +91,7 @@ const HeroSection = () => {
                 display: "inline-block",
                 px: 2,
                 py: 0.5,
-                mb: 3,
+                mb: { xs: 6, sm: 3 },
                 borderRadius: "20px",
                 bgcolor: "primary.main",
                 color: "primary.contrastText",
@@ -456,58 +456,65 @@ const Footer = () => {
       }}
     >
       <Container maxWidth="lg" sx={{ position: "relative" }}>
-        {/* GitHub repo link (top-right of footer) */}
-        <Box sx={{ position: "absolute", right: 8, top: 8 }}>
-          <MuiLink
-            href="https://github.com/royce-mathew/axelot"
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="GitHub repository"
-            color="inherit"
-            sx={{ display: "inline-flex", alignItems: "center", opacity: 0.8, '&:hover': { opacity: 1 } }}
-          >
-            <GitHubIcon fontSize="small" />
-          </MuiLink>
-        </Box>
-        <Typography
-          variant="body1"
-          align="center"
-          sx={{
-            color: "text.secondary",
-            fontSize: "0.95rem",
-            fontWeight: 500,
-            letterSpacing: "-0.01em",
-          }}
+        <Stack
+          direction={{ xs: "column", sm: "row" }}
+          alignItems="center"
+          justifyContent="center"
+          spacing={{ xs: 2, sm: 0 }}
+          sx={{ position: "relative" }}
         >
-          © 2025 Royce Mathew & {""}
-          <MuiLink
-            href="https://www.linkedin.com/in/sunny-patel-30b460204/"
-            target="_blank"
-            rel="noopener noreferrer"
-            underline="hover"
-            color="inherit"
-            sx={{ fontWeight: 600 }}
-          >
-            Sunny Patel
-          </MuiLink>
-          . Built with{" "}
-          <Box
-            component="span"
+          <Box sx={{ position: { xs: "static", sm: "absolute" }, right: { sm: 8 }, top: { sm: 8 } }}>
+            <MuiLink
+              href="https://github.com/royce-mathew/axelot"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="GitHub repository"
+              color="inherit"
+              sx={{ display: "inline-flex", alignItems: "center", opacity: 0.8, "&:hover": { opacity: 1 } }}
+            >
+              <GitHubIcon fontSize="small" />
+            </MuiLink>
+          </Box>
+          <Typography
+            variant="body1"
+            align="center"
             sx={{
-              color: "#ec4899",
-              display: "inline-block",
-              animation: "heartbeat 1.5s ease-in-out infinite",
-              "@keyframes heartbeat": {
-                "0%, 100%": { transform: "scale(1)" },
-                "10%, 30%": { transform: "scale(1.1)" },
-                "20%, 40%": { transform: "scale(1)" },
-              },
+              color: "text.secondary",
+              fontSize: "0.95rem",
+              fontWeight: 500,
+              letterSpacing: "-0.01em",
             }}
           >
-            ❤️
-          </Box>{" "}
-          for developers.
-        </Typography>
+            © 2025 Royce Mathew & {""}
+            <MuiLink
+              href="https://www.linkedin.com/in/sunny-patel-30b460204/"
+              target="_blank"
+              rel="noopener noreferrer"
+              underline="hover"
+              color="inherit"
+              sx={{ fontWeight: 600 }}
+            >
+              Sunny Patel
+            </MuiLink>
+            . Built with{" "}
+            <Box
+              component="span"
+              sx={{
+                color: "#ec4899",
+                display: "inline-block",
+                animation: "heartbeat 1.5s ease-in-out infinite",
+                "@keyframes heartbeat": {
+                  "0%, 100%": { transform: "scale(1)" },
+                  "10%, 30%": { transform: "scale(1.1)" },
+                  "20%, 40%": { transform: "scale(1)" },
+                },
+              }}
+            >
+              ❤️
+            </Box>{" "}
+            for developers.
+          </Typography>
+        </Stack>
       </Container>
     </Box>
   )
