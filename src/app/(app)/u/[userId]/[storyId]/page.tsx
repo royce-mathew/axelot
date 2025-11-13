@@ -303,13 +303,27 @@ export default function StoryPage({ params }: { params: Promise<{ userId: string
     setSearchedUser(null);
 
     try {
-      // Query Firestore for user with matching email
+      // Support searching by email or @username
+      const input = sharingEmail.trim().toLowerCase();
       const usersRef = collection(db, 'users');
-      const q = query(usersRef, where('email', '==', sharingEmail.toLowerCase().trim()));
-      const querySnapshot = await getDocs(q);
+
+      let querySnapshot;
+      if (input.startsWith('@')) {
+        // explicit username
+        querySnapshot = await getDocs(query(usersRef, where('username', '==', input.slice(1))));
+      } else if (input.includes('@') && input.includes('.')) {
+        // looks like an email
+        querySnapshot = await getDocs(query(usersRef, where('email', '==', input)));
+      } else {
+        // try username first, then email as fallback
+        querySnapshot = await getDocs(query(usersRef, where('username', '==', input)));
+        if (querySnapshot.empty) {
+          querySnapshot = await getDocs(query(usersRef, where('email', '==', input)));
+        }
+      }
 
       if (querySnapshot.empty) {
-        setShareError('User not found. Please check the email address.');
+        setShareError('User not found. Try an email or @username.');
         return;
       }
 
@@ -1055,8 +1069,8 @@ export default function StoryPage({ params }: { params: Promise<{ userId: string
                   <TextField
                     fullWidth
                     size="small"
-                    type="email"
-                    placeholder="Enter email address"
+                    type="text"
+                    placeholder="Enter email address or @username"
                     value={sharingEmail}
                     onChange={(e) => {
                       setSharingEmail(e.target.value);

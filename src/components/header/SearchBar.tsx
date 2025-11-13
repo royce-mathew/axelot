@@ -103,7 +103,9 @@ export const SearchBar = () => {
         const filteredDocs = docs.filter(d => (d.title || '').toLowerCase().includes(q.toLowerCase())).slice(0, 8);
 
         const users = userSnap.docs.map(u => ({ id: u.id, ...(u.data() as any) })) as Array<User & { id: string }>;
-        const filteredUsers = users
+        // Only index users who have a configured username
+        const withUsername = users.filter(u => typeof u.username === 'string' && u.username.trim().length > 0);
+        const filteredUsers = withUsername
           .filter(u => (u.name?.toLowerCase().includes(q.toLowerCase()) || (u.username || '').toLowerCase().includes(q.toLowerCase())))
           .slice(0, 6);
 
@@ -132,7 +134,10 @@ export const SearchBar = () => {
       const slug = story.slug || 'untitled';
       router.push(`/u/${story.owner}/${story.id}-${slug}`);
     } else {
-      router.push(`/u/${id}/dashboard`);
+      const u: (User & { id: string }) | undefined = payload;
+      if (u?.username) {
+        router.push(`/u/@${u.username}`);
+      }
     }
   };
 
@@ -232,7 +237,7 @@ export const SearchBar = () => {
               <List disablePadding>
                 {results.users.map((user) => (
                   <ListItem key={user.id} disablePadding>
-                    <ListItemButton onClick={() => handleResultClick('user', user.id)}>
+                    <ListItemButton onClick={() => handleResultClick('user', user.id, user)}>
                       <ListItemAvatar>
                         <Avatar sx={{ bgcolor: 'secondary.main' }}>
                           <PersonIcon fontSize="small" />
