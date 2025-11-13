@@ -989,6 +989,7 @@ export default function StoryPage({ params }: { params: Promise<{ userId: string
           }}
         >
           <Tiptap
+            key={previewMode ? 'preview' : 'edit'}
             editable={access === true && !previewMode}
             onEditorReady={setCurrentEditor}
             readOnly={access !== true || previewMode}

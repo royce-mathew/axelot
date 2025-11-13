@@ -214,10 +214,10 @@ export default function SearchPage() {
 
                     <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 2 }}>
                       <Avatar sx={{ width: 24, height: 24, fontSize: '0.75rem' }}>
-                        {getInitials(story.lastUpdatedBy)}
+                        {getInitials(story.authorNames?.[0] || story.lastUpdatedBy || 'A')}
                       </Avatar>
                       <Typography variant="caption" color="text.secondary">
-                        {story.lastUpdatedBy}
+                        {story.authorNames?.[0] || story.lastUpdatedBy || 'Anonymous'}
                       </Typography>
                       <Typography variant="caption" color="text.secondary">
                         •

@@ -1,13 +1,14 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Extension } from '@tiptap/core';
+import { AnyExtension } from '@tiptap/core';
 import { EditorContent, JSONContent, useEditor, Editor } from '@tiptap/react';
 import { Box, Paper } from '@mui/material';
 import Toolbar2 from './toolbar';
 import { BubbleMenu } from './BubbleMenu';
 import { CharacterCountPopup } from './CharacterCountPopup';
 import { extensions } from './utils/extensions';
+import Link from '@tiptap/extension-link';
 import 'katex/dist/katex.min.css';
 
 export interface TiptapProps {
@@ -15,7 +16,7 @@ export interface TiptapProps {
   onSaved?: (content: JSONContent) => void;
   onDeleted?: () => void;
   initialContent?: JSONContent | undefined;
-  passedExtensions?: Extension[];
+  passedExtensions?: AnyExtension[];
   editable?: boolean;
   readOnly?: boolean;
   onEditorReady?: (editor: Editor) => void;
@@ -33,10 +34,26 @@ const Tiptap2 = ({ passedExtensions, initialContent, editable = true, readOnly =
           : 'outline: none; min-height: 500px; padding: 24px;',
       },
     },
-    extensions: [
-      ...extensions,
-      ...(passedExtensions ?? []),
-    ],
+    extensions: (() => {
+      // Reconfigure Link based on readOnly/editable to enable openOnClick in previews
+      const shouldOpenOnClick = readOnly || !editable;
+      const linkConfigured = Link.configure({
+        openOnClick: shouldOpenOnClick,
+        enableClickSelection: !shouldOpenOnClick,
+        HTMLAttributes: {
+          rel: 'noopener noreferrer',
+          target: null,
+        },
+      });
+
+      // Remove existing Link from base extensions and add our configured one at the end
+      const base = extensions.filter((ext: any) => ext?.name !== 'link');
+      return [
+        ...base,
+        linkConfigured,
+        ...(passedExtensions ?? []),
+      ];
+    })(),
     content: initialContent,
     editable,
     immediatelyRender: true,

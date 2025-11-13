@@ -210,13 +210,13 @@ export default function DashboardPage() {
                       <Card
                         sx={{
                           cursor: "pointer",
-                          transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                          transition: "all 0.2s ease-in-out",
                           border: "1px solid",
                           borderColor: "divider",
                           "&:hover": {
-                            boxShadow: "0 8px 24px rgba(0,0,0,0.12)",
-                            transform: "translateY(-4px)",
+                            boxShadow: 3,
                             borderColor: "primary.main",
+                            transform: "translateY(-4px)",
                           },
                         }}
                         onClick={() => handleCardClick(doc)}
@@ -327,13 +327,13 @@ export default function DashboardPage() {
                       <Card
                         sx={{
                           cursor: "pointer",
-                          transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                          transition: "all 0.2s ease-in-out",
                           border: "1px solid",
                           borderColor: "divider",
                           "&:hover": {
-                            boxShadow: "0 8px 24px rgba(0,0,0,0.12)",
-                            transform: "translateY(-4px)",
+                            boxShadow: 3,
                             borderColor: "primary.main",
+                            transform: "translateY(-4px)",
                           },
                         }}
                         onClick={() => handleCardClick(doc)}
