@@ -72,13 +72,23 @@ const HeroSection = () => {
         }}
       />
 
-      <Container maxWidth="lg" sx={{ position: "relative", zIndex: 1 }}>
+      <Container
+          maxWidth="lg"
+          sx={{
+            position: "relative",
+            zIndex: 1,
+            // Add extra top padding on small screens so the lead-in badge
+            // doesn't sit too close to a fixed header.
+            pt: { xs: 8, sm: 10},
+          }}
+        >
         <Stack spacing={5} alignItems="center" textAlign="center">
           <Box
             sx={{
               animation: "fadeInUp 0.6s ease-out",
               animationDelay: "0.1s",
               animationFillMode: "both",
+              mt: { xs: 15, sm: 0 },
               "@keyframes fadeInUp": {
                 "0%": { opacity: 0, transform: "translateY(20px)" },
                 "100%": { opacity: 1, transform: "translateY(0)" },
@@ -212,7 +222,7 @@ const HeroSection = () => {
           </Stack>
 
           <Stack
-            direction={{ xs: "column", sm: "row" }}
+            direction="row"
             spacing={6}
             sx={{
               pt: 4,
@@ -449,7 +459,7 @@ const Footer = () => {
     <Box
       component="footer"
       sx={{
-        py: 8,
+        py: 4,
         borderTop: "2px solid",
         borderColor: "divider",
         bgcolor: (theme) => (theme.palette.mode === "dark" ? "rgba(0, 0, 0, 0.2)" : "rgba(0, 0, 0, 0.02)"),
@@ -507,7 +517,7 @@ const Footer = () => {
             >
               Sunny Patel
             </MuiLink>
-            . Built with{" "}
+            .<br/> Built with{" "}
             <Box
               component="span"
               sx={{

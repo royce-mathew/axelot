@@ -249,10 +249,9 @@ export default function StoryPage({ params }: { params: Promise<{ userId: string
         lastSavedTitleRef.current = title;
         
         // Update URL if slug changed (format: /u/userId/storyId-slug)
-        // Use Next.js router.replace for better SPA navigation (avoids full reload)
         const newUrl = `/u/${unwrappedParams.userId}/${storyId}-${newSlug}`;
-        if (window.location.pathname !== newUrl) {
-          router.replace(newUrl, { scroll: false });
+        if (typeof window !== 'undefined' && window.location.pathname !== newUrl) {
+          window.history.replaceState(null, '', newUrl);
         }
       } catch (error) {
         console.error('Error saving title:', error);
@@ -551,12 +550,8 @@ export default function StoryPage({ params }: { params: Promise<{ userId: string
     setShareDialogOpen(true);
   };
 
-  // Show skeleton while provider is initializing (improved UX)
-  // Wait until both the provider is ready and we've loaded document metadata
-  // (which determines access) before rendering the editor. This prevents a
-  // race where the provider is ready first and the editor mounts before we
-  // know the user's access level, causing the editor to appear read-only and
-  // the local cursor to be missing.
+  /* Wait for provider and document metadata (access) before rendering the editor.
+     Prevents mounting in the wrong state (e.g., read-only or missing cursors). */
   if (!provider || loading) {
     return (
       <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
@@ -634,31 +629,7 @@ export default function StoryPage({ params }: { params: Promise<{ userId: string
           {access === true && (
             <Paper elevation={0} sx={{ p: 3, mb: 3, border: 1, borderColor: 'divider' }}>
             <Stack spacing={2}>
-            {previewMode ? (
-              <Box>
-                <Typography 
-                  variant="h3" 
-                  sx={{ 
-                    fontSize: { xs: '1.75rem', sm: '2rem' },
-                    fontWeight: 700,
-                    mb: { xs: 1.5, sm: 2 },
-                    lineHeight: 1.2,
-                    wordBreak: 'break-word',
-                  }}
-                >
-                  {title || 'Untitled Story'}
-                </Typography>
-                {document?.authorNames && document.authorNames.length > 0 && (
-                  <Typography 
-                    variant="body2" 
-                    color="text.secondary"
-                    sx={{ mb: 1.5, fontStyle: 'italic' }}
-                  >
-                    By {document.authorNames[0]} {document.authorNames.length > 1 && `, ${document.authorNames.slice(1).join(', ')}`}
-                  </Typography>
-                )}
-              </Box>
-            ) : (
+            <Box sx={{ mb: { xs: 1.5, sm: 2 }, minHeight: { xs: '3.5rem', sm: '4.25rem' } }}>
               <TextField
                 fullWidth
                 variant="standard"
@@ -666,16 +637,48 @@ export default function StoryPage({ params }: { params: Promise<{ userId: string
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 disabled={access !== true}
-                InputProps={{
-                  sx: {
-                    fontSize: '2rem',
-                    fontWeight: 700,
-                    '&:before': { borderBottom: 'none' },
-                    '&:hover:not(.Mui-disabled):before': { borderBottom: 'none' },
+                inputProps={{
+                  readOnly: previewMode,
+                  tabIndex: previewMode ? -1 : undefined,
+                }}
+                slotProps={{
+                  input: {
+                    sx: {
+                      fontSize: { xs: '1.75rem', sm: '2rem' },
+                      fontWeight: 700,
+                      lineHeight: 1.2,
+                      // hide caret when in preview
+                      caretColor: previewMode ? 'transparent' : undefined,
+                      userSelect: previewMode ? 'none' : undefined,
+                    },
+                  },
+                  root: {
+                    sx: {
+                      // remove standard underline for the input root
+                      '& .MuiInput-underline:before': { borderBottom: 'none' },
+                      '& .MuiInput-underline:hover:not(.Mui-disabled):before': { borderBottom: 'none' },
+                      // disable pointer events when previewing so it behaves like static text
+                      pointerEvents: previewMode ? 'none' : undefined,
+                    },
                   },
                 }}
               />
-            )}
+
+              {/* Authors: always render to reserve space and prevent layout shifts */}
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                sx={{
+                  fontStyle: 'italic',
+                  mt: 0.5,
+                  minHeight: '1rem',
+                }}
+              >
+                {document?.authorNames && document.authorNames.length > 0
+                  ? `By ${document.authorNames[0]}${document.authorNames.length > 1 ? `, ${document.authorNames.slice(1).join(', ')}` : ''}`
+                  : ''}
+              </Typography>
+            </Box>
 
             <Divider />
 

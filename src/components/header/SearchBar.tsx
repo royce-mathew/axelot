@@ -125,19 +125,26 @@ export const SearchBar = () => {
     };
   }, [searchQuery, isAuthenticated]);
 
-  const handleResultClick = (type: 'document' | 'user', id: string, payload?: any) => {
+  const handleResultClick = (
+    type: 'document' | 'user',
+    id: string,
+    payload?: (Story & { id: string }) | (User & { id: string })
+  ) => {
     setShowResults(false);
     setSearchQuery('');
-    // Navigate to the specific item
+
+    if (!payload) return;
+
     if (type === 'document') {
-      const story: Story & { id: string } = payload;
-      const slug = story.slug || 'untitled';
+      const story = payload as Story & { id: string };
+      const slug = story.slug ?? 'untitled';
       router.push(`/u/${story.owner}/${story.id}-${slug}`);
-    } else {
-      const u: (User & { id: string }) | undefined = payload;
-      if (u?.username) {
-        router.push(`/u/@${u.username}`);
-      }
+      return;
+    }
+
+    const user = payload as User & { id: string };
+    if (user.username) {
+      router.push(`/u/@${user.username}`);
     }
   };
 
