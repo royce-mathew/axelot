@@ -1,127 +1,126 @@
-'use client';
+"use client"
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
+import {
+  Add as AddIcon,
+  Delete as DeleteIcon,
+  Description as DescriptionIcon,
+  Edit as EditIcon,
+  Lock as LockIcon,
+  MoreVert as MoreVertIcon,
+  Public as PublicIcon,
+} from "@mui/icons-material"
 import {
   Box,
-  Container,
-  Typography,
   Button,
   Card,
-  CardContent,
   CardActions,
+  CardContent,
+  Chip,
+  Container,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Fab,
   IconButton,
   Menu,
   MenuItem,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
-  Chip,
-  Stack,
   Skeleton,
-  Fab,
-} from '@mui/material';
-import {
-  Add as AddIcon,
-  MoreVert as MoreVertIcon,
-  Edit as EditIcon,
-  Delete as DeleteIcon,
-  Public as PublicIcon,
-  Lock as LockIcon,
-  Description as DescriptionIcon,
-} from '@mui/icons-material';
-import { useRouter } from 'next/navigation';
-import { useAuth } from '@/hooks/use-auth';
+  Stack,
+  TextField,
+  Typography,
+} from "@mui/material"
 import {
   addDoc,
-  onSnapshot,
   deleteDoc,
-  updateDoc,
+  onSnapshot,
   Timestamp,
-} from 'firebase/firestore';
+  updateDoc,
+} from "firebase/firestore"
+import { Document } from "@/types/document"
+import { createInitialDocument } from "@/lib/content-utils"
 import {
+  allDocumentsRef,
   documentRef,
   documentsByOwnerRef,
-  allDocumentsRef,
-} from '@/lib/converters/document';
-import { Document } from '@/types/document';
-import { createInitialDocument } from '@/lib/content-utils';
-import { timeAgo } from '@/lib/utils';
+} from "@/lib/converters/document"
+import { timeAgo } from "@/lib/utils"
+import { useAuth } from "@/hooks/use-auth"
 
 export default function StoriesPage() {
-  const { user, isAuthenticated, isLoading } = useAuth();
-  const router = useRouter();
-  const [documents, setDocuments] = useState<Document[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const [selectedDoc, setSelectedDoc] = useState<Document | null>(null);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [renameDialogOpen, setRenameDialogOpen] = useState(false);
-  const [createDialogOpen, setCreateDialogOpen] = useState(false);
-  const [newTitle, setNewTitle] = useState('');
-
+  const { user, isAuthenticated, isLoading } = useAuth()
+  const router = useRouter()
+  const [documents, setDocuments] = useState<Document[]>([])
+  const [loading, setLoading] = useState(true)
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
+  const [selectedDoc, setSelectedDoc] = useState<Document | null>(null)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [renameDialogOpen, setRenameDialogOpen] = useState(false)
+  const [createDialogOpen, setCreateDialogOpen] = useState(false)
+  const [newTitle, setNewTitle] = useState("")
 
   // Fetch user's documents
   useEffect(() => {
     // If the user is not available, skip fetch
     if (!user) {
-      return;
+      return
     }
 
     const unsubscribe = onSnapshot(
       documentsByOwnerRef(user.id),
       (snapshot) => {
-        const docs = snapshot.docs.map((doc) => doc.data());
-        setDocuments(docs);
-        setLoading(false);
+        const docs = snapshot.docs.map((doc) => doc.data())
+        setDocuments(docs)
+        setLoading(false)
       },
       (error) => {
-        console.error('Error fetching documents:', error);
-        setLoading(false);
+        console.error("Error fetching documents:", error)
+        setLoading(false)
       }
-    );
+    )
 
     return () => {
-      console.log("Cleaning up documents subscription");
-      unsubscribe();
-    };
-  }, [isAuthenticated, isLoading, user, user?.id]);
+      console.log("Cleaning up documents subscription")
+      unsubscribe()
+    }
+  }, [isAuthenticated, isLoading, user, user?.id])
 
   const handleMenuOpen = (
     event: React.MouseEvent<HTMLElement>,
     doc: Document
   ) => {
-    event.stopPropagation();
-    setAnchorEl(event.currentTarget);
-    setSelectedDoc(doc);
-  };
+    event.stopPropagation()
+    setAnchorEl(event.currentTarget)
+    setSelectedDoc(doc)
+  }
 
   const handleMenuClose = () => {
-    setAnchorEl(null);
-  };
+    setAnchorEl(null)
+  }
 
   const handleRenameClick = () => {
     if (selectedDoc) {
-      setNewTitle(selectedDoc.title);
-      setRenameDialogOpen(true);
+      setNewTitle(selectedDoc.title)
+      setRenameDialogOpen(true)
     }
-    handleMenuClose();
-  };
+    handleMenuClose()
+  }
 
   const handleDeleteClick = () => {
-    setDeleteDialogOpen(true);
-    handleMenuClose();
-  };
+    setDeleteDialogOpen(true)
+    handleMenuClose()
+  }
 
   const handleCreateNew = async () => {
-    if (!user?.id || !newTitle.trim()) return;
+    if (!user?.id || !newTitle.trim()) return
 
     try {
-      const docData = createInitialDocument(newTitle.trim(), user.id);
+      const docData = createInitialDocument(newTitle.trim(), user.id)
 
       // Add missing fields required by security rules for creation
-      const completeDocData: Omit<Document, 'id' | 'ref'> = {
+      const completeDocData: Omit<Document, "id" | "ref"> = {
         ...docData,
         owner: user.id,
         writeAccess: [],
@@ -134,63 +133,63 @@ export default function StoriesPage() {
         isArchived: false,
         // Denormalized author names (just owner at creation)
         authorNames: user.name ? [user.name] : [],
-      };
+      }
 
-      const newDoc = await addDoc(allDocumentsRef(), completeDocData);
+      const newDoc = await addDoc(allDocumentsRef(), completeDocData)
 
-      setCreateDialogOpen(false);
-      setNewTitle('');
+      setCreateDialogOpen(false)
+      setNewTitle("")
       // Navigate to the new story with username if available, otherwise user ID
-      const userIdentifier = user.username ? `@${user.username}` : user.id;
-      router.push(`/u/${userIdentifier}/${newDoc.id}`);
+      const userIdentifier = user.username ? `@${user.username}` : user.id
+      router.push(`/u/${userIdentifier}/${newDoc.id}`)
     } catch (error) {
-      console.error('Error creating document:', error);
+      console.error("Error creating document:", error)
     }
-  };
+  }
 
   const handleRename = async () => {
-    if (!selectedDoc?.id || !newTitle.trim()) return;
+    if (!selectedDoc?.id || !newTitle.trim()) return
 
     try {
       await updateDoc(documentRef(selectedDoc.id), {
         title: newTitle.trim(),
         lastUpdated: Timestamp.now(),
-        lastUpdatedBy: user?.id || 'Unknown',
-      });
-      setRenameDialogOpen(false);
-      setNewTitle('');
+        lastUpdatedBy: user?.id || "Unknown",
+      })
+      setRenameDialogOpen(false)
+      setNewTitle("")
     } catch (error) {
-      console.error('Error renaming document:', error);
+      console.error("Error renaming document:", error)
     }
-  };
+  }
 
   const handleDelete = async () => {
-    if (!selectedDoc?.id) return;
+    if (!selectedDoc?.id) return
 
     try {
-      await deleteDoc(documentRef(selectedDoc.id));
-      setDeleteDialogOpen(false);
-      setSelectedDoc(null);
+      await deleteDoc(documentRef(selectedDoc.id))
+      setDeleteDialogOpen(false)
+      setSelectedDoc(null)
     } catch (error) {
-      console.error('Error deleting document:', error);
+      console.error("Error deleting document:", error)
     }
-  };
+  }
 
   const handleCardClick = (doc: Document) => {
     if (doc.id && doc.owner) {
-      const slug = doc.slug || 'untitled';
-      const userIdentifier = user?.username ? `@${user.username}` : doc.owner;
-      router.push(`/u/${userIdentifier}/${doc.id}-${slug}`);
+      const slug = doc.slug || "untitled"
+      const userIdentifier = user?.username ? `@${user.username}` : doc.owner
+      router.push(`/u/${userIdentifier}/${doc.id}-${slug}`)
     }
-  };
+  }
 
   // Show nothing while auth is loading or user is not authenticated
   if (isLoading || !isAuthenticated) {
-    return null;
+    return null
   }
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
+    <Box sx={{ minHeight: "100vh", bgcolor: "background.default" }}>
       <Container maxWidth="lg" sx={{ py: 6 }}>
         <Stack
           direction="row"
@@ -226,13 +225,13 @@ export default function StoriesPage() {
         ) : documents.length === 0 ? (
           <Card
             sx={{
-              textAlign: 'center',
+              textAlign: "center",
               py: 8,
-              bgcolor: 'background.paper',
+              bgcolor: "background.paper",
             }}
           >
             <DescriptionIcon
-              sx={{ fontSize: 80, color: 'text.disabled', mb: 2 }}
+              sx={{ fontSize: 80, color: "text.disabled", mb: 2 }}
             />
             <Typography variant="h5" gutterBottom color="text.secondary">
               No stories yet
@@ -254,11 +253,11 @@ export default function StoriesPage() {
               <Card
                 key={doc.id}
                 sx={{
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
-                  '&:hover': {
+                  cursor: "pointer",
+                  transition: "all 0.2s",
+                  "&:hover": {
                     boxShadow: 4,
-                    transform: 'translateY(-2px)',
+                    transform: "translateY(-2px)",
                   },
                 }}
                 onClick={() => handleCardClick(doc)}
@@ -290,21 +289,19 @@ export default function StoriesPage() {
                       >
                         <Chip
                           icon={doc.isPublic ? <PublicIcon /> : <LockIcon />}
-                          label={doc.isPublic ? 'Public' : 'Private'}
+                          label={doc.isPublic ? "Public" : "Private"}
                           size="small"
-                          color={doc.isPublic ? 'success' : 'default'}
+                          color={doc.isPublic ? "success" : "default"}
                         />
                         {doc.isArchived && (
-                          <Chip
-                            label="Archived"
-                            size="small"
-                            color="default"
-                          />
+                          <Chip label="Archived" size="small" color="default" />
                         )}
                         {doc.tags &&
-                          doc.tags.slice(0, 3).map((tag, index) => (
-                            <Chip key={index} label={tag} size="small" />
-                          ))}
+                          doc.tags
+                            .slice(0, 3)
+                            .map((tag, index) => (
+                              <Chip key={index} label={tag} size="small" />
+                            ))}
                       </Stack>
                     </Box>
                     <IconButton
@@ -335,7 +332,7 @@ export default function StoriesPage() {
             <EditIcon fontSize="small" sx={{ mr: 1 }} />
             Rename
           </MenuItem>
-          <MenuItem onClick={handleDeleteClick} sx={{ color: 'error.main' }}>
+          <MenuItem onClick={handleDeleteClick} sx={{ color: "error.main" }}>
             <DeleteIcon fontSize="small" sx={{ mr: 1 }} />
             Delete
           </MenuItem>
@@ -358,8 +355,8 @@ export default function StoriesPage() {
               value={newTitle}
               onChange={(e) => setNewTitle(e.target.value)}
               onKeyPress={(e) => {
-                if (e.key === 'Enter') {
-                  handleCreateNew();
+                if (e.key === "Enter") {
+                  handleCreateNew()
                 }
               }}
             />
@@ -393,8 +390,8 @@ export default function StoriesPage() {
               value={newTitle}
               onChange={(e) => setNewTitle(e.target.value)}
               onKeyPress={(e) => {
-                if (e.key === 'Enter') {
-                  handleRename();
+                if (e.key === "Enter") {
+                  handleRename()
                 }
               }}
             />
@@ -438,15 +435,15 @@ export default function StoriesPage() {
         color="primary"
         aria-label="add"
         sx={{
-          position: 'fixed',
+          position: "fixed",
           bottom: 24,
           right: 24,
-          display: { xs: 'flex', sm: 'none' },
+          display: { xs: "flex", sm: "none" },
         }}
         onClick={() => setCreateDialogOpen(true)}
       >
         <AddIcon />
       </Fab>
     </Box>
-  );
+  )
 }

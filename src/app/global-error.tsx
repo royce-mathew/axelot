@@ -14,9 +14,9 @@ export default function GlobalError({
     <html>
       <head />
       <body
-        style={{ 
-          minHeight: '100vh', 
-          backgroundColor: 'var(--mui-palette-background-default)',
+        style={{
+          minHeight: "100vh",
+          backgroundColor: "var(--mui-palette-background-default)",
         }}
       >
         <Providers>

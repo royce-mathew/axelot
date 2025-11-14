@@ -1,92 +1,107 @@
-"use client";
+"use client"
 
-import { useEffect, useState, useTransition } from 'react';
+import { useEffect, useState, useTransition } from "react"
+import Link from "next/link"
+import { useRouter } from "next/navigation"
 import {
-  Box,
-  Container,
-  TextField,
-  Button,
-  Typography,
-  Paper,
-  Link as MuiLink,
   Alert,
+  Box,
+  Button,
+  Container,
   Divider,
+  Link as MuiLink,
+  Paper,
   Stack,
-} from '@mui/material';
-import Link from 'next/link';
-import { signUpAction } from './actions';
-import { signIn } from 'next-auth/react';
-import { getAuth, sendSignInLinkToEmail } from 'firebase/auth';
-import { firebaseApp } from '@/lib/firebase/client';
-import { useAuth } from '@/hooks/use-auth';
-import { useRouter } from 'next/navigation';
+  TextField,
+  Typography,
+} from "@mui/material"
+import { getAuth, sendSignInLinkToEmail } from "firebase/auth"
+import { signIn } from "next-auth/react"
+import { firebaseApp } from "@/lib/firebase/client"
+import { useAuth } from "@/hooks/use-auth"
+import { signUpAction } from "./actions"
 
 export default function SignUpPage() {
-  const { isAuthenticated } = useAuth();
-  const router = useRouter();
+  const { isAuthenticated } = useAuth()
+  const router = useRouter()
   // If a logged-in user lands here, send them to stories (avoid confusing sign-up state)
   useEffect(() => {
     if (isAuthenticated) {
-      router.replace('/stories');
+      router.replace("/stories")
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, router])
 
-  const [isPending, startTransition] = useTransition();
-  const [error, setError] = useState<string>('');
-  const [success, setSuccess] = useState<string>('');
-  const [emailSent, setEmailSent] = useState(false);
+  const [isPending, startTransition] = useTransition()
+  const [error, setError] = useState<string>("")
+  const [success, setSuccess] = useState<string>("")
+  const [emailSent, setEmailSent] = useState(false)
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setError('');
-    setSuccess('');
+    event.preventDefault()
+    setError("")
+    setSuccess("")
 
-    const formData = new FormData(event.currentTarget);
+    const formData = new FormData(event.currentTarget)
 
     startTransition(async () => {
       // First create the user account
-      const result = await signUpAction(formData);
+      const result = await signUpAction(formData)
 
       if (result.success && result.email) {
         try {
           // Send verification email link using Firebase
-          const auth = getAuth(firebaseApp);
+          const auth = getAuth(firebaseApp)
           const actionCodeSettings = {
             url: `${window.location.origin}/auth/verify-email?email=${encodeURIComponent(result.email)}`,
             handleCodeInApp: true,
-          };
+          }
 
-          await sendSignInLinkToEmail(auth, result.email, actionCodeSettings);
-          
+          await sendSignInLinkToEmail(auth, result.email, actionCodeSettings)
+
           // Save email locally for verification completion
-          window.localStorage.setItem('emailForSignIn', result.email);
-          
-          setSuccess('Account created! Check your email for a verification link.');
-          setEmailSent(true);
+          window.localStorage.setItem("emailForSignIn", result.email)
+
+          setSuccess(
+            "Account created! Check your email for a verification link."
+          )
+          setEmailSent(true)
         } catch (emailError) {
-          console.error('Error sending verification email:', emailError);
-          setError('Account created but failed to send verification email. Please try signing in.');
+          console.error("Error sending verification email:", emailError)
+          setError(
+            "Account created but failed to send verification email. Please try signing in."
+          )
         }
       } else {
-        setError(result.error || 'Sign up failed');
+        setError(result.error || "Sign up failed")
       }
-    });
-  };
+    })
+  }
 
-  const handleOAuthSignIn = (provider: 'google' | 'github') => {
+  const handleOAuthSignIn = (provider: "google" | "github") => {
     // Route to a real page after OAuth completes. The previous '/auth/username-setup'
     // path does not exist and caused a 404 after successful auth.
-    signIn(provider, { callbackUrl: '/stories' });
-  };
+    signIn(provider, { callbackUrl: "/stories" })
+  }
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
+    <Box sx={{ minHeight: "100vh", bgcolor: "background.default" }}>
       <Container maxWidth="sm" sx={{ py: 8 }}>
         <Paper elevation={3} sx={{ p: 4 }}>
-          <Typography variant="h4" component="h1" gutterBottom fontWeight={700} textAlign="center">
+          <Typography
+            variant="h4"
+            component="h1"
+            gutterBottom
+            fontWeight={700}
+            textAlign="center"
+          >
             Create Account
           </Typography>
-          <Typography variant="body2" color="text.secondary" textAlign="center" sx={{ mb: 3 }}>
+          <Typography
+            variant="body2"
+            color="text.secondary"
+            textAlign="center"
+            sx={{ mb: 3 }}
+          >
             Sign up to start writing and sharing your stories
           </Typography>
 
@@ -101,7 +116,8 @@ export default function SignUpPage() {
               {success}
               {emailSent && (
                 <Typography variant="body2" sx={{ mt: 1 }}>
-                  Click the link in the email to verify your account and complete sign-up.
+                  Click the link in the email to verify your account and
+                  complete sign-up.
                 </Typography>
               )}
             </Alert>
@@ -112,7 +128,7 @@ export default function SignUpPage() {
             <Stack direction="row" justifyContent="center" sx={{ mb: 2 }}>
               <Button
                 variant="contained"
-                onClick={() => router.push('/auth/sign-in?registered=true')}
+                onClick={() => router.push("/auth/sign-in?registered=true")}
               >
                 Go to Sign In
               </Button>
@@ -168,7 +184,7 @@ export default function SignUpPage() {
                     disabled={isPending}
                     sx={{ mt: 1 }}
                   >
-                    {isPending ? 'Creating Account...' : 'Sign Up'}
+                    {isPending ? "Creating Account..." : "Sign Up"}
                   </Button>
                 </Stack>
               </form>
@@ -179,7 +195,7 @@ export default function SignUpPage() {
                 <Button
                   variant="outlined"
                   fullWidth
-                  onClick={() => handleOAuthSignIn('google')}
+                  onClick={() => handleOAuthSignIn("google")}
                   disabled={isPending}
                 >
                   Continue with Google
@@ -187,7 +203,7 @@ export default function SignUpPage() {
                 <Button
                   variant="outlined"
                   fullWidth
-                  onClick={() => handleOAuthSignIn('github')}
+                  onClick={() => handleOAuthSignIn("github")}
                   disabled={isPending}
                 >
                   Continue with GitHub
@@ -197,7 +213,7 @@ export default function SignUpPage() {
           )}
 
           <Typography variant="body2" textAlign="center" sx={{ mt: 3 }}>
-            Already have an account?{' '}
+            Already have an account?{" "}
             <MuiLink component={Link} href="/auth/sign-in" underline="hover">
               Sign in
             </MuiLink>
@@ -205,5 +221,5 @@ export default function SignUpPage() {
         </Paper>
       </Container>
     </Box>
-  );
+  )
 }

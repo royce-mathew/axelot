@@ -1,17 +1,23 @@
 "use client"
 
 import type React from "react"
-
-import { useState, useEffect } from "react"
-import { Typography, Button, Container, Box, Stack, Link as MuiLink } from "@mui/material"
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward"
 import CodeIcon from "@mui/icons-material/Code"
 import FolderIcon from "@mui/icons-material/Folder"
-import StarIcon from "@mui/icons-material/Star"
 import GitHubIcon from "@mui/icons-material/GitHub"
+import StarIcon from "@mui/icons-material/Star"
+import {
+  Box,
+  Button,
+  Card,
+  Container,
+  Link as MuiLink,
+  Stack,
+  Typography,
+} from "@mui/material"
 import NumberFlow, { continuous } from "@number-flow/react"
-import { Card } from "@mui/material"
 import { useAuth } from "@/hooks/use-auth"
 
 const HeroSection = () => {
@@ -49,7 +55,8 @@ const HeroSection = () => {
           left: "10%",
           width: 400,
           height: 400,
-          background: "radial-gradient(circle, rgba(59, 130, 246, 0.1) 0%, transparent 70%)",
+          background:
+            "radial-gradient(circle, rgba(59, 130, 246, 0.1) 0%, transparent 70%)",
           borderRadius: "50%",
           animation: "float 6s ease-in-out infinite",
           "@keyframes float": {
@@ -65,7 +72,8 @@ const HeroSection = () => {
           right: "10%",
           width: 300,
           height: 300,
-          background: "radial-gradient(circle, rgba(139, 92, 246, 0.1) 0%, transparent 70%)",
+          background:
+            "radial-gradient(circle, rgba(139, 92, 246, 0.1) 0%, transparent 70%)",
           borderRadius: "50%",
           animation: "float 8s ease-in-out infinite",
           animationDelay: "1s",
@@ -73,15 +81,15 @@ const HeroSection = () => {
       />
 
       <Container
-          maxWidth="lg"
-          sx={{
-            position: "relative",
-            zIndex: 1,
-            // Add extra top padding on small screens so the lead-in badge
-            // doesn't sit too close to a fixed header.
-            pt: { xs: 8, sm: 10},
-          }}
-        >
+        maxWidth="lg"
+        sx={{
+          position: "relative",
+          zIndex: 1,
+          // Add extra top padding on small screens so the lead-in badge
+          // doesn't sit too close to a fixed header.
+          pt: { xs: 8, sm: 10 },
+        }}
+      >
         <Stack spacing={5} alignItems="center" textAlign="center">
           <Box
             sx={{
@@ -158,8 +166,8 @@ const HeroSection = () => {
                 maxWidth: "700px",
               }}
             >
-              The all-in-one platform for developers to document their journey, collaborate in real-time, and build a
-              stunning portfolio.
+              The all-in-one platform for developers to document their journey,
+              collaborate in real-time, and build a stunning portfolio.
             </Typography>
           </Box>
 
@@ -237,16 +245,34 @@ const HeroSection = () => {
             }}
           >
             <Box sx={{ textAlign: "center" }}>
-              <Typography variant="h4" fontWeight={700} sx={{ fontVariantNumeric: "tabular-nums" }}>
-                <NumberFlow value={animatedUsers} format={{ notation: "compact" }} plugins={[continuous]} />+
+              <Typography
+                variant="h4"
+                fontWeight={700}
+                sx={{ fontVariantNumeric: "tabular-nums" }}
+              >
+                <NumberFlow
+                  value={animatedUsers}
+                  format={{ notation: "compact" }}
+                  plugins={[continuous]}
+                />
+                +
               </Typography>
               <Typography variant="body2" color="text.secondary">
                 Active Writers
               </Typography>
             </Box>
             <Box sx={{ textAlign: "center" }}>
-              <Typography variant="h4" fontWeight={700} sx={{ fontVariantNumeric: "tabular-nums" }}>
-                <NumberFlow value={animatedStories} format={{ notation: "compact" }} plugins={[continuous]} />+
+              <Typography
+                variant="h4"
+                fontWeight={700}
+                sx={{ fontVariantNumeric: "tabular-nums" }}
+              >
+                <NumberFlow
+                  value={animatedStories}
+                  format={{ notation: "compact" }}
+                  plugins={[continuous]}
+                />
+                +
               </Typography>
               <Typography variant="body2" color="text.secondary">
                 Stories Published
@@ -351,12 +377,14 @@ const FeaturesSection = () => {
     {
       icon: <FolderIcon />,
       title: "Organized Workspace",
-      description: "Keep all your documentation, notes, and projects organized in one beautiful, accessible space.",
+      description:
+        "Keep all your documentation, notes, and projects organized in one beautiful, accessible space.",
     },
     {
       icon: <StarIcon />,
       title: "Public Portfolios",
-      description: "Showcase your best work to the world. Share your knowledge and build your developer brand.",
+      description:
+        "Showcase your best work to the world. Share your knowledge and build your developer brand.",
     },
   ]
 
@@ -376,7 +404,8 @@ const FeaturesSection = () => {
           right: "-10%",
           width: 400,
           height: 400,
-          background: "radial-gradient(circle, rgba(139, 92, 246, 0.08) 0%, transparent 70%)",
+          background:
+            "radial-gradient(circle, rgba(139, 92, 246, 0.08) 0%, transparent 70%)",
           borderRadius: "50%",
           filter: "blur(60px)",
           pointerEvents: "none",
@@ -427,7 +456,8 @@ const FeaturesSection = () => {
                 letterSpacing: "-0.01em",
               }}
             >
-              Professional tools designed for developers who want to create, share, and grow
+              Professional tools designed for developers who want to create,
+              share, and grow
             </Typography>
           </Box>
 
@@ -462,7 +492,10 @@ const Footer = () => {
         py: 4,
         borderTop: "2px solid",
         borderColor: "divider",
-        bgcolor: (theme) => (theme.palette.mode === "dark" ? "rgba(0, 0, 0, 0.2)" : "rgba(0, 0, 0, 0.02)"),
+        bgcolor: (theme) =>
+          theme.palette.mode === "dark"
+            ? "rgba(0, 0, 0, 0.2)"
+            : "rgba(0, 0, 0, 0.02)",
       }}
     >
       <Container maxWidth="lg" sx={{ position: "relative" }}>
@@ -473,14 +506,25 @@ const Footer = () => {
           spacing={{ xs: 2, sm: 0 }}
           sx={{ position: "relative" }}
         >
-          <Box sx={{ position: { xs: "static", sm: "absolute" }, right: { sm: 8 }, top: { sm: 8 } }}>
+          <Box
+            sx={{
+              position: { xs: "static", sm: "absolute" },
+              right: { sm: 8 },
+              top: { sm: 8 },
+            }}
+          >
             <MuiLink
               href="https://github.com/royce-mathew/axelot"
               target="_blank"
               rel="noopener noreferrer"
               aria-label="GitHub repository"
               color="inherit"
-              sx={{ display: "inline-flex", alignItems: "center", opacity: 0.8, "&:hover": { opacity: 1 } }}
+              sx={{
+                display: "inline-flex",
+                alignItems: "center",
+                opacity: 0.8,
+                "&:hover": { opacity: 1 },
+              }}
             >
               <GitHubIcon fontSize="small" />
             </MuiLink>
@@ -495,7 +539,7 @@ const Footer = () => {
               letterSpacing: "-0.01em",
             }}
           >
-            © 2025 {" "}
+            © 2025{" "}
             <MuiLink
               href="https://www.linkedin.com/in/royce-mathew/"
               target="_blank"
@@ -505,8 +549,8 @@ const Footer = () => {
               sx={{ fontWeight: 600 }}
             >
               Royce Mathew
-            </MuiLink>
-            {" "} & {""}
+            </MuiLink>{" "}
+            & {""}
             <MuiLink
               href="https://www.linkedin.com/in/sunny-patel-30b460204/"
               target="_blank"
@@ -517,7 +561,7 @@ const Footer = () => {
             >
               Sunny Patel
             </MuiLink>
-            .<br/> Built with{" "}
+            .<br /> Built with{" "}
             <Box
               component="span"
               sx={{

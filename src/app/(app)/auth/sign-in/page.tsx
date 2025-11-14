@@ -1,87 +1,100 @@
-'use client';
+"use client"
 
-import React, { Suspense, useEffect, useState } from 'react';
-import { 
-  Box, 
-  Container, 
-  Paper, 
-  Typography, 
-  Button,
-  Stack,
-  Divider,
-  CircularProgress,
-  TextField,
+import React, { Suspense, useEffect, useState } from "react"
+import Link from "next/link"
+import { useRouter, useSearchParams } from "next/navigation"
+import GitHubIcon from "@mui/icons-material/GitHub"
+import GoogleIcon from "@mui/icons-material/Google"
+import {
   Alert,
+  Box,
+  Button,
+  CircularProgress,
+  Container,
+  Divider,
   Link as MuiLink,
-} from '@mui/material';
-import Link from 'next/link';
-import { signIn } from 'next-auth/react';
-import { useSearchParams, useRouter } from 'next/navigation';
-import { useAuth } from '@/hooks/use-auth';
-import GoogleIcon from '@mui/icons-material/Google';
-import GitHubIcon from '@mui/icons-material/GitHub';
+  Paper,
+  Stack,
+  TextField,
+  Typography,
+} from "@mui/material"
+import { signIn } from "next-auth/react"
+import { useAuth } from "@/hooks/use-auth"
 
 function SignInContent() {
-  const searchParams = useSearchParams();
-  const router = useRouter();
-  const { isAuthenticated } = useAuth();
-  const callbackUrl = searchParams.get('callbackUrl') || '/';
-  const registered = searchParams.get('registered');
-  const verified = searchParams.get('verified');
-  const error = searchParams.get('error');
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  const { isAuthenticated } = useAuth()
+  const callbackUrl = searchParams.get("callbackUrl") || "/"
+  const registered = searchParams.get("registered")
+  const verified = searchParams.get("verified")
+  const error = searchParams.get("error")
 
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [loginError, setLoginError] = useState('');
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [isLoading, setIsLoading] = useState(false)
+  const [loginError, setLoginError] = useState("")
 
   // If already authenticated, avoid showing sign-in and redirect to stories
   useEffect(() => {
     if (isAuthenticated) {
-      router.replace('/stories');
+      router.replace("/stories")
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, router])
 
   const handleCredentialsSignIn = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setLoginError('');
+    e.preventDefault()
+    setIsLoading(true)
+    setLoginError("")
 
     try {
-      const result = await signIn('credentials', {
+      const result = await signIn("credentials", {
         email,
         password,
         redirect: false,
-      });
+      })
 
       if (result?.error) {
-        setLoginError('Invalid email or password. If you just signed up, please verify your email first.');
+        setLoginError(
+          "Invalid email or password. If you just signed up, please verify your email first."
+        )
       } else {
-        router.push(callbackUrl);
+        router.push(callbackUrl)
       }
     } catch {
-      setLoginError('An error occurred. Please try again.');
+      setLoginError("An error occurred. Please try again.")
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   const handleGoogleSignIn = async () => {
-    await signIn('google', { callbackUrl });
-  };
+    await signIn("google", { callbackUrl })
+  }
 
   const handleGitHubSignIn = async () => {
-    await signIn('github', { callbackUrl });
-  };
+    await signIn("github", { callbackUrl })
+  }
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
+    <Box sx={{ minHeight: "100vh", bgcolor: "background.default" }}>
       <Container maxWidth="sm" sx={{ py: 8 }}>
         <Paper elevation={3} sx={{ p: 4 }}>
-          <Typography variant="h4" component="h1" gutterBottom fontWeight={700} textAlign="center">
+          <Typography
+            variant="h4"
+            component="h1"
+            gutterBottom
+            fontWeight={700}
+            textAlign="center"
+          >
             Welcome Back
           </Typography>
-          <Typography variant="body2" color="text.secondary" textAlign="center" sx={{ mb: 3 }}>
+          <Typography
+            variant="body2"
+            color="text.secondary"
+            textAlign="center"
+            sx={{ mb: 3 }}
+          >
             Sign in to continue to your account
           </Typography>
 
@@ -97,7 +110,7 @@ function SignInContent() {
             </Alert>
           )}
 
-          {error === 'CredentialsSignin' && (
+          {error === "CredentialsSignin" && (
             <Alert severity="error" sx={{ mb: 2 }}>
               Invalid email or password
             </Alert>
@@ -145,7 +158,7 @@ function SignInContent() {
                 disabled={isLoading}
                 sx={{ mt: 1 }}
               >
-                {isLoading ? 'Signing in...' : 'Sign In'}
+                {isLoading ? "Signing in..." : "Sign In"}
               </Button>
             </Stack>
           </Box>
@@ -174,7 +187,7 @@ function SignInContent() {
           </Stack>
 
           <Typography variant="body2" textAlign="center" sx={{ mt: 3 }}>
-            Don&apos;t have an account?{' '}
+            Don&apos;t have an account?{" "}
             <MuiLink component={Link} href="/auth/sign-up" underline="hover">
               Sign up
             </MuiLink>
@@ -182,7 +195,7 @@ function SignInContent() {
         </Paper>
       </Container>
     </Box>
-  );
+  )
 }
 
 export default function SignInPage() {
@@ -191,11 +204,11 @@ export default function SignInPage() {
       fallback={
         <Box
           sx={{
-            minHeight: '100vh',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            bgcolor: 'background.default',
+            minHeight: "100vh",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            bgcolor: "background.default",
           }}
         >
           <CircularProgress />
@@ -204,5 +217,5 @@ export default function SignInPage() {
     >
       <SignInContent />
     </Suspense>
-  );
+  )
 }

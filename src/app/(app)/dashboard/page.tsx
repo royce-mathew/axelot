@@ -1,35 +1,35 @@
 "use client"
 
 import { useEffect } from "react"
+import { useRouter } from "next/navigation"
 import {
-  Box,
-  Container,
-  Typography,
-  Button,
-  Card,
-  CardContent,
-  CardActions,
-  Chip,
-  Stack,
-  Skeleton,
-  Fab,
-  Fade,
-} from "@mui/material"
-import {
-  TrendingUp as TrendingUpIcon,
   AccessTime as AccessTimeIcon,
-  Visibility as VisibilityIcon,
-  Refresh as RefreshIcon,
-  Person as PersonIcon,
   Add as AddIcon,
   Description as DescriptionIcon,
+  Person as PersonIcon,
+  Refresh as RefreshIcon,
+  TrendingUp as TrendingUpIcon,
+  Visibility as VisibilityIcon,
 } from "@mui/icons-material"
-import { useRouter } from "next/navigation"
-import { useAuth } from "@/hooks/use-auth"
-import { getDocs, query, where, orderBy, limit } from "firebase/firestore"
-import { allDocumentsRef } from "@/lib/converters/document"
+import {
+  Box,
+  Button,
+  Card,
+  CardActions,
+  CardContent,
+  Chip,
+  Container,
+  Fab,
+  Fade,
+  Skeleton,
+  Stack,
+  Typography,
+} from "@mui/material"
+import { getDocs, limit, orderBy, query, where } from "firebase/firestore"
 import type { Document } from "@/types/document"
+import { allDocumentsRef } from "@/lib/converters/document"
 import { timeAgo } from "@/lib/utils"
+import { useAuth } from "@/hooks/use-auth"
 import { useStoriesCache } from "@/hooks/use-stories-cache"
 import HoverCard from "@/components/HoverCard"
 
@@ -51,16 +51,24 @@ export default function DashboardPage() {
     refresh: refreshStories,
   } = useStoriesCache(
     async () => {
-      const recentQuery = query(allDocumentsRef(), where("isPublic", "==", true), orderBy("created", "desc"), limit(6))
+      const recentQuery = query(
+        allDocumentsRef(),
+        where("isPublic", "==", true),
+        orderBy("created", "desc"),
+        limit(6)
+      )
 
       const trendingQuery = query(
         allDocumentsRef(),
         where("isPublic", "==", true),
         orderBy("trendingScore", "desc"),
-        limit(6),
+        limit(6)
       )
 
-      const [recentSnapshot, trendingSnapshot] = await Promise.all([getDocs(recentQuery), getDocs(trendingQuery)])
+      const [recentSnapshot, trendingSnapshot] = await Promise.all([
+        getDocs(recentQuery),
+        getDocs(trendingQuery),
+      ])
 
       return {
         recent: recentSnapshot.docs.map((doc) => doc.data()),
@@ -68,14 +76,16 @@ export default function DashboardPage() {
       }
     },
     [user?.id],
-    "dashboard-stories",
+    "dashboard-stories"
   )
 
   const recentStories = storiesData?.recent ?? []
   const trendingStories = storiesData?.trending ?? []
   // Dedupe: remove items from Recent that already appear in Trending
   const trendingIds = new Set(trendingStories.map((d: Document) => d.id))
-  const recentFiltered = recentStories.filter((d: Document) => !trendingIds.has(d.id))
+  const recentFiltered = recentStories.filter(
+    (d: Document) => !trendingIds.has(d.id)
+  )
 
   const handleCardClick = (doc: Document) => {
     router.push(`/u/${doc.owner}/${doc.id}`)
@@ -142,11 +152,20 @@ export default function DashboardPage() {
           <Stack spacing={4}>
             {[1, 2, 3].map((i) => (
               <Box key={i}>
-                <Skeleton variant="text" width="30%" height={40} sx={{ mb: 2 }} />
+                <Skeleton
+                  variant="text"
+                  width="30%"
+                  height={40}
+                  sx={{ mb: 2 }}
+                />
                 <Box
                   sx={{
                     display: "grid",
-                    gridTemplateColumns: { xs: "1fr", sm: "repeat(2, 1fr)", md: "repeat(3, 1fr)" },
+                    gridTemplateColumns: {
+                      xs: "1fr",
+                      sm: "repeat(2, 1fr)",
+                      md: "repeat(3, 1fr)",
+                    },
                     gap: 3,
                   }}
                 >
@@ -188,7 +207,8 @@ export default function DashboardPage() {
                         width: 36,
                         height: 36,
                         borderRadius: 1.5,
-                        background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                        background:
+                          "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
                         boxShadow: "0 4px 12px rgba(102, 126, 234, 0.3)",
                       }}
                     >
@@ -202,76 +222,97 @@ export default function DashboardPage() {
                 <Box
                   sx={{
                     display: "grid",
-                    gridTemplateColumns: { xs: "1fr", sm: "repeat(2, 1fr)", md: "repeat(3, 1fr)" },
+                    gridTemplateColumns: {
+                      xs: "1fr",
+                      sm: "repeat(2, 1fr)",
+                      md: "repeat(3, 1fr)",
+                    },
                     gap: 3,
                   }}
                 >
-                  {trendingStories.slice(0, 6).map((doc: Document, index: number) => (
-                    <Fade key={doc.id} in timeout={800 + index * 100}>
-                      <HoverCard
-                        elevation={0}
-                        sx={{
-                          cursor: "pointer",
-                          transition: "all 0.25s ease",
-                        }}
-                        onClick={() => handleCardClick(doc)}
-                      >
-                        <CardContent sx={{ pb: 1, p: 3 }}>
-                          <Typography variant="h6" fontWeight={600} gutterBottom noWrap sx={{ mb: 1.5 }}>
-                            {doc.title}
-                          </Typography>
-                          {doc.description && (
+                  {trendingStories
+                    .slice(0, 6)
+                    .map((doc: Document, index: number) => (
+                      <Fade key={doc.id} in timeout={800 + index * 100}>
+                        <HoverCard
+                          elevation={0}
+                          sx={{
+                            cursor: "pointer",
+                            transition: "all 0.25s ease",
+                          }}
+                          onClick={() => handleCardClick(doc)}
+                        >
+                          <CardContent sx={{ pb: 1, p: 3 }}>
                             <Typography
-                              variant="body2"
-                              color="text.secondary"
-                              sx={{
-                                mb: 2.5,
-                                display: "-webkit-box",
-                                WebkitLineClamp: 2,
-                                WebkitBoxOrient: "vertical",
-                                overflow: "hidden",
-                                lineHeight: 1.6,
-                              }}
+                              variant="h6"
+                              fontWeight={600}
+                              gutterBottom
+                              noWrap
+                              sx={{ mb: 1.5 }}
                             >
-                              {doc.description}
+                              {doc.title}
                             </Typography>
-                          )}
-                          <Stack direction="row" spacing={1} flexWrap="wrap" gap={1}>
-                            <Chip
-                              icon={<PersonIcon />}
-                              label={doc.authorNames?.[0] || "Anonymous"}
-                              size="small"
-                              sx={{
-                                fontWeight: 500,
-                                transition: "all 0.2s",
-                                "&:hover": {
-                                  transform: "scale(1.05)",
-                                },
-                              }}
-                            />
-                            <Chip
-                              icon={<VisibilityIcon />}
-                              label={`${(doc.viewCount || 0).toLocaleString()} views`}
-                              size="small"
-                              variant="outlined"
-                              sx={{
-                                fontWeight: 500,
-                                transition: "all 0.2s",
-                                "&:hover": {
-                                  transform: "scale(1.05)",
-                                },
-                              }}
-                            />
-                          </Stack>
-                        </CardContent>
-                        <CardActions sx={{ px: 2, pb: 2, pt: 0.5 }}>
-                          <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500 }}>
-                            Updated {timeAgo(doc.lastUpdated)}
-                          </Typography>
-                        </CardActions>
-                      </HoverCard>
-                    </Fade>
-                  ))}
+                            {doc.description && (
+                              <Typography
+                                variant="body2"
+                                color="text.secondary"
+                                sx={{
+                                  mb: 2.5,
+                                  display: "-webkit-box",
+                                  WebkitLineClamp: 2,
+                                  WebkitBoxOrient: "vertical",
+                                  overflow: "hidden",
+                                  lineHeight: 1.6,
+                                }}
+                              >
+                                {doc.description}
+                              </Typography>
+                            )}
+                            <Stack
+                              direction="row"
+                              spacing={1}
+                              flexWrap="wrap"
+                              gap={1}
+                            >
+                              <Chip
+                                icon={<PersonIcon />}
+                                label={doc.authorNames?.[0] || "Anonymous"}
+                                size="small"
+                                sx={{
+                                  fontWeight: 500,
+                                  transition: "all 0.2s",
+                                  "&:hover": {
+                                    transform: "scale(1.05)",
+                                  },
+                                }}
+                              />
+                              <Chip
+                                icon={<VisibilityIcon />}
+                                label={`${(doc.viewCount || 0).toLocaleString()} views`}
+                                size="small"
+                                variant="outlined"
+                                sx={{
+                                  fontWeight: 500,
+                                  transition: "all 0.2s",
+                                  "&:hover": {
+                                    transform: "scale(1.05)",
+                                  },
+                                }}
+                              />
+                            </Stack>
+                          </CardContent>
+                          <CardActions sx={{ px: 2, pb: 2, pt: 0.5 }}>
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                              sx={{ fontWeight: 500 }}
+                            >
+                              Updated {timeAgo(doc.lastUpdated)}
+                            </Typography>
+                          </CardActions>
+                        </HoverCard>
+                      </Fade>
+                    ))}
                 </Box>
               </Box>
             )}
@@ -299,7 +340,8 @@ export default function DashboardPage() {
                         width: 36,
                         height: 36,
                         borderRadius: 1.5,
-                        background: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
+                        background:
+                          "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
                         boxShadow: "0 4px 12px rgba(240, 147, 251, 0.3)",
                       }}
                     >
@@ -313,76 +355,104 @@ export default function DashboardPage() {
                 <Box
                   sx={{
                     display: "grid",
-                    gridTemplateColumns: { xs: "1fr", sm: "repeat(2, 1fr)", md: "repeat(3, 1fr)" },
+                    gridTemplateColumns: {
+                      xs: "1fr",
+                      sm: "repeat(2, 1fr)",
+                      md: "repeat(3, 1fr)",
+                    },
                     gap: 3,
                   }}
                 >
-                  {recentFiltered.slice(0, 6).map((doc: Document, index: number) => (
-                    <Fade key={doc.id} in timeout={(trendingStories.length > 0 ? 1600 : 800) + index * 100}>
-                      <HoverCard
-                        elevation={0}
-                        sx={{
-                          cursor: "pointer",
-                          transition: "all 0.25s ease",
-                        }}
-                        onClick={() => handleCardClick(doc)}
+                  {recentFiltered
+                    .slice(0, 6)
+                    .map((doc: Document, index: number) => (
+                      <Fade
+                        key={doc.id}
+                        in
+                        timeout={
+                          (trendingStories.length > 0 ? 1600 : 800) +
+                          index * 100
+                        }
                       >
-                        <CardContent sx={{ pb: 1, p: 3 }}>
-                          <Typography variant="h6" fontWeight={600} gutterBottom noWrap sx={{ mb: 1.5 }}>
-                            {doc.title}
-                          </Typography>
-                          {doc.description && (
+                        <HoverCard
+                          elevation={0}
+                          sx={{
+                            cursor: "pointer",
+                            transition: "all 0.25s ease",
+                          }}
+                          onClick={() => handleCardClick(doc)}
+                        >
+                          <CardContent sx={{ pb: 1, p: 3 }}>
                             <Typography
-                              variant="body2"
-                              color="text.secondary"
-                              sx={{
-                                mb: 2.5,
-                                display: "-webkit-box",
-                                WebkitLineClamp: 2,
-                                WebkitBoxOrient: "vertical",
-                                overflow: "hidden",
-                                lineHeight: 1.6,
-                              }}
+                              variant="h6"
+                              fontWeight={600}
+                              gutterBottom
+                              noWrap
+                              sx={{ mb: 1.5 }}
                             >
-                              {doc.description}
+                              {doc.title}
                             </Typography>
-                          )}
-                          <Stack direction="row" spacing={1} flexWrap="wrap" gap={1}>
-                            <Chip
-                              icon={<PersonIcon />}
-                              label={doc.authorNames?.[0] || "Anonymous"}
-                              size="small"
-                              sx={{
-                                fontWeight: 500,
-                                transition: "all 0.2s",
-                                "&:hover": {
-                                  transform: "scale(1.05)",
-                                },
-                              }}
-                            />
-                            <Chip
-                              icon={<VisibilityIcon />}
-                              label={`${(doc.viewCount || 0).toLocaleString()} views`}
-                              size="small"
-                              variant="outlined"
-                              sx={{
-                                fontWeight: 500,
-                                transition: "all 0.2s",
-                                "&:hover": {
-                                  transform: "scale(1.05)",
-                                },
-                              }}
-                            />
-                          </Stack>
-                        </CardContent>
-                        <CardActions sx={{ px: 2, pb: 2, pt: 0.5 }}>
-                          <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500 }}>
-                            Published {timeAgo(doc.created)}
-                          </Typography>
-                        </CardActions>
-                      </HoverCard>
-                    </Fade>
-                  ))}
+                            {doc.description && (
+                              <Typography
+                                variant="body2"
+                                color="text.secondary"
+                                sx={{
+                                  mb: 2.5,
+                                  display: "-webkit-box",
+                                  WebkitLineClamp: 2,
+                                  WebkitBoxOrient: "vertical",
+                                  overflow: "hidden",
+                                  lineHeight: 1.6,
+                                }}
+                              >
+                                {doc.description}
+                              </Typography>
+                            )}
+                            <Stack
+                              direction="row"
+                              spacing={1}
+                              flexWrap="wrap"
+                              gap={1}
+                            >
+                              <Chip
+                                icon={<PersonIcon />}
+                                label={doc.authorNames?.[0] || "Anonymous"}
+                                size="small"
+                                sx={{
+                                  fontWeight: 500,
+                                  transition: "all 0.2s",
+                                  "&:hover": {
+                                    transform: "scale(1.05)",
+                                  },
+                                }}
+                              />
+                              <Chip
+                                icon={<VisibilityIcon />}
+                                label={`${(doc.viewCount || 0).toLocaleString()} views`}
+                                size="small"
+                                variant="outlined"
+                                sx={{
+                                  fontWeight: 500,
+                                  transition: "all 0.2s",
+                                  "&:hover": {
+                                    transform: "scale(1.05)",
+                                  },
+                                }}
+                              />
+                            </Stack>
+                          </CardContent>
+                          <CardActions sx={{ px: 2, pb: 2, pt: 0.5 }}>
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                              sx={{ fontWeight: 500 }}
+                            >
+                              Published {timeAgo(doc.created)}
+                            </Typography>
+                          </CardActions>
+                        </HoverCard>
+                      </Fade>
+                    ))}
                 </Box>
               </Box>
             )}
@@ -400,11 +470,22 @@ export default function DashboardPage() {
                     borderRadius: 2,
                   }}
                 >
-                  <DescriptionIcon sx={{ fontSize: 80, color: "text.disabled", mb: 2 }} />
-                  <Typography variant="h5" gutterBottom color="text.secondary" fontWeight={600}>
+                  <DescriptionIcon
+                    sx={{ fontSize: 80, color: "text.disabled", mb: 2 }}
+                  />
+                  <Typography
+                    variant="h5"
+                    gutterBottom
+                    color="text.secondary"
+                    fontWeight={600}
+                  >
                     No stories yet
                   </Typography>
-                  <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
+                  <Typography
+                    variant="body1"
+                    color="text.secondary"
+                    sx={{ mb: 3 }}
+                  >
                     Create your first story to get started
                   </Typography>
                   <Button
