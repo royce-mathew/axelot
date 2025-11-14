@@ -62,6 +62,33 @@ service cloud.firestore {
       match /instances/{instanceId=**} {
         allow read, write: if isSignedIn();
       }
+
+      // ---------------------------------------------------------------
+      // Comments subcollection
+      // ---------------------------------------------------------------
+      match /comments/{commentId} {
+        allow read: if hasReadAccess(get(/databases/$(database)/documents/stories/$(storyId)).data);
+
+        // Create if signed in and can read the story; authorId must be self
+        allow create: if isSignedIn() &&
+                       hasReadAccess(get(/databases/$(database)/documents/stories/$(storyId)).data) &&
+                       request.resource.data.authorId == request.auth.uid;
+
+        // Update only by author
+        allow update: if isSignedIn() && request.auth.uid == resource.data.authorId;
+
+        // Delete by author or story owner
+        allow delete: if isSignedIn() && (
+          request.auth.uid == resource.data.authorId ||
+          isOwner(get(/databases/$(database)/documents/stories/$(storyId)).data)
+        );
+
+        // Likes under a comment
+        match /likes/{uid} {
+          allow read: if hasReadAccess(get(/databases/$(database)/documents/stories/$(storyId)).data);
+          allow create, update, delete: if isSignedIn() && request.auth.uid == uid;
+        }
+      }
     }
     
     // =================================================================
@@ -73,6 +100,18 @@ service cloud.firestore {
       
       // Only the user can write their own profile
       allow write: if isSignedIn() && request.auth.uid == userId;
+
+      // Followers: anyone can read; only the follower can create/delete their entry
+      match /followers/{followerId} {
+        allow read: if true;
+        allow create, delete: if isSignedIn() && request.auth.uid == followerId;
+      }
+
+      // Following: anyone can read; only the owner can create/delete their following entries
+      match /following/{followedId} {
+        allow read: if true;
+        allow create, delete: if isSignedIn() && request.auth.uid == userId;
+      }
     }
     
     // =================================================================

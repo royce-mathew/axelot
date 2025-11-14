@@ -41,6 +41,10 @@ import {
 } from "@/lib/username-utils"
 import { timeAgo } from "@/lib/utils"
 import { useAuth } from "@/hooks/use-auth"
+import FollowButton from "@/components/social/FollowButton"
+import FollowersDialog from "@/components/social/FollowersDialog"
+import { followersCollection, followingCollection } from "@/lib/social"
+import { onSnapshot } from "firebase/firestore"
 
 export default function UserProfilePage(props: {
   params: Promise<{ userId: string }>
@@ -55,6 +59,9 @@ export default function UserProfilePage(props: {
   const [actualUserId, setActualUserId] = useState<string>("")
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
   const menuOpen = Boolean(anchorEl)
+  const [followersCount, setFollowersCount] = useState(0)
+  const [followingCount, setFollowingCount] = useState(0)
+  const [connectionsOpen, setConnectionsOpen] = useState(false)
 
   const isOwnProfile = currentUser?.id === actualUserId
 
@@ -151,6 +158,21 @@ export default function UserProfilePage(props: {
     loadDocuments()
   }, [actualUserId])
 
+  // Live followers/following counts
+  useEffect(() => {
+    if (!actualUserId) return
+    const unsub1 = onSnapshot(followersCollection(actualUserId), (snap) => {
+      setFollowersCount(snap.size)
+    })
+    const unsub2 = onSnapshot(followingCollection(actualUserId), (snap) => {
+      setFollowingCount(snap.size)
+    })
+    return () => {
+      unsub1()
+      unsub2()
+    }
+  }, [actualUserId])
+
   const handleCardClick = (doc: Document) => {
     if (doc.id && doc.slug && user?.username) {
       router.push(`/u/@${user.username}/${doc.id}-${doc.slug}`)
@@ -245,6 +267,14 @@ export default function UserProfilePage(props: {
                         @{user.username}
                       </Typography>
                     )}
+                    <Stack direction="row" spacing={2} sx={{ mt: 1 }}>
+                      <Button size="small" variant="text" onClick={() => setConnectionsOpen(true)}>
+                        {followersCount} Followers
+                      </Button>
+                      <Button size="small" variant="text" onClick={() => setConnectionsOpen(true)}>
+                        {followingCount} Following
+                      </Button>
+                    </Stack>
                     {user?.bio && (
                       <Typography
                         variant="body2"
@@ -256,7 +286,7 @@ export default function UserProfilePage(props: {
                     )}
                   </Box>
                 </Stack>
-                {isOwnProfile && (
+                {isOwnProfile ? (
                   <>
                     <IconButton
                       onClick={(e) => setAnchorEl(e.currentTarget)}
@@ -301,6 +331,8 @@ export default function UserProfilePage(props: {
                       </MenuItem>
                     </Menu>
                   </>
+                ) : (
+                  <FollowButton targetUserId={actualUserId} targetName={user?.name ?? undefined} targetImage={user?.image ?? undefined} />
                 )}
               </Stack>
             </>
@@ -431,6 +463,7 @@ export default function UserProfilePage(props: {
           </Stack>
         )}
       </Container>
+      <FollowersDialog userId={actualUserId} open={connectionsOpen} onClose={() => setConnectionsOpen(false)} />
     </Box>
   )
 }

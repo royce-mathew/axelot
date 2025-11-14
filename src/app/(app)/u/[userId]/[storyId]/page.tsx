@@ -75,6 +75,7 @@ import { FireProvider } from "@/lib/y-fire"
 import { useAuth } from "@/hooks/use-auth"
 import { useDocumentView } from "@/hooks/use-document-view"
 import { TableOfContents, TocAnchor } from "@/components/tiptap/TableOfContents"
+import Comments from "@/components/comments/Comments"
 
 const Tiptap = dynamic(() => import("@/components/tiptap/tiptap"), {
   ssr: false,
@@ -1133,6 +1134,13 @@ export default function StoryPage({
                 }),
               ]}
             />
+          </Box>
+
+          {/* Comments Section */}
+          <Box sx={{ mt: 4 }}>
+            {/* Render comments for this story */}
+            {/* storyId extracted earlier from params */}
+            <Comments storyId={storyId} />
           </Box>
 
           {/* Share Dialog */}
