@@ -47,7 +47,7 @@ const Tiptap2 = ({ passedExtensions, initialContent, editable = true, readOnly =
       });
 
       // Remove existing Link from base extensions and add our configured one at the end
-      const base = extensions.filter((ext: any) => ext?.name !== 'link');
+      const base = extensions.filter((ext: AnyExtension) => ext?.name !== 'link');
       return [
         ...base,
         linkConfigured,

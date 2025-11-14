@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { firebaseAdminFirestore, adminAuth } from '@/lib/firebase/server';
-import { increment, serverTimestamp } from 'firebase/firestore';
+import { increment } from 'firebase/firestore';
 import { Timestamp } from 'firebase-admin/firestore';
 
 // POST /api/document/view

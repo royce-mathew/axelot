@@ -99,10 +99,10 @@ export const SearchBar = () => {
 
         if (cancelled) return;
 
-        const docs = docSnap.docs.map(d => ({ id: d.id, ...(d.data() as any) })) as Array<Story & { id: string }>;
+        const docs = docSnap.docs.map(d => ({ id: d.id, ...(d.data() as Story) })) as Array<Story & { id: string }>;
         const filteredDocs = docs.filter(d => (d.title || '').toLowerCase().includes(q.toLowerCase())).slice(0, 8);
 
-        const users = userSnap.docs.map(u => ({ id: u.id, ...(u.data() as any) })) as Array<User & { id: string }>;
+        const users = userSnap.docs.map(u => ({ id: u.id, ...(u.data() as User) })) as Array<User & { id: string }>;
         // Only index users who have a configured username
         const withUsername = users.filter(u => typeof u.username === 'string' && u.username.trim().length > 0);
         const filteredUsers = withUsername
@@ -214,10 +214,14 @@ export const SearchBar = () => {
                         </Avatar>
                       </ListItemAvatar>
                       <ListItemText
-                        primary={doc.title || 'Untitled Story'}
-                        secondary={`Updated ${timeAgo(doc.lastUpdated as any)}`}
-                        primaryTypographyProps={{ variant: 'body2' }}
-                        secondaryTypographyProps={{ variant: 'caption' }}
+                        primary={
+                          <Box>
+                            <Typography variant="body2">{doc.title || 'Untitled Story'}</Typography>
+                            <Typography variant="caption" color="text.secondary">
+                              Updated {timeAgo(doc.lastUpdated)}
+                            </Typography>
+                          </Box>
+                        }
                       />
                     </ListItemButton>
                   </ListItem>
@@ -244,10 +248,14 @@ export const SearchBar = () => {
                         </Avatar>
                       </ListItemAvatar>
                       <ListItemText
-                        primary={user.name}
-                        secondary={user.username ? `@${user.username}` : ''}
-                        primaryTypographyProps={{ variant: 'body2' }}
-                        secondaryTypographyProps={{ variant: 'caption' }}
+                        primary={
+                          <Box>
+                            <Typography variant="body2">{user.name}</Typography>
+                            {user.username && (
+                              <Typography variant="caption" color="text.secondary">@{user.username}</Typography>
+                            )}
+                          </Box>
+                        }
                       />
                     </ListItemButton>
                   </ListItem>

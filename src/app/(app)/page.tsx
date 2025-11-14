@@ -485,7 +485,18 @@ const Footer = () => {
               letterSpacing: "-0.01em",
             }}
           >
-            © 2025 Royce Mathew & {""}
+            © 2025 {" "}
+            <MuiLink
+              href="https://www.linkedin.com/in/royce-mathew/"
+              target="_blank"
+              rel="noopener noreferrer"
+              underline="hover"
+              color="inherit"
+              sx={{ fontWeight: 600 }}
+            >
+              Royce Mathew
+            </MuiLink>
+            {" "} & {""}
             <MuiLink
               href="https://www.linkedin.com/in/sunny-patel-30b460204/"
               target="_blank"

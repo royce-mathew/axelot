@@ -518,7 +518,7 @@ export default function StoryPage({ params }: { params: Promise<{ userId: string
 
       const states = Array.from(awareness.getStates().entries());
       const users = states
-        .filter(([_, state]) => state.user !== undefined)
+        .filter(([, state]) => state.user !== undefined)
         .map(([clientId, state]: [number, Record<string, AwarenessUser>]) => ({
           ...state.user as AwarenessUser,
           clientId,
@@ -811,8 +811,10 @@ export default function StoryPage({ params }: { params: Promise<{ userId: string
         </Paper>
           )}
 
-        {/* Read-only Title Display - Show for read access or when owner toggles preview */}
-        {(access !== true || previewMode) && document && (
+    {/* Read-only Title Display - Show for read access only.
+      Owners' preview is handled above inside the editable header, so
+      avoid rendering the title again when an owner toggles previewMode. */}
+    {access !== true && document && (
           <Box 
             sx={{ 
               mb: { xs: 2, sm: 3 },
@@ -934,18 +936,6 @@ export default function StoryPage({ params }: { params: Promise<{ userId: string
           open={menuOpen}
           onClose={handleMenuClose}
         >
-          {/* Preview Toggle */}
-          <MenuItem onClick={() => setPreviewMode(!previewMode)}>
-            <ListItemIcon>
-              <VisibilityIcon fontSize="small" />
-            </ListItemIcon>
-            <ListItemText>{previewMode ? 'Exit Preview' : 'Preview mode'}</ListItemText>
-            <Switch
-              checked={previewMode}
-              onChange={(e) => setPreviewMode(e.target.checked)}
-              size="small"
-            />
-          </MenuItem>
           <Divider />
           {/* Public/Private Toggle - Mobile only */}
           <MenuItem 
