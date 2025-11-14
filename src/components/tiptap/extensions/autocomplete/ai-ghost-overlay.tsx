@@ -1,33 +1,33 @@
-'use client';
+"use client"
 
-import React from 'react';
-import type { GhostTextPosition } from './types';
+import React from "react"
+import type { GhostTextPosition } from "./types"
 
 interface AIGhostOverlayProps {
   /**
    * The pending completion text to display
    */
-  text: string;
-  
+  text: string
+
   /**
    * Position for the ghost text
    */
-  position: GhostTextPosition | null;
-  
+  position: GhostTextPosition | null
+
   /**
    * Whether dark mode is active
    */
-  isDark?: boolean;
-  
+  isDark?: boolean
+
   /**
    * Custom styles for the ghost text
    */
-  style?: React.CSSProperties;
-  
+  style?: React.CSSProperties
+
   /**
    * Custom class name
    */
-  className?: string;
+  className?: string
 }
 
 export function AIGhostOverlay({
@@ -35,26 +35,26 @@ export function AIGhostOverlay({
   position,
   isDark = false,
   style = {},
-  className = '',
+  className = "",
 }: AIGhostOverlayProps) {
-  if (!text || !position) return null;
+  if (!text || !position) return null
 
   const defaultStyle: React.CSSProperties = {
-    position: 'absolute',
-    top: position.top + 'px',
-    left: position.left + 'px',
-    pointerEvents: 'none',
-    color: isDark ? '#6b7280' : '#9ca3af', // Gray-500 : Gray-400
-    fontFamily: 'inherit',
-    fontSize: 'inherit',
-    lineHeight: 'inherit',
-    whiteSpace: 'pre',
+    position: "absolute",
+    top: position.top + "px",
+    left: position.left + "px",
+    pointerEvents: "none",
+    color: isDark ? "#6b7280" : "#9ca3af", // Gray-500 : Gray-400
+    fontFamily: "inherit",
+    fontSize: "inherit",
+    lineHeight: "inherit",
+    whiteSpace: "pre",
     zIndex: 1,
-    userSelect: 'none',
+    userSelect: "none",
     ...style,
-  };
+  }
 
-  console.log('👻 Rendering AIGhostOverlay at', position, 'with text:', text);
+  console.log("👻 Rendering AIGhostOverlay at", position, "with text:", text)
   return (
     <div
       className={`ai-ghost-overlay ${className}`}
@@ -64,5 +64,5 @@ export function AIGhostOverlay({
     >
       {text}
     </div>
-  );
+  )
 }

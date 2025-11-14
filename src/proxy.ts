@@ -33,7 +33,5 @@ export async function proxy(req: NextRequest) {
 
 export const config = {
   // Only invoke Middleware on these paths
-  matcher: [
-    "/stories",
-  ],
+  matcher: ["/stories"],
 }

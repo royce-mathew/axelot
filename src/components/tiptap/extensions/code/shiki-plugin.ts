@@ -1,15 +1,15 @@
-import { BundledLanguage, BundledTheme } from 'shiki'
-import { NodeWithPos, findChildren } from '@tiptap/core'
-import { Plugin, PluginKey, PluginView } from '@tiptap/pm/state'
-import { Decoration, DecorationSet } from '@tiptap/pm/view'
-import { Node as ProsemirrorNode } from '@tiptap/pm/model'
+import { BundledLanguage, BundledTheme } from "shiki"
+import { NodeWithPos, findChildren } from "@tiptap/core"
+import { Plugin, PluginKey, PluginView } from "@tiptap/pm/state"
+import { Decoration, DecorationSet } from "@tiptap/pm/view"
+import { Node as ProsemirrorNode } from "@tiptap/pm/model"
 import {
   getShiki,
   initHighlighter,
   loadLanguage,
   loadTheme,
-} from './highlighter'
-import { styleToHtml } from './html-styles'
+} from "./highlighter"
+import { styleToHtml } from "./html-styles"
 
 /** Create code decorations for the current document */
 function getDecorations({
@@ -48,7 +48,7 @@ function getDecorations({
     if (!highlighter) return
 
     if (!highlighter.getLoadedLanguages().includes(language)) {
-      language = 'plaintext'
+      language = "plaintext"
     }
 
     const getThemeToApply = (theme: string): BundledTheme => {
@@ -71,14 +71,14 @@ function getDecorations({
       })
 
       const blockStyle: { [prop: string]: string } = {}
-      if (tokens.bg) blockStyle['background-color'] = tokens.bg
-      if (tokens.fg) blockStyle['color'] = tokens.fg
+      if (tokens.bg) blockStyle["background-color"] = tokens.bg
+      if (tokens.fg) blockStyle["color"] = tokens.fg
 
       decorations.push(
         Decoration.node(block.pos, block.pos + block.node.nodeSize, {
           style: styleToHtml(blockStyle),
-          class: 'shiki',
-        }),
+          class: "shiki",
+        })
       )
     } else {
       tokens = highlighter.codeToTokens(block.node.textContent, {
@@ -95,7 +95,7 @@ function getDecorations({
       decorations.push(
         Decoration.node(block.pos, block.pos + block.node.nodeSize, {
           style: `background-color: ${themeResolved.bg}`,
-        }),
+        })
       )
     }
 
@@ -105,7 +105,7 @@ function getDecorations({
 
         //NOTE: tokens object will be different if themes supplied
         // thus, need to handle style accordingly
-        let style = ''
+        let style = ""
 
         if (themes) {
           style = styleToHtml(token.htmlStyle || {})
@@ -147,7 +147,7 @@ export function ShikiPlugin({
     | undefined
 }) {
   const shikiPlugin: Plugin<DecorationSet> = new Plugin({
-    key: new PluginKey('shiki'),
+    key: new PluginKey("shiki"),
 
     view(view) {
       // This small view is just for initial async handling
@@ -171,7 +171,7 @@ export function ShikiPlugin({
             defaultTheme,
             themeModes: themes,
           })
-          const tr = view.state.tr.setMeta('shikiPluginForceDecoration', true)
+          const tr = view.state.tr.setMeta("shikiPluginForceDecoration", true)
           view.dispatch(tr)
         }
 
@@ -180,7 +180,7 @@ export function ShikiPlugin({
         async checkUndecoratedBlocks() {
           const codeBlocks = findChildren(
             view.state.doc,
-            (node) => node.type.name === name,
+            (node) => node.type.name === name
           )
 
           const loaderFns = (block: NodeWithPos): Promise<boolean>[] => {
@@ -188,7 +188,7 @@ export function ShikiPlugin({
 
             if (themes) {
               fns.push(
-                loadTheme(block.node.attrs.themes?.light || themes.light),
+                loadTheme(block.node.attrs.themes?.light || themes.light)
               )
               fns.push(loadTheme(block.node.attrs.themes?.dark || themes.dark))
             } else {
@@ -202,7 +202,7 @@ export function ShikiPlugin({
           // loadStates is an array with booleans depending on if a theme/lang
           // got loaded.
           const loadStates = await Promise.all(
-            codeBlocks.flatMap((block) => loaderFns(block)),
+            codeBlocks.flatMap((block) => loaderFns(block))
           )
           const didLoadSomething = loadStates.includes(true)
 
@@ -210,7 +210,7 @@ export function ShikiPlugin({
           // race conditions. Imma just hope it's fine lol
 
           if (didLoadSomething) {
-            const tr = view.state.tr.setMeta('shikiPluginForceDecoration', true)
+            const tr = view.state.tr.setMeta("shikiPluginForceDecoration", true)
             view.dispatch(tr)
           }
         }
@@ -234,11 +234,11 @@ export function ShikiPlugin({
         const newNodeName = newState.selection.$head.parent.type.name
         const oldNodes = findChildren(
           oldState.doc,
-          (node) => node.type.name === name,
+          (node) => node.type.name === name
         )
         const newNodes = findChildren(
           newState.doc,
-          (node) => node.type.name === name,
+          (node) => node.type.name === name
         )
 
         const didChangeSomeCodeBlock =
@@ -257,16 +257,13 @@ export function ShikiPlugin({
               const from = step.from as number
               const to = step.to as number
               return oldNodes.some((node) => {
-                return (
-                  node.pos >= from &&
-                  node.pos + node.node.nodeSize <= to
-                )
+                return node.pos >= from && node.pos + node.node.nodeSize <= to
               })
             }))
 
         // only create code decoration when it's necessary to do so
         if (
-          transaction.getMeta('shikiPluginForceDecoration') ||
+          transaction.getMeta("shikiPluginForceDecoration") ||
           didChangeSomeCodeBlock
         ) {
           return getDecorations({

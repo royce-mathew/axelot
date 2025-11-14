@@ -1,4 +1,4 @@
-import { Icons } from "@/config/icons"  
+import { Icons } from "@/config/icons"
 
 export interface NavItem {
   title: string
@@ -16,4 +16,3 @@ export interface NavItem {
 export interface NavItemWithChildren extends NavItem {
   items: NavItemWithChildren[]
 }
-

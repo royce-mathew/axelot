@@ -5,7 +5,7 @@ import { ShikiPlugin } from "./shiki-plugin"
 export interface CodeBlockShikiOptions extends CodeBlockOptions {
   defaultLanguage: BundledLanguage | null | undefined
   defaultTheme: BundledTheme
-  languageClassPrefix: string,
+  languageClassPrefix: string
   themes:
     | {
         light: BundledTheme

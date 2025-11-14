@@ -23,11 +23,11 @@ declare module "@tiptap/core" {
 /**
  * Print extension for TipTap
  * Allows printing the editor content with proper styling
- * 
+ *
  * @example
  * ```ts
  * import { Print } from './extensions/print'
- * 
+ *
  * const editor = useEditor({
  *   extensions: [
  *     Print.configure({
@@ -35,7 +35,7 @@ declare module "@tiptap/core" {
  *     }),
  *   ],
  * })
- * 
+ *
  * // Trigger print programmatically
  * editor.commands.print()
  * ```

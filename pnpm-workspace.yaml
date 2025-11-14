@@ -1,5 +1,5 @@
 onlyBuiltDependencies:
-  - '@firebase/util'
+  - "@firebase/util"
   - protobufjs
   - sharp
   - unrs-resolver

@@ -67,7 +67,7 @@ const documentConverter: FirestoreDataConverter<Document> = {
     if (document.slug !== undefined) {
       data.slug = document.slug
     }
-    
+
     if (document.description !== undefined) {
       data.description = document.description
     }
@@ -93,7 +93,7 @@ const documentConverter: FirestoreDataConverter<Document> = {
     if (document.authorNames !== undefined) {
       data.authorNames = document.authorNames
     }
-    
+
     return data
   },
 }
@@ -120,10 +120,9 @@ export const documentsByOwnerRef = (ownerId: string) =>
  * Get a query for all published public stories/documents
  */
 export const publicDocumentsRef = () =>
-  query(
-    collection(db, "stories"),
-    where("isPublic", "==", true)
-  ).withConverter(documentConverter)
+  query(collection(db, "stories"), where("isPublic", "==", true)).withConverter(
+    documentConverter
+  )
 
 /**
  * Get a reference to all stories/documents collection

@@ -25,7 +25,7 @@ export interface Document {
   writeAccess: string[]
 
   // Denormalized author data (names of all users with write access)
-  authorNames?: string[]    // Display names of owner + writeAccess users
+  authorNames?: string[] // Display names of owner + writeAccess users
 
   // Public/private visibility
   isPublic: boolean

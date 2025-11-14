@@ -1,7 +1,6 @@
 /* Global styles for the application */
 /* Material UI provides most styling through the theme and sx props */
 
-
 html {
   -webkit-text-size-adjust: 100%;
   -webkit-font-smoothing: antialiased;
@@ -18,7 +17,11 @@ body {
 }
 
 body {
-  font-family: var(--font-dm-sans), system-ui, -apple-system, sans-serif;
+  font-family:
+    var(--font-dm-sans),
+    system-ui,
+    -apple-system,
+    sans-serif;
 }
 
 #__next {
@@ -128,14 +131,14 @@ body {
   .tableWrapper table {
     border-color: rgba(255, 255, 255, 0.12);
   }
-  
+
   .tiptap-editor-content td,
   .tiptap-editor-content th,
   .tableWrapper td,
   .tableWrapper th {
     border-color: rgba(255, 255, 255, 0.12);
   }
-  
+
   .tiptap-editor-content th,
   .tableWrapper th {
     background-color: rgba(255, 255, 255, 0.08);
@@ -232,7 +235,6 @@ body {
   pointer-events: none;
 }
 
-
 .collaboration-cursor__label,
 .collaboration-carets__label {
   position: absolute;
@@ -257,7 +259,7 @@ body {
 /* Arrow pointing down to cursor */
 .collaboration-cursor__label::after,
 .collaboration-carets__label::after {
-  content: '';
+  content: "";
   position: absolute;
   bottom: -4px;
   left: 50%;

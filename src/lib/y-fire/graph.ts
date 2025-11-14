@@ -9,14 +9,14 @@
  * @returns
  */
 export const createGraph = (uids: string[] = [], connections: number = 3) => {
-  const ids = uids.sort();
-  const graph: { [index: string]: string[] } = {};
+  const ids = uids.sort()
+  const graph: { [index: string]: string[] } = {}
   for (let i = 0; i < ids.length; i++) {
     const nodes = ids.slice(
       connections * i + 1,
       connections * i + 1 + connections
-    );
-    if (nodes.length) graph[ids[i]] = nodes;
+    )
+    if (nodes.length) graph[ids[i]] = nodes
   }
-  return graph;
-};
+  return graph
+}

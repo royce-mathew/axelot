@@ -85,6 +85,6 @@ export const Indent = Extension.create<IndentOptions>({
           to: startOfLinePos + spacesToDelete,
         })
       },
-    };
+    }
   },
 })

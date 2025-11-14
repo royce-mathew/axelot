@@ -40,14 +40,14 @@ export const extensions: Extensions = [
   Document,
   Text,
   Paragraph,
-  
+
   // Formatting extensions
   Bold.configure({ HTMLAttributes: { class: "font-bold" } }),
   Italic,
   Strike,
   Underline,
   Code,
-  
+
   // Text style extensions
   TextStyle,
   Color,
@@ -57,13 +57,13 @@ export const extensions: Extensions = [
   FontFamily,
   FontSize,
   LineHeight,
-  
+
   // Block extensions
   Heading.configure({ levels: [1, 2, 3, 4] }),
   Blockquote,
   CodeBlockShiki,
   HorizontalRule,
-  
+
   // List extensions
   BulletList.configure({
     HTMLAttributes: {
@@ -76,7 +76,7 @@ export const extensions: Extensions = [
     },
   }),
   ListItem,
-  
+
   // Link extension
   Link.configure({
     openOnClick: false,
@@ -84,9 +84,9 @@ export const extensions: Extensions = [
     HTMLAttributes: {
       rel: "noopener noreferrer",
       target: null,
-    }
+    },
   }),
-  
+
   // Table extensions
   Table.configure({
     resizable: true,
@@ -101,12 +101,12 @@ export const extensions: Extensions = [
   TableRow,
   TableHeader,
   TableCell,
-  
+
   // Alignment
   TextAlign.configure({
     types: ["heading", "paragraph"],
   }),
-  
+
   // Utility extensions
   Gapcursor,
   Typography,
@@ -116,7 +116,7 @@ export const extensions: Extensions = [
     visible: false, // Hidden by default, toggle with toolbar button
   }),
   Print,
-  
+
   // Special extensions
   MathExtension.configure({ evaluation: true }),
   Placeholder.configure({

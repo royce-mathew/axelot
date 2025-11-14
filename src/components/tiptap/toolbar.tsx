@@ -1,8 +1,8 @@
-'use client';
+"use client"
 
-import React, { useState } from 'react';
-import { useEditorState } from '@tiptap/react';
-import { Editor } from '@tiptap/react';
+import React, { useState } from "react"
+import { useEditorState } from "@tiptap/react"
+import { Editor } from "@tiptap/react"
 import {
   Box,
   Button,
@@ -20,80 +20,127 @@ import {
   ToggleButtonGroup,
   Tooltip,
   Typography,
-} from '@mui/material';
-import { Sketch } from '@uiw/react-color';
-import FormatAlignCenterIcon from '@mui/icons-material/FormatAlignCenter';
-import FormatAlignJustifyIcon from '@mui/icons-material/FormatAlignJustify';
-import FormatAlignLeftIcon from '@mui/icons-material/FormatAlignLeft';
-import FormatAlignRightIcon from '@mui/icons-material/FormatAlignRight';
-import FormatBoldIcon from '@mui/icons-material/FormatBold';
-import FormatColorFillIcon from '@mui/icons-material/FormatColorFill';
-import FormatColorTextIcon from '@mui/icons-material/FormatColorText';
-import FormatItalicIcon from '@mui/icons-material/FormatItalic';
-import FormatListBulletedIcon from '@mui/icons-material/FormatListBulleted';
-import FormatListNumberedIcon from '@mui/icons-material/FormatListNumbered';
-import FormatQuoteIcon from '@mui/icons-material/FormatQuote';
-import FormatSizeIcon from '@mui/icons-material/FormatSize';
-import FormatUnderlinedIcon from '@mui/icons-material/FormatUnderlined';
-import FunctionsIcon from '@mui/icons-material/Functions';
-import HorizontalRuleIcon from '@mui/icons-material/HorizontalRule';
-import LinkIcon from '@mui/icons-material/Link';
-import LineWeightIcon from '@mui/icons-material/LineWeight';
-import PrintIcon from '@mui/icons-material/Print';
-import RedoIcon from '@mui/icons-material/Redo';
-import StrikethroughSIcon from '@mui/icons-material/StrikethroughS';
-import TableChartIcon from '@mui/icons-material/TableChart';
-import UndoIcon from '@mui/icons-material/Undo';
-import VisibilityIcon from '@mui/icons-material/Visibility';
-import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
-import CodeIcon from '@mui/icons-material/Code';
-import NumbersIcon from '@mui/icons-material/Numbers';
-import ViewColumnIcon from '@mui/icons-material/ViewColumn';
-import TableRowsIcon from '@mui/icons-material/TableRows';
-import DeleteIcon from '@mui/icons-material/Delete';
-import AddIcon from '@mui/icons-material/Add';
-import { TablePicker } from './TablePicker';
+} from "@mui/material"
+import { Sketch } from "@uiw/react-color"
+import FormatAlignCenterIcon from "@mui/icons-material/FormatAlignCenter"
+import FormatAlignJustifyIcon from "@mui/icons-material/FormatAlignJustify"
+import FormatAlignLeftIcon from "@mui/icons-material/FormatAlignLeft"
+import FormatAlignRightIcon from "@mui/icons-material/FormatAlignRight"
+import FormatBoldIcon from "@mui/icons-material/FormatBold"
+import FormatColorFillIcon from "@mui/icons-material/FormatColorFill"
+import FormatColorTextIcon from "@mui/icons-material/FormatColorText"
+import FormatItalicIcon from "@mui/icons-material/FormatItalic"
+import FormatListBulletedIcon from "@mui/icons-material/FormatListBulleted"
+import FormatListNumberedIcon from "@mui/icons-material/FormatListNumbered"
+import FormatQuoteIcon from "@mui/icons-material/FormatQuote"
+import FormatSizeIcon from "@mui/icons-material/FormatSize"
+import FormatUnderlinedIcon from "@mui/icons-material/FormatUnderlined"
+import FunctionsIcon from "@mui/icons-material/Functions"
+import HorizontalRuleIcon from "@mui/icons-material/HorizontalRule"
+import LinkIcon from "@mui/icons-material/Link"
+import LineWeightIcon from "@mui/icons-material/LineWeight"
+import PrintIcon from "@mui/icons-material/Print"
+import RedoIcon from "@mui/icons-material/Redo"
+import StrikethroughSIcon from "@mui/icons-material/StrikethroughS"
+import TableChartIcon from "@mui/icons-material/TableChart"
+import UndoIcon from "@mui/icons-material/Undo"
+import VisibilityIcon from "@mui/icons-material/Visibility"
+import VisibilityOffIcon from "@mui/icons-material/VisibilityOff"
+import CodeIcon from "@mui/icons-material/Code"
+import NumbersIcon from "@mui/icons-material/Numbers"
+import ViewColumnIcon from "@mui/icons-material/ViewColumn"
+import TableRowsIcon from "@mui/icons-material/TableRows"
+import DeleteIcon from "@mui/icons-material/Delete"
+import AddIcon from "@mui/icons-material/Add"
+import { TablePicker } from "./TablePicker"
 
 interface ToolbarProps {
-  editor: Editor;
-  showCharacterCount?: boolean;
-  onToggleCharacterCount?: (show: boolean) => void;
+  editor: Editor
+  showCharacterCount?: boolean
+  onToggleCharacterCount?: (show: boolean) => void
 }
 
 const FONT_FAMILIES = [
-  { label: 'Default', value: '', fontFamily: 'inherit' },
-  { label: 'DM Sans', value: 'var(--font-dm-sans), sans-serif', fontFamily: 'var(--font-dm-sans), sans-serif' },
-  { label: 'Outfit', value: 'var(--font-outfit), sans-serif', fontFamily: 'var(--font-outfit), sans-serif' },
-  { label: 'Arial', value: 'Arial, sans-serif', fontFamily: 'Arial, sans-serif' },
-  { label: 'Times New Roman', value: '"Times New Roman", serif', fontFamily: '"Times New Roman", serif' },
-  { label: 'Courier New', value: '"Courier New", monospace', fontFamily: '"Courier New", monospace' },
-  { label: 'Georgia', value: 'Georgia, serif', fontFamily: 'Georgia, serif' },
-  { label: 'Verdana', value: 'Verdana, sans-serif', fontFamily: 'Verdana, sans-serif' },
-];
+  { label: "Default", value: "", fontFamily: "inherit" },
+  {
+    label: "DM Sans",
+    value: "var(--font-dm-sans), sans-serif",
+    fontFamily: "var(--font-dm-sans), sans-serif",
+  },
+  {
+    label: "Outfit",
+    value: "var(--font-outfit), sans-serif",
+    fontFamily: "var(--font-outfit), sans-serif",
+  },
+  {
+    label: "Arial",
+    value: "Arial, sans-serif",
+    fontFamily: "Arial, sans-serif",
+  },
+  {
+    label: "Times New Roman",
+    value: '"Times New Roman", serif',
+    fontFamily: '"Times New Roman", serif',
+  },
+  {
+    label: "Courier New",
+    value: '"Courier New", monospace',
+    fontFamily: '"Courier New", monospace',
+  },
+  { label: "Georgia", value: "Georgia, serif", fontFamily: "Georgia, serif" },
+  {
+    label: "Verdana",
+    value: "Verdana, sans-serif",
+    fontFamily: "Verdana, sans-serif",
+  },
+]
 
-const FONT_SIZES = ['12px', '14px', '16px', '18px', '20px', '24px', '28px', '32px', '36px', '48px'];
+const FONT_SIZES = [
+  "12px",
+  "14px",
+  "16px",
+  "18px",
+  "20px",
+  "24px",
+  "28px",
+  "32px",
+  "36px",
+  "48px",
+]
 
 const LINE_HEIGHTS = [
-  { label: 'Compact (1.0)', value: '100%' },
-  { label: 'Normal (1.5)', value: '150%' },
-  { label: 'Relaxed (1.75)', value: '175%' },
-  { label: 'Loose (2.0)', value: '200%' },
-  { label: 'Extra Loose (2.5)', value: '250%' },
-];
+  { label: "Compact (1.0)", value: "100%" },
+  { label: "Normal (1.5)", value: "150%" },
+  { label: "Relaxed (1.75)", value: "175%" },
+  { label: "Loose (2.0)", value: "200%" },
+  { label: "Extra Loose (2.5)", value: "250%" },
+]
 
-const Toolbar2 = ({ editor, showCharacterCount = false, onToggleCharacterCount }: ToolbarProps) => {
-  const [colorAnchor, setColorAnchor] = useState<HTMLButtonElement | null>(null);
-  const [highlightAnchor, setHighlightAnchor] = useState<HTMLButtonElement | null>(null);
-  const [invisibleCharsEnabled, setInvisibleCharsEnabled] = useState(false);
-  
+const Toolbar2 = ({
+  editor,
+  showCharacterCount = false,
+  onToggleCharacterCount,
+}: ToolbarProps) => {
+  const [colorAnchor, setColorAnchor] = useState<HTMLButtonElement | null>(null)
+  const [highlightAnchor, setHighlightAnchor] =
+    useState<HTMLButtonElement | null>(null)
+  const [invisibleCharsEnabled, setInvisibleCharsEnabled] = useState(false)
+
   // Menu anchors
-  const [fileMenuAnchor, setFileMenuAnchor] = useState<HTMLElement | null>(null);
-  const [editMenuAnchor, setEditMenuAnchor] = useState<HTMLElement | null>(null);
-  const [viewMenuAnchor, setViewMenuAnchor] = useState<HTMLElement | null>(null);
-  const [insertMenuAnchor, setInsertMenuAnchor] = useState<HTMLElement | null>(null);
-  const [formatMenuAnchor, setFormatMenuAnchor] = useState<HTMLElement | null>(null);
-  const [tablePickerAnchor, setTablePickerAnchor] = useState<HTMLElement | null>(null);
-  const [alignMenuAnchor, setAlignMenuAnchor] = useState<HTMLElement | null>(null);
+  const [fileMenuAnchor, setFileMenuAnchor] = useState<HTMLElement | null>(null)
+  const [editMenuAnchor, setEditMenuAnchor] = useState<HTMLElement | null>(null)
+  const [viewMenuAnchor, setViewMenuAnchor] = useState<HTMLElement | null>(null)
+  const [insertMenuAnchor, setInsertMenuAnchor] = useState<HTMLElement | null>(
+    null
+  )
+  const [formatMenuAnchor, setFormatMenuAnchor] = useState<HTMLElement | null>(
+    null
+  )
+  const [tablePickerAnchor, setTablePickerAnchor] =
+    useState<HTMLElement | null>(null)
+  const [alignMenuAnchor, setAlignMenuAnchor] = useState<HTMLElement | null>(
+    null
+  )
 
   // Subscribe to the minimal editor state needed by the toolbar to avoid
   // re-rendering on every transaction. useEditorState will only re-render this
@@ -101,165 +148,165 @@ const Toolbar2 = ({ editor, showCharacterCount = false, onToggleCharacterCount }
   const editorState = useEditorState({
     editor,
     selector: ({ editor: e }) => ({
-      isBold: e.isActive('bold'),
-      isItalic: e.isActive('italic'),
-      isUnderline: e.isActive('underline'),
-      isStrike: e.isActive('strike'),
-      isCode: e.isActive('code'),
+      isBold: e.isActive("bold"),
+      isItalic: e.isActive("italic"),
+      isUnderline: e.isActive("underline"),
+      isStrike: e.isActive("strike"),
+      isCode: e.isActive("code"),
       canUndo: e.can().undo(),
       canRedo: e.can().redo(),
-      heading1: e.isActive('heading', { level: 1 }),
-      heading2: e.isActive('heading', { level: 2 }),
-      heading3: e.isActive('heading', { level: 3 }),
-      heading4: e.isActive('heading', { level: 4 }),
-      fontFamily: e.getAttributes('textStyle').fontFamily || '',
-      fontSize: e.getAttributes('textStyle').fontSize || '',
-      lineHeight: e.getAttributes('paragraph').lineHeight || '',
-      alignLeft: e.isActive({ textAlign: 'left' }),
-      alignCenter: e.isActive({ textAlign: 'center' }),
-      alignRight: e.isActive({ textAlign: 'right' }),
-      alignJustify: e.isActive({ textAlign: 'justify' }),
+      heading1: e.isActive("heading", { level: 1 }),
+      heading2: e.isActive("heading", { level: 2 }),
+      heading3: e.isActive("heading", { level: 3 }),
+      heading4: e.isActive("heading", { level: 4 }),
+      fontFamily: e.getAttributes("textStyle").fontFamily || "",
+      fontSize: e.getAttributes("textStyle").fontSize || "",
+      lineHeight: e.getAttributes("paragraph").lineHeight || "",
+      alignLeft: e.isActive({ textAlign: "left" }),
+      alignCenter: e.isActive({ textAlign: "center" }),
+      alignRight: e.isActive({ textAlign: "right" }),
+      alignJustify: e.isActive({ textAlign: "justify" }),
       inTable: e.can().addColumnAfter(),
       characters: e.storage.characterCount?.characters() || 0,
       words: e.storage.characterCount?.words() || 0,
     }),
-  });
+  })
 
   const getActiveHeading = () => {
-    if (editorState.heading1) return 'h1';
-    if (editorState.heading2) return 'h2';
-    if (editorState.heading3) return 'h3';
-    if (editorState.heading4) return 'h4';
-    return 'p';
-  };
+    if (editorState.heading1) return "h1"
+    if (editorState.heading2) return "h2"
+    if (editorState.heading3) return "h3"
+    if (editorState.heading4) return "h4"
+    return "p"
+  }
 
   const handleHeadingChange = (event: SelectChangeEvent<string>) => {
-    const value = event.target.value;
-    if (value === 'p') {
-      editor.chain().focus().setParagraph().run();
+    const value = event.target.value
+    if (value === "p") {
+      editor.chain().focus().setParagraph().run()
     } else {
-      const level = parseInt(value.replace('h', '')) as 1 | 2 | 3 | 4;
-      editor.chain().focus().setHeading({ level }).run();
+      const level = parseInt(value.replace("h", "")) as 1 | 2 | 3 | 4
+      editor.chain().focus().setHeading({ level }).run()
     }
-  };
+  }
 
   const getFontFamily = () => {
-    return editorState.fontFamily || '';
-  };
+    return editorState.fontFamily || ""
+  }
 
   const handleFontFamilyChange = (event: SelectChangeEvent<string>) => {
-    const value = event.target.value;
+    const value = event.target.value
     if (value) {
-      editor.chain().focus().setFontFamily(value).run();
+      editor.chain().focus().setFontFamily(value).run()
     } else {
-      editor.chain().focus().unsetFontFamily().run();
+      editor.chain().focus().unsetFontFamily().run()
     }
-  };
+  }
 
   const getFontSize = () => {
-    return editorState.fontSize || '';
-  };
+    return editorState.fontSize || ""
+  }
 
   const handleFontSizeChange = (event: SelectChangeEvent<string>) => {
-    const value = event.target.value;
+    const value = event.target.value
     if (value) {
-      editor.chain().focus().setFontSize(value).run();
+      editor.chain().focus().setFontSize(value).run()
     } else {
-      editor.chain().focus().unsetFontSize().run();
+      editor.chain().focus().unsetFontSize().run()
     }
-  };
+  }
 
   const getLineHeight = () => {
-    return editorState.lineHeight || '150%';
-  };
+    return editorState.lineHeight || "150%"
+  }
 
   const handleLineHeightChange = (event: SelectChangeEvent<string>) => {
-    const value = event.target.value;
-    editor.chain().focus().setLineHeight(value).run();
-  };
+    const value = event.target.value
+    editor.chain().focus().setLineHeight(value).run()
+  }
 
   const getCurrentAlignment = () => {
-    if (editorState.alignCenter) return 'center';
-    if (editorState.alignRight) return 'right';
-    if (editorState.alignJustify) return 'justify';
-    if (editorState.alignLeft) return 'left';
-    return 'left'; // default
-  };
+    if (editorState.alignCenter) return "center"
+    if (editorState.alignRight) return "right"
+    if (editorState.alignJustify) return "justify"
+    if (editorState.alignLeft) return "left"
+    return "left" // default
+  }
 
   const getAlignmentIcon = () => {
-    const align = getCurrentAlignment();
+    const align = getCurrentAlignment()
     switch (align) {
-      case 'center':
-        return <FormatAlignCenterIcon fontSize="small" />;
-      case 'right':
-        return <FormatAlignRightIcon fontSize="small" />;
-      case 'justify':
-        return <FormatAlignJustifyIcon fontSize="small" />;
+      case "center":
+        return <FormatAlignCenterIcon fontSize="small" />
+      case "right":
+        return <FormatAlignRightIcon fontSize="small" />
+      case "justify":
+        return <FormatAlignJustifyIcon fontSize="small" />
       default:
-        return <FormatAlignLeftIcon fontSize="small" />;
+        return <FormatAlignLeftIcon fontSize="small" />
     }
-  };
+  }
 
   const setLink = () => {
-    const previousUrl = editor.getAttributes('link').href;
-    const url = window.prompt('URL', previousUrl);
+    const previousUrl = editor.getAttributes("link").href
+    const url = window.prompt("URL", previousUrl)
 
     if (url === null) {
-      return;
+      return
     }
 
-    if (url === '') {
-      editor.chain().focus().extendMarkRange('link').unsetLink().run();
-      return;
+    if (url === "") {
+      editor.chain().focus().extendMarkRange("link").unsetLink().run()
+      return
     }
 
-    editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
-  };
+    editor.chain().focus().extendMarkRange("link").setLink({ href: url }).run()
+  }
 
   const insertMath = () => {
-    const latex = window.prompt('LaTeX formula:');
+    const latex = window.prompt("LaTeX formula:")
     if (latex) {
-      editor.chain().focus().insertContent(`$${latex}$`).run();
+      editor.chain().focus().insertContent(`$${latex}$`).run()
     }
-  };
+  }
 
   const handleColorClick = (event: React.MouseEvent<HTMLButtonElement>) => {
-    setColorAnchor(event.currentTarget);
-  };
+    setColorAnchor(event.currentTarget)
+  }
 
   const handleHighlightClick = (event: React.MouseEvent<HTMLButtonElement>) => {
-    setHighlightAnchor(event.currentTarget);
-  };
+    setHighlightAnchor(event.currentTarget)
+  }
 
   const handleColorChange = (color: { hex: string }) => {
-    editor.chain().focus().setColor(color.hex).run();
-  };
+    editor.chain().focus().setColor(color.hex).run()
+  }
 
   const handleHighlightChange = (color: { hex: string }) => {
-    editor.chain().focus().setHighlight({ color: color.hex }).run();
-  };
+    editor.chain().focus().setHighlight({ color: color.hex }).run()
+  }
 
   const toggleInvisibleChars = () => {
-    editor.commands.toggleInvisibleCharacters();
-    setInvisibleCharsEnabled(!invisibleCharsEnabled);
-  };
+    editor.commands.toggleInvisibleCharacters()
+    setInvisibleCharsEnabled(!invisibleCharsEnabled)
+  }
 
   const getCharacterCount = () => {
-    return editorState.characters || 0;
-  };
+    return editorState.characters || 0
+  }
 
   const getWordCount = () => {
-    return editorState.words || 0;
-  };
+    return editorState.words || 0
+  }
 
   return (
-    <Box 
-      sx={{ 
+    <Box
+      sx={{
         border: 1,
-        borderColor: 'divider',
-        borderRadius: '8px 8px 0 0',
-        overflow: 'hidden',
-        bgcolor: 'background.paper',
+        borderColor: "divider",
+        borderRadius: "8px 8px 0 0",
+        overflow: "hidden",
+        bgcolor: "background.paper",
       }}
     >
       {/* Menu Bar */}
@@ -267,40 +314,40 @@ const Toolbar2 = ({ editor, showCharacterCount = false, onToggleCharacterCount }
         elevation={0}
         sx={{
           borderBottom: 1,
-          borderColor: 'divider',
-          display: 'flex',
-          alignItems: 'center',
-          bgcolor: 'background.paper',
+          borderColor: "divider",
+          display: "flex",
+          alignItems: "center",
+          bgcolor: "background.paper",
         }}
       >
-        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+        <Box sx={{ display: "flex", alignItems: "center" }}>
           <Button
             onClick={(e) => setFileMenuAnchor(e.currentTarget)}
-            sx={{ textTransform: 'none', color: 'text.primary', px: 2, py: 1 }}
+            sx={{ textTransform: "none", color: "text.primary", px: 2, py: 1 }}
           >
             File
           </Button>
           <Button
             onClick={(e) => setEditMenuAnchor(e.currentTarget)}
-            sx={{ textTransform: 'none', color: 'text.primary', px: 2, py: 1 }}
+            sx={{ textTransform: "none", color: "text.primary", px: 2, py: 1 }}
           >
             Edit
           </Button>
           <Button
             onClick={(e) => setViewMenuAnchor(e.currentTarget)}
-            sx={{ textTransform: 'none', color: 'text.primary', px: 2, py: 1 }}
+            sx={{ textTransform: "none", color: "text.primary", px: 2, py: 1 }}
           >
             View
           </Button>
           <Button
             onClick={(e) => setInsertMenuAnchor(e.currentTarget)}
-            sx={{ textTransform: 'none', color: 'text.primary', px: 2, py: 1 }}
+            sx={{ textTransform: "none", color: "text.primary", px: 2, py: 1 }}
           >
             Insert
           </Button>
           <Button
             onClick={(e) => setFormatMenuAnchor(e.currentTarget)}
-            sx={{ textTransform: 'none', color: 'text.primary', px: 2, py: 1 }}
+            sx={{ textTransform: "none", color: "text.primary", px: 2, py: 1 }}
           >
             Format
           </Button>
@@ -314,11 +361,16 @@ const Toolbar2 = ({ editor, showCharacterCount = false, onToggleCharacterCount }
         onClose={() => setFileMenuAnchor(null)}
         slotProps={{
           paper: {
-            sx: { zIndex: 1300 }
-          }
+            sx: { zIndex: 1300 },
+          },
         }}
       >
-        <MenuItem onClick={() => { editor.commands.print(); setFileMenuAnchor(null); }}>
+        <MenuItem
+          onClick={() => {
+            editor.commands.print()
+            setFileMenuAnchor(null)
+          }}
+        >
           <ListItemIcon>
             <PrintIcon fontSize="small" />
           </ListItemIcon>
@@ -336,12 +388,15 @@ const Toolbar2 = ({ editor, showCharacterCount = false, onToggleCharacterCount }
         onClose={() => setEditMenuAnchor(null)}
         slotProps={{
           paper: {
-            sx: { zIndex: 1300 }
-          }
+            sx: { zIndex: 1300 },
+          },
         }}
       >
         <MenuItem
-          onClick={() => { editor.chain().focus().undo().run(); setEditMenuAnchor(null); }}
+          onClick={() => {
+            editor.chain().focus().undo().run()
+            setEditMenuAnchor(null)
+          }}
           disabled={!editor.can().undo()}
         >
           <ListItemIcon>
@@ -353,7 +408,10 @@ const Toolbar2 = ({ editor, showCharacterCount = false, onToggleCharacterCount }
           </Typography>
         </MenuItem>
         <MenuItem
-          onClick={() => { editor.chain().focus().redo().run(); setEditMenuAnchor(null); }}
+          onClick={() => {
+            editor.chain().focus().redo().run()
+            setEditMenuAnchor(null)
+          }}
           disabled={!editor.can().redo()}
         >
           <ListItemIcon>
@@ -373,24 +431,42 @@ const Toolbar2 = ({ editor, showCharacterCount = false, onToggleCharacterCount }
         onClose={() => setViewMenuAnchor(null)}
         slotProps={{
           paper: {
-            sx: { zIndex: 1300 }
-          }
+            sx: { zIndex: 1300 },
+          },
         }}
       >
-        <MenuItem onClick={() => { toggleInvisibleChars(); setViewMenuAnchor(null); }}>
+        <MenuItem
+          onClick={() => {
+            toggleInvisibleChars()
+            setViewMenuAnchor(null)
+          }}
+        >
           <ListItemIcon>
-            {invisibleCharsEnabled ? <VisibilityOffIcon fontSize="small" /> : <VisibilityIcon fontSize="small" />}
+            {invisibleCharsEnabled ? (
+              <VisibilityOffIcon fontSize="small" />
+            ) : (
+              <VisibilityIcon fontSize="small" />
+            )}
           </ListItemIcon>
           <ListItemText>
-            {invisibleCharsEnabled ? 'Hide' : 'Show'} Non-Printable Characters
+            {invisibleCharsEnabled ? "Hide" : "Show"} Non-Printable Characters
           </ListItemText>
         </MenuItem>
-        <MenuItem onClick={() => { onToggleCharacterCount?.(!showCharacterCount); setViewMenuAnchor(null); }}>
+        <MenuItem
+          onClick={() => {
+            onToggleCharacterCount?.(!showCharacterCount)
+            setViewMenuAnchor(null)
+          }}
+        >
           <ListItemIcon>
-            {showCharacterCount ? <VisibilityOffIcon fontSize="small" /> : <VisibilityIcon fontSize="small" />}
+            {showCharacterCount ? (
+              <VisibilityOffIcon fontSize="small" />
+            ) : (
+              <VisibilityIcon fontSize="small" />
+            )}
           </ListItemIcon>
           <ListItemText>
-            {showCharacterCount ? 'Hide' : 'Show'} Character Count
+            {showCharacterCount ? "Hide" : "Show"} Character Count
           </ListItemText>
         </MenuItem>
         <Divider />
@@ -411,11 +487,16 @@ const Toolbar2 = ({ editor, showCharacterCount = false, onToggleCharacterCount }
         onClose={() => setInsertMenuAnchor(null)}
         slotProps={{
           paper: {
-            sx: { zIndex: 1300 }
-          }
+            sx: { zIndex: 1300 },
+          },
         }}
       >
-        <MenuItem onClick={() => { setLink(); setInsertMenuAnchor(null); }}>
+        <MenuItem
+          onClick={() => {
+            setLink()
+            setInsertMenuAnchor(null)
+          }}
+        >
           <ListItemIcon>
             <LinkIcon fontSize="small" />
           </ListItemIcon>
@@ -424,7 +505,11 @@ const Toolbar2 = ({ editor, showCharacterCount = false, onToggleCharacterCount }
             Ctrl+K
           </Typography>
         </MenuItem>
-        <MenuItem onClick={(e) => { setTablePickerAnchor(e.currentTarget); }}>
+        <MenuItem
+          onClick={(e) => {
+            setTablePickerAnchor(e.currentTarget)
+          }}
+        >
           <ListItemIcon>
             <TableChartIcon fontSize="small" />
           </ListItemIcon>
@@ -432,71 +517,123 @@ const Toolbar2 = ({ editor, showCharacterCount = false, onToggleCharacterCount }
         </MenuItem>
         {/* Table manipulation options - only show when cursor is in a table */}
         {editor.can().addColumnAfter() && [
-            <Divider key="divider-1" />,
-            <MenuItem key="col-before" onClick={() => { editor.chain().focus().addColumnBefore().run(); setInsertMenuAnchor(null); }}>
-              <ListItemIcon>
-                <ViewColumnIcon fontSize="small" />
-              </ListItemIcon>
-              <ListItemText>Column Before</ListItemText>
-              <ListItemIcon sx={{ ml: 'auto', minWidth: 'auto' }}>
-                <AddIcon fontSize="small" />
-              </ListItemIcon>
-            </MenuItem>,
-            <MenuItem key="col-after" onClick={() => { editor.chain().focus().addColumnAfter().run(); setInsertMenuAnchor(null); }}>
-              <ListItemIcon>
-                <ViewColumnIcon fontSize="small" />
-              </ListItemIcon>
-              <ListItemText>Column After</ListItemText>
-              <ListItemIcon sx={{ ml: 'auto', minWidth: 'auto' }}>
-                <AddIcon fontSize="small" />
-              </ListItemIcon>
-            </MenuItem>,
-            <MenuItem key="row-before" onClick={() => { editor.chain().focus().addRowBefore().run(); setInsertMenuAnchor(null); }}>
-              <ListItemIcon>
-                <TableRowsIcon fontSize="small" />
-              </ListItemIcon>
-              <ListItemText>Row Before</ListItemText>
-              <ListItemIcon sx={{ ml: 'auto', minWidth: 'auto' }}>
-                <AddIcon fontSize="small" />
-              </ListItemIcon>
-            </MenuItem>,
-            <MenuItem key="row-after" onClick={() => { editor.chain().focus().addRowAfter().run(); setInsertMenuAnchor(null); }}>
-              <ListItemIcon>
-                <TableRowsIcon fontSize="small" />
-              </ListItemIcon>
-              <ListItemText>Row After</ListItemText>
-              <ListItemIcon sx={{ ml: 'auto', minWidth: 'auto' }}>
-                <AddIcon fontSize="small" />
-              </ListItemIcon>
-            </MenuItem>,
-            <Divider key="divider-2" />,
-            <MenuItem key="del-col" onClick={() => { editor.chain().focus().deleteColumn().run(); setInsertMenuAnchor(null); }}>
-              <ListItemIcon>
-                <DeleteIcon fontSize="small" color="error" />
-              </ListItemIcon>
-              <ListItemText>Delete Column</ListItemText>
-            </MenuItem>,
-            <MenuItem key="del-row" onClick={() => { editor.chain().focus().deleteRow().run(); setInsertMenuAnchor(null); }}>
-              <ListItemIcon>
-                <DeleteIcon fontSize="small" color="error" />
-              </ListItemIcon>
-              <ListItemText>Delete Row</ListItemText>
-            </MenuItem>,
-            <MenuItem key="del-table" onClick={() => { editor.chain().focus().deleteTable().run(); setInsertMenuAnchor(null); }}>
-              <ListItemIcon>
-                <DeleteIcon fontSize="small" color="error" />
-              </ListItemIcon>
-              <ListItemText>Delete Table</ListItemText>
-            </MenuItem>
+          <Divider key="divider-1" />,
+          <MenuItem
+            key="col-before"
+            onClick={() => {
+              editor.chain().focus().addColumnBefore().run()
+              setInsertMenuAnchor(null)
+            }}
+          >
+            <ListItemIcon>
+              <ViewColumnIcon fontSize="small" />
+            </ListItemIcon>
+            <ListItemText>Column Before</ListItemText>
+            <ListItemIcon sx={{ ml: "auto", minWidth: "auto" }}>
+              <AddIcon fontSize="small" />
+            </ListItemIcon>
+          </MenuItem>,
+          <MenuItem
+            key="col-after"
+            onClick={() => {
+              editor.chain().focus().addColumnAfter().run()
+              setInsertMenuAnchor(null)
+            }}
+          >
+            <ListItemIcon>
+              <ViewColumnIcon fontSize="small" />
+            </ListItemIcon>
+            <ListItemText>Column After</ListItemText>
+            <ListItemIcon sx={{ ml: "auto", minWidth: "auto" }}>
+              <AddIcon fontSize="small" />
+            </ListItemIcon>
+          </MenuItem>,
+          <MenuItem
+            key="row-before"
+            onClick={() => {
+              editor.chain().focus().addRowBefore().run()
+              setInsertMenuAnchor(null)
+            }}
+          >
+            <ListItemIcon>
+              <TableRowsIcon fontSize="small" />
+            </ListItemIcon>
+            <ListItemText>Row Before</ListItemText>
+            <ListItemIcon sx={{ ml: "auto", minWidth: "auto" }}>
+              <AddIcon fontSize="small" />
+            </ListItemIcon>
+          </MenuItem>,
+          <MenuItem
+            key="row-after"
+            onClick={() => {
+              editor.chain().focus().addRowAfter().run()
+              setInsertMenuAnchor(null)
+            }}
+          >
+            <ListItemIcon>
+              <TableRowsIcon fontSize="small" />
+            </ListItemIcon>
+            <ListItemText>Row After</ListItemText>
+            <ListItemIcon sx={{ ml: "auto", minWidth: "auto" }}>
+              <AddIcon fontSize="small" />
+            </ListItemIcon>
+          </MenuItem>,
+          <Divider key="divider-2" />,
+          <MenuItem
+            key="del-col"
+            onClick={() => {
+              editor.chain().focus().deleteColumn().run()
+              setInsertMenuAnchor(null)
+            }}
+          >
+            <ListItemIcon>
+              <DeleteIcon fontSize="small" color="error" />
+            </ListItemIcon>
+            <ListItemText>Delete Column</ListItemText>
+          </MenuItem>,
+          <MenuItem
+            key="del-row"
+            onClick={() => {
+              editor.chain().focus().deleteRow().run()
+              setInsertMenuAnchor(null)
+            }}
+          >
+            <ListItemIcon>
+              <DeleteIcon fontSize="small" color="error" />
+            </ListItemIcon>
+            <ListItemText>Delete Row</ListItemText>
+          </MenuItem>,
+          <MenuItem
+            key="del-table"
+            onClick={() => {
+              editor.chain().focus().deleteTable().run()
+              setInsertMenuAnchor(null)
+            }}
+          >
+            <ListItemIcon>
+              <DeleteIcon fontSize="small" color="error" />
+            </ListItemIcon>
+            <ListItemText>Delete Table</ListItemText>
+          </MenuItem>,
         ]}
         {!editor.can().addColumnAfter() && <Divider />}
-        <MenuItem onClick={() => { editor.chain().focus().setHorizontalRule().run(); setInsertMenuAnchor(null); }}>
+        <MenuItem
+          onClick={() => {
+            editor.chain().focus().setHorizontalRule().run()
+            setInsertMenuAnchor(null)
+          }}
+        >
           <ListItemIcon>
             <HorizontalRuleIcon fontSize="small" />
           </ListItemIcon>
           <ListItemText>Horizontal Rule</ListItemText>
         </MenuItem>
-        <MenuItem onClick={() => { insertMath(); setInsertMenuAnchor(null); }}>
+        <MenuItem
+          onClick={() => {
+            insertMath()
+            setInsertMenuAnchor(null)
+          }}
+        >
           <ListItemIcon>
             <FunctionsIcon fontSize="small" />
           </ListItemIcon>
@@ -511,11 +648,16 @@ const Toolbar2 = ({ editor, showCharacterCount = false, onToggleCharacterCount }
         onClose={() => setFormatMenuAnchor(null)}
         slotProps={{
           paper: {
-            sx: { zIndex: 1300 }
-          }
+            sx: { zIndex: 1300 },
+          },
         }}
       >
-        <MenuItem onClick={() => { editor.chain().focus().toggleBold().run(); setFormatMenuAnchor(null); }}>
+        <MenuItem
+          onClick={() => {
+            editor.chain().focus().toggleBold().run()
+            setFormatMenuAnchor(null)
+          }}
+        >
           <ListItemIcon>
             <FormatBoldIcon fontSize="small" />
           </ListItemIcon>
@@ -524,7 +666,12 @@ const Toolbar2 = ({ editor, showCharacterCount = false, onToggleCharacterCount }
             Ctrl+B
           </Typography>
         </MenuItem>
-        <MenuItem onClick={() => { editor.chain().focus().toggleItalic().run(); setFormatMenuAnchor(null); }}>
+        <MenuItem
+          onClick={() => {
+            editor.chain().focus().toggleItalic().run()
+            setFormatMenuAnchor(null)
+          }}
+        >
           <ListItemIcon>
             <FormatItalicIcon fontSize="small" />
           </ListItemIcon>
@@ -533,7 +680,12 @@ const Toolbar2 = ({ editor, showCharacterCount = false, onToggleCharacterCount }
             Ctrl+I
           </Typography>
         </MenuItem>
-        <MenuItem onClick={() => { editor.chain().focus().toggleUnderline().run(); setFormatMenuAnchor(null); }}>
+        <MenuItem
+          onClick={() => {
+            editor.chain().focus().toggleUnderline().run()
+            setFormatMenuAnchor(null)
+          }}
+        >
           <ListItemIcon>
             <FormatUnderlinedIcon fontSize="small" />
           </ListItemIcon>
@@ -542,58 +694,103 @@ const Toolbar2 = ({ editor, showCharacterCount = false, onToggleCharacterCount }
             Ctrl+U
           </Typography>
         </MenuItem>
-        <MenuItem onClick={() => { editor.chain().focus().toggleStrike().run(); setFormatMenuAnchor(null); }}>
+        <MenuItem
+          onClick={() => {
+            editor.chain().focus().toggleStrike().run()
+            setFormatMenuAnchor(null)
+          }}
+        >
           <ListItemIcon>
             <StrikethroughSIcon fontSize="small" />
           </ListItemIcon>
           <ListItemText>Strikethrough</ListItemText>
         </MenuItem>
         <Divider />
-        <MenuItem onClick={() => { editor.chain().focus().setTextAlign('left').run(); setFormatMenuAnchor(null); }}>
+        <MenuItem
+          onClick={() => {
+            editor.chain().focus().setTextAlign("left").run()
+            setFormatMenuAnchor(null)
+          }}
+        >
           <ListItemIcon>
             <FormatAlignLeftIcon fontSize="small" />
           </ListItemIcon>
           <ListItemText>Align Left</ListItemText>
         </MenuItem>
-        <MenuItem onClick={() => { editor.chain().focus().setTextAlign('center').run(); setFormatMenuAnchor(null); }}>
+        <MenuItem
+          onClick={() => {
+            editor.chain().focus().setTextAlign("center").run()
+            setFormatMenuAnchor(null)
+          }}
+        >
           <ListItemIcon>
             <FormatAlignCenterIcon fontSize="small" />
           </ListItemIcon>
           <ListItemText>Align Center</ListItemText>
         </MenuItem>
-        <MenuItem onClick={() => { editor.chain().focus().setTextAlign('right').run(); setFormatMenuAnchor(null); }}>
+        <MenuItem
+          onClick={() => {
+            editor.chain().focus().setTextAlign("right").run()
+            setFormatMenuAnchor(null)
+          }}
+        >
           <ListItemIcon>
             <FormatAlignRightIcon fontSize="small" />
           </ListItemIcon>
           <ListItemText>Align Right</ListItemText>
         </MenuItem>
-        <MenuItem onClick={() => { editor.chain().focus().setTextAlign('justify').run(); setFormatMenuAnchor(null); }}>
+        <MenuItem
+          onClick={() => {
+            editor.chain().focus().setTextAlign("justify").run()
+            setFormatMenuAnchor(null)
+          }}
+        >
           <ListItemIcon>
             <FormatAlignJustifyIcon fontSize="small" />
           </ListItemIcon>
           <ListItemText>Justify</ListItemText>
         </MenuItem>
         <Divider />
-        <MenuItem onClick={() => { editor.chain().focus().toggleBulletList().run(); setFormatMenuAnchor(null); }}>
+        <MenuItem
+          onClick={() => {
+            editor.chain().focus().toggleBulletList().run()
+            setFormatMenuAnchor(null)
+          }}
+        >
           <ListItemIcon>
             <FormatListBulletedIcon fontSize="small" />
           </ListItemIcon>
           <ListItemText>Bullet List</ListItemText>
         </MenuItem>
-        <MenuItem onClick={() => { editor.chain().focus().toggleOrderedList().run(); setFormatMenuAnchor(null); }}>
+        <MenuItem
+          onClick={() => {
+            editor.chain().focus().toggleOrderedList().run()
+            setFormatMenuAnchor(null)
+          }}
+        >
           <ListItemIcon>
             <FormatListNumberedIcon fontSize="small" />
           </ListItemIcon>
           <ListItemText>Numbered List</ListItemText>
         </MenuItem>
         <Divider />
-        <MenuItem onClick={() => { editor.chain().focus().toggleBlockquote().run(); setFormatMenuAnchor(null); }}>
+        <MenuItem
+          onClick={() => {
+            editor.chain().focus().toggleBlockquote().run()
+            setFormatMenuAnchor(null)
+          }}
+        >
           <ListItemIcon>
             <FormatQuoteIcon fontSize="small" />
           </ListItemIcon>
           <ListItemText>Blockquote</ListItemText>
         </MenuItem>
-        <MenuItem onClick={() => { editor.chain().focus().toggleCodeBlock().run(); setFormatMenuAnchor(null); }}>
+        <MenuItem
+          onClick={() => {
+            editor.chain().focus().toggleCodeBlock().run()
+            setFormatMenuAnchor(null)
+          }}
+        >
           <ListItemIcon>
             <CodeIcon fontSize="small" />
           </ListItemIcon>
@@ -606,41 +803,46 @@ const Toolbar2 = ({ editor, showCharacterCount = false, onToggleCharacterCount }
         elevation={0}
         sx={{
           borderBottom: 1,
-          borderColor: 'divider',
+          borderColor: "divider",
           p: 1.5,
-          display: 'flex',
+          display: "flex",
           gap: 1,
-          flexWrap: { xs: 'nowrap', md: 'wrap' },
-          alignItems: 'center',
-          bgcolor: 'background.paper',
-          overflowX: { xs: 'auto', md: 'visible' },
-          overflowY: 'visible',
-          '&::-webkit-scrollbar': {
-            height: '6px',
+          flexWrap: { xs: "nowrap", md: "wrap" },
+          alignItems: "center",
+          bgcolor: "background.paper",
+          overflowX: { xs: "auto", md: "visible" },
+          overflowY: "visible",
+          "&::-webkit-scrollbar": {
+            height: "6px",
           },
-          '&::-webkit-scrollbar-track': {
-            backgroundColor: 'rgba(0, 0, 0, 0.05)',
+          "&::-webkit-scrollbar-track": {
+            backgroundColor: "rgba(0, 0, 0, 0.05)",
           },
-          '&::-webkit-scrollbar-thumb': {
-            backgroundColor: 'rgba(0, 0, 0, 0.2)',
-            borderRadius: '3px',
-            '&:hover': {
-              backgroundColor: 'rgba(0, 0, 0, 0.3)',
+          "&::-webkit-scrollbar-thumb": {
+            backgroundColor: "rgba(0, 0, 0, 0.2)",
+            borderRadius: "3px",
+            "&:hover": {
+              backgroundColor: "rgba(0, 0, 0, 0.3)",
             },
           },
         }}
       >
         {/* Heading Selector */}
-        <Tooltip title="Text Style" disableInteractive enterDelay={500} slotProps={{ popper: { sx: { zIndex: 1 } } }}>
+        <Tooltip
+          title="Text Style"
+          disableInteractive
+          enterDelay={500}
+          slotProps={{ popper: { sx: { zIndex: 1 } } }}
+        >
           <Select
             value={getActiveHeading()}
             onChange={handleHeadingChange}
             size="small"
             sx={{
               minWidth: 120,
-              '& .MuiSelect-select': {
+              "& .MuiSelect-select": {
                 py: 0.75,
-                fontSize: '0.875rem',
+                fontSize: "0.875rem",
               },
             }}
           >
@@ -655,7 +857,12 @@ const Toolbar2 = ({ editor, showCharacterCount = false, onToggleCharacterCount }
         <Divider orientation="vertical" flexItem />
 
         {/* Font Family */}
-        <Tooltip title="Font Family" disableInteractive enterDelay={500} slotProps={{ popper: { sx: { zIndex: 1 } } }}>
+        <Tooltip
+          title="Font Family"
+          disableInteractive
+          enterDelay={500}
+          slotProps={{ popper: { sx: { zIndex: 1 } } }}
+        >
           <Select
             value={getFontFamily()}
             onChange={handleFontFamilyChange}
@@ -663,23 +870,23 @@ const Toolbar2 = ({ editor, showCharacterCount = false, onToggleCharacterCount }
             displayEmpty
             sx={{
               minWidth: 140,
-              '& .MuiSelect-select': {
+              "& .MuiSelect-select": {
                 py: 0.75,
-                fontSize: '0.875rem',
+                fontSize: "0.875rem",
               },
             }}
             renderValue={(value) => {
-              const selected = FONT_FAMILIES.find(f => f.value === value);
+              const selected = FONT_FAMILIES.find((f) => f.value === value)
               return (
-                <span style={{ fontFamily: selected?.fontFamily || 'inherit' }}>
-                  {selected?.label || 'Default'}
+                <span style={{ fontFamily: selected?.fontFamily || "inherit" }}>
+                  {selected?.label || "Default"}
                 </span>
-              );
+              )
             }}
           >
             {FONT_FAMILIES.map((font) => (
-              <MenuItem 
-                key={font.value} 
+              <MenuItem
+                key={font.value}
                 value={font.value}
                 sx={{ fontFamily: font.fontFamily }}
               >
@@ -690,7 +897,12 @@ const Toolbar2 = ({ editor, showCharacterCount = false, onToggleCharacterCount }
         </Tooltip>
 
         {/* Font Size */}
-        <Tooltip title="Font Size" disableInteractive enterDelay={500} slotProps={{ popper: { sx: { zIndex: 1 } } }}>
+        <Tooltip
+          title="Font Size"
+          disableInteractive
+          enterDelay={500}
+          slotProps={{ popper: { sx: { zIndex: 1 } } }}
+        >
           <Select
             value={getFontSize()}
             onChange={handleFontSizeChange}
@@ -698,16 +910,18 @@ const Toolbar2 = ({ editor, showCharacterCount = false, onToggleCharacterCount }
             displayEmpty
             sx={{
               minWidth: 80,
-              '& .MuiSelect-select': {
+              "& .MuiSelect-select": {
                 py: 0.75,
-                fontSize: '0.875rem',
+                fontSize: "0.875rem",
               },
             }}
             renderValue={(value) => {
-              return <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                <FormatSizeIcon fontSize="small" />
-                <span>{value || '16px'}</span>
-              </Box>;
+              return (
+                <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                  <FormatSizeIcon fontSize="small" />
+                  <span>{value || "16px"}</span>
+                </Box>
+              )
             }}
           >
             <MenuItem value="">Default</MenuItem>
@@ -720,24 +934,31 @@ const Toolbar2 = ({ editor, showCharacterCount = false, onToggleCharacterCount }
         </Tooltip>
 
         {/* Line Height */}
-        <Tooltip title="Line Height" disableInteractive enterDelay={500} slotProps={{ popper: { sx: { zIndex: 1 } } }}>
+        <Tooltip
+          title="Line Height"
+          disableInteractive
+          enterDelay={500}
+          slotProps={{ popper: { sx: { zIndex: 1 } } }}
+        >
           <Select
             value={getLineHeight()}
             onChange={handleLineHeightChange}
             size="small"
             sx={{
               minWidth: 120,
-              '& .MuiSelect-select': {
+              "& .MuiSelect-select": {
                 py: 0.75,
-                fontSize: '0.875rem',
+                fontSize: "0.875rem",
               },
             }}
             renderValue={(value) => {
-              const selected = LINE_HEIGHTS.find(h => h.value === value);
-              return <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                <LineWeightIcon fontSize="small" />
-                <span>{selected?.label.split(' ')[0] || value}</span>
-              </Box>;
+              const selected = LINE_HEIGHTS.find((h) => h.value === value)
+              return (
+                <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                  <LineWeightIcon fontSize="small" />
+                  <span>{selected?.label.split(" ")[0] || value}</span>
+                </Box>
+              )
             }}
           >
             {LINE_HEIGHTS.map((height) => (
@@ -751,10 +972,14 @@ const Toolbar2 = ({ editor, showCharacterCount = false, onToggleCharacterCount }
         <Divider orientation="vertical" flexItem />
 
         {/* Text Formatting */}
-        <ToggleButtonGroup size="small" sx={{ height: 32 }} aria-label="text formatting">
+        <ToggleButtonGroup
+          size="small"
+          sx={{ height: 32 }}
+          aria-label="text formatting"
+        >
           <ToggleButton
             value="bold"
-            selected={editor.isActive('bold')}
+            selected={editor.isActive("bold")}
             onClick={() => editor.chain().focus().toggleBold().run()}
             aria-label="Bold"
           >
@@ -764,7 +989,7 @@ const Toolbar2 = ({ editor, showCharacterCount = false, onToggleCharacterCount }
           </ToggleButton>
           <ToggleButton
             value="italic"
-            selected={editor.isActive('italic')}
+            selected={editor.isActive("italic")}
             onClick={() => editor.chain().focus().toggleItalic().run()}
             aria-label="Italic"
           >
@@ -774,7 +999,7 @@ const Toolbar2 = ({ editor, showCharacterCount = false, onToggleCharacterCount }
           </ToggleButton>
           <ToggleButton
             value="underline"
-            selected={editor.isActive('underline')}
+            selected={editor.isActive("underline")}
             onClick={() => editor.chain().focus().toggleUnderline().run()}
             aria-label="Underline"
           >
@@ -784,7 +1009,7 @@ const Toolbar2 = ({ editor, showCharacterCount = false, onToggleCharacterCount }
           </ToggleButton>
           <ToggleButton
             value="strike"
-            selected={editor.isActive('strike')}
+            selected={editor.isActive("strike")}
             onClick={() => editor.chain().focus().toggleStrike().run()}
             aria-label="Strikethrough"
           >
@@ -794,7 +1019,7 @@ const Toolbar2 = ({ editor, showCharacterCount = false, onToggleCharacterCount }
           </ToggleButton>
           <ToggleButton
             value="code"
-            selected={editor.isActive('code')}
+            selected={editor.isActive("code")}
             onClick={() => editor.chain().focus().toggleCode().run()}
             aria-label="Code"
           >
@@ -808,7 +1033,11 @@ const Toolbar2 = ({ editor, showCharacterCount = false, onToggleCharacterCount }
 
         {/* Text Color */}
         <Tooltip title="Text Color" disableInteractive>
-          <IconButton size="small" onClick={handleColorClick} aria-label="text color">
+          <IconButton
+            size="small"
+            onClick={handleColorClick}
+            aria-label="text color"
+          >
             <FormatColorTextIcon fontSize="small" />
           </IconButton>
         </Tooltip>
@@ -817,27 +1046,27 @@ const Toolbar2 = ({ editor, showCharacterCount = false, onToggleCharacterCount }
           anchorEl={colorAnchor}
           onClose={() => setColorAnchor(null)}
           anchorOrigin={{
-            vertical: 'bottom',
-            horizontal: 'left',
+            vertical: "bottom",
+            horizontal: "left",
           }}
           slotProps={{
             paper: {
-              sx: { zIndex: 1300 }
-            }
+              sx: { zIndex: 1300 },
+            },
           }}
         >
           <Box sx={{ p: 2 }}>
             <Sketch
-              color={editor.getAttributes('textStyle').color || '#000000'}
+              color={editor.getAttributes("textStyle").color || "#000000"}
               onChange={handleColorChange}
               disableAlpha
             />
-            <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end' }}>
+            <Box sx={{ mt: 2, display: "flex", justifyContent: "flex-end" }}>
               <Button
                 size="small"
                 onClick={() => {
-                  editor.chain().focus().unsetColor().run();
-                  setColorAnchor(null);
+                  editor.chain().focus().unsetColor().run()
+                  setColorAnchor(null)
                 }}
               >
                 Clear
@@ -856,7 +1085,11 @@ const Toolbar2 = ({ editor, showCharacterCount = false, onToggleCharacterCount }
 
         {/* Highlight Color */}
         <Tooltip title="Highlight Color" disableInteractive>
-          <IconButton size="small" onClick={handleHighlightClick} aria-label="highlight color">
+          <IconButton
+            size="small"
+            onClick={handleHighlightClick}
+            aria-label="highlight color"
+          >
             <FormatColorFillIcon fontSize="small" />
           </IconButton>
         </Tooltip>
@@ -865,27 +1098,27 @@ const Toolbar2 = ({ editor, showCharacterCount = false, onToggleCharacterCount }
           anchorEl={highlightAnchor}
           onClose={() => setHighlightAnchor(null)}
           anchorOrigin={{
-            vertical: 'bottom',
-            horizontal: 'left',
+            vertical: "bottom",
+            horizontal: "left",
           }}
           slotProps={{
             paper: {
-              sx: { zIndex: 1300 }
-            }
+              sx: { zIndex: 1300 },
+            },
           }}
         >
           <Box sx={{ p: 2 }}>
             <Sketch
-              color={editor.getAttributes('highlight').color || '#ffff00'}
+              color={editor.getAttributes("highlight").color || "#ffff00"}
               onChange={handleHighlightChange}
               disableAlpha
             />
-            <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end' }}>
+            <Box sx={{ mt: 2, display: "flex", justifyContent: "flex-end" }}>
               <Button
                 size="small"
                 onClick={() => {
-                  editor.chain().focus().unsetHighlight().run();
-                  setHighlightAnchor(null);
+                  editor.chain().focus().unsetHighlight().run()
+                  setHighlightAnchor(null)
                 }}
               >
                 Clear
@@ -911,29 +1144,29 @@ const Toolbar2 = ({ editor, showCharacterCount = false, onToggleCharacterCount }
             onClick={(e) => setAlignMenuAnchor(e.currentTarget)}
             sx={{
               border: 1,
-              borderColor: 'divider',
+              borderColor: "divider",
               borderRadius: 1,
-              '&:hover': { bgcolor: 'action.hover' },
+              "&:hover": { bgcolor: "action.hover" },
             }}
           >
             {getAlignmentIcon()}
           </IconButton>
         </Tooltip>
-        
+
         <Menu
           anchorEl={alignMenuAnchor}
           open={Boolean(alignMenuAnchor)}
           onClose={() => setAlignMenuAnchor(null)}
           anchorOrigin={{
-            vertical: 'bottom',
-            horizontal: 'left',
+            vertical: "bottom",
+            horizontal: "left",
           }}
         >
-          <MenuItem 
-            selected={editor.isActive({ textAlign: 'left' })}
-            onClick={() => { 
-              editor.chain().focus().setTextAlign('left').run(); 
-              setAlignMenuAnchor(null); 
+          <MenuItem
+            selected={editor.isActive({ textAlign: "left" })}
+            onClick={() => {
+              editor.chain().focus().setTextAlign("left").run()
+              setAlignMenuAnchor(null)
             }}
           >
             <ListItemIcon>
@@ -941,11 +1174,11 @@ const Toolbar2 = ({ editor, showCharacterCount = false, onToggleCharacterCount }
             </ListItemIcon>
             <ListItemText>Left</ListItemText>
           </MenuItem>
-          <MenuItem 
-            selected={editor.isActive({ textAlign: 'center' })}
-            onClick={() => { 
-              editor.chain().focus().setTextAlign('center').run(); 
-              setAlignMenuAnchor(null); 
+          <MenuItem
+            selected={editor.isActive({ textAlign: "center" })}
+            onClick={() => {
+              editor.chain().focus().setTextAlign("center").run()
+              setAlignMenuAnchor(null)
             }}
           >
             <ListItemIcon>
@@ -953,11 +1186,11 @@ const Toolbar2 = ({ editor, showCharacterCount = false, onToggleCharacterCount }
             </ListItemIcon>
             <ListItemText>Center</ListItemText>
           </MenuItem>
-          <MenuItem 
-            selected={editor.isActive({ textAlign: 'right' })}
-            onClick={() => { 
-              editor.chain().focus().setTextAlign('right').run(); 
-              setAlignMenuAnchor(null); 
+          <MenuItem
+            selected={editor.isActive({ textAlign: "right" })}
+            onClick={() => {
+              editor.chain().focus().setTextAlign("right").run()
+              setAlignMenuAnchor(null)
             }}
           >
             <ListItemIcon>
@@ -965,11 +1198,11 @@ const Toolbar2 = ({ editor, showCharacterCount = false, onToggleCharacterCount }
             </ListItemIcon>
             <ListItemText>Right</ListItemText>
           </MenuItem>
-          <MenuItem 
-            selected={editor.isActive({ textAlign: 'justify' })}
-            onClick={() => { 
-              editor.chain().focus().setTextAlign('justify').run(); 
-              setAlignMenuAnchor(null); 
+          <MenuItem
+            selected={editor.isActive({ textAlign: "justify" })}
+            onClick={() => {
+              editor.chain().focus().setTextAlign("justify").run()
+              setAlignMenuAnchor(null)
             }}
           >
             <ListItemIcon>
@@ -986,30 +1219,30 @@ const Toolbar2 = ({ editor, showCharacterCount = false, onToggleCharacterCount }
         anchorEl={tablePickerAnchor}
         onClose={() => setTablePickerAnchor(null)}
         anchorOrigin={{
-          vertical: 'bottom',
-          horizontal: 'left',
+          vertical: "bottom",
+          horizontal: "left",
         }}
         transformOrigin={{
-          vertical: 'top',
-          horizontal: 'left',
+          vertical: "top",
+          horizontal: "left",
         }}
         slotProps={{
           paper: {
-            sx: { zIndex: 1400 }
-          }
+            sx: { zIndex: 1400 },
+          },
         }}
       >
         <TablePicker
           editor={editor}
           onInsert={() => {
-            setTablePickerAnchor(null);
-            setInsertMenuAnchor(null);
+            setTablePickerAnchor(null)
+            setInsertMenuAnchor(null)
           }}
         />
       </Popover>
     </Box>
-  );
-};
+  )
+}
 
 // Memoize toolbar so it doesn't re-render with unrelated parent updates.
-export default React.memo(Toolbar2);
+export default React.memo(Toolbar2)

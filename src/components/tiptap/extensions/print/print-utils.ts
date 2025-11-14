@@ -4,22 +4,25 @@ import { EditorView } from "@tiptap/pm/view"
  * Collects all stylesheets and inline styles from the current document
  * @returns Object containing style and link elements
  */
-function collectStyles(): { styles: HTMLStyleElement[]; links: HTMLLinkElement[] } {
-  const styles = Array.from(document.querySelectorAll<HTMLStyleElement>("style")).map(
-    (element) => element.cloneNode(true) as HTMLStyleElement
-  )
-  
+function collectStyles(): {
+  styles: HTMLStyleElement[]
+  links: HTMLLinkElement[]
+} {
+  const styles = Array.from(
+    document.querySelectorAll<HTMLStyleElement>("style")
+  ).map((element) => element.cloneNode(true) as HTMLStyleElement)
+
   const links = Array.from(
     document.querySelectorAll<HTMLLinkElement>("link[rel='stylesheet']")
   ).map((element) => {
     const link = element.cloneNode(true) as HTMLLinkElement
     // Ensure absolute URLs for external stylesheets
-    if (link.href && !link.href.startsWith('blob:')) {
+    if (link.href && !link.href.startsWith("blob:")) {
       link.href = new URL(link.href, window.location.href).href
     }
     return link
   })
-  
+
   return { styles, links }
 }
 
@@ -30,7 +33,8 @@ function collectStyles(): { styles: HTMLStyleElement[]; links: HTMLLinkElement[]
 function createPrintIframe(): HTMLIFrameElement {
   const iframe = document.createElement("iframe")
   iframe.id = "tiptap-print-iframe"
-  iframe.style.cssText = "position: absolute; width: 0; height: 0; top: -10px; left: -10px; border: none;"
+  iframe.style.cssText =
+    "position: absolute; width: 0; height: 0; top: -10px; left: -10px; border: none;"
   iframe.setAttribute("aria-hidden", "true")
   iframe.setAttribute("title", "Print Frame")
   document.body.appendChild(iframe)
@@ -43,7 +47,10 @@ function createPrintIframe(): HTMLIFrameElement {
  * @param contentElement The element to print
  * @returns Promise that resolves when all styles are loaded
  */
-async function buildIframeContent(iframe: HTMLIFrameElement, contentElement: Element): Promise<void> {
+async function buildIframeContent(
+  iframe: HTMLIFrameElement,
+  contentElement: Element
+): Promise<void> {
   const doc = iframe.contentDocument || iframe.contentWindow?.document
 
   if (!doc) {
@@ -69,25 +76,25 @@ async function buildIframeContent(iframe: HTMLIFrameElement, contentElement: Ele
   // Copy CSS variables from the parent document (especially font variables)
   const rootComputedStyle = window.getComputedStyle(document.documentElement)
   const cssVariables: string[] = []
-  
+
   // Extract all CSS custom properties (variables)
   for (let i = 0; i < rootComputedStyle.length; i++) {
     const propertyName = rootComputedStyle[i]
-    if (propertyName.startsWith('--')) {
+    if (propertyName.startsWith("--")) {
       const value = rootComputedStyle.getPropertyValue(propertyName)
       cssVariables.push(`${propertyName}: ${value};`)
     }
   }
-  
+
   // Also get body computed style for fallback font
   const bodyComputedStyle = window.getComputedStyle(document.body)
-  const actualFontFamily = bodyComputedStyle.getPropertyValue('font-family')
-  
+  const actualFontFamily = bodyComputedStyle.getPropertyValue("font-family")
+
   // Add print-specific styles with CSS variables
   const printStyle = doc.createElement("style")
   printStyle.textContent = `
     :root {
-      ${cssVariables.join('\n      ')}
+      ${cssVariables.join("\n      ")}
     }
     
     @media print {
@@ -131,8 +138,8 @@ async function buildIframeContent(iframe: HTMLIFrameElement, contentElement: Ele
     /* Ensure editor content is visible and styled */
     body {
       font-family: ${actualFontFamily};
-      line-height: ${bodyComputedStyle.getPropertyValue('line-height')};
-      color: ${bodyComputedStyle.getPropertyValue('color')};
+      line-height: ${bodyComputedStyle.getPropertyValue("line-height")};
+      color: ${bodyComputedStyle.getPropertyValue("color")};
     }
     
     .ProseMirror {
@@ -145,76 +152,89 @@ async function buildIframeContent(iframe: HTMLIFrameElement, contentElement: Ele
 
   // Collect and add all existing styles
   const { styles, links } = collectStyles()
-  
+
   // Add all inline styles first
   styles.forEach((style) => head.appendChild(style))
-  
+
   // Add all stylesheet links
   links.forEach((link) => head.appendChild(link))
 
   // Clone and add the content with all computed styles
   const clonedContent = contentElement.cloneNode(true) as HTMLElement
-  
+
   // Copy computed styles to ensure accurate rendering
   const copyComputedStyles = (source: Element, target: Element) => {
     const computedStyle = window.getComputedStyle(source)
     const targetElement = target as HTMLElement
-    
+
     // Copy essential styling properties
     const essentialProps = [
-      'font-family',
-      'font-size',
-      'font-weight',
-      'font-style',
-      'line-height',
-      'color',
-      'background-color',
-      'padding',
-      'margin',
-      'border',
-      'text-align',
-      'text-decoration',
-      'letter-spacing',
-      'word-spacing',
-      'white-space',
-      'text-transform',
+      "font-family",
+      "font-size",
+      "font-weight",
+      "font-style",
+      "line-height",
+      "color",
+      "background-color",
+      "padding",
+      "margin",
+      "border",
+      "text-align",
+      "text-decoration",
+      "letter-spacing",
+      "word-spacing",
+      "white-space",
+      "text-transform",
     ]
-    
+
     essentialProps.forEach((prop) => {
       const value = computedStyle.getPropertyValue(prop)
-      if (value && value !== 'normal' && value !== 'none') {
-        targetElement.style.setProperty(prop, value, 'important')
+      if (value && value !== "normal" && value !== "none") {
+        targetElement.style.setProperty(prop, value, "important")
       }
     })
-    
+
     // Recursively copy styles for children
     const sourceChildren = source.children
     const targetChildren = target.children
-    for (let i = 0; i < sourceChildren.length && i < targetChildren.length; i++) {
+    for (
+      let i = 0;
+      i < sourceChildren.length && i < targetChildren.length;
+      i++
+    ) {
       copyComputedStyles(sourceChildren[i], targetChildren[i])
     }
   }
-  
+
   // Apply computed styles to cloned content
-  if (contentElement instanceof HTMLElement && clonedContent instanceof HTMLElement) {
+  if (
+    contentElement instanceof HTMLElement &&
+    clonedContent instanceof HTMLElement
+  ) {
     copyComputedStyles(contentElement, clonedContent)
   }
-  
+
   // Explicitly set font on the cloned content root
   const contentComputedStyle = window.getComputedStyle(contentElement)
-  clonedContent.style.setProperty('font-family', contentComputedStyle.getPropertyValue('font-family'), 'important')
-  
+  clonedContent.style.setProperty(
+    "font-family",
+    contentComputedStyle.getPropertyValue("font-family"),
+    "important"
+  )
+
   body.appendChild(clonedContent)
 
   // Assemble the document
   html.appendChild(head)
   html.appendChild(body)
-  
+
   // Replace the entire document
   doc.documentElement.replaceWith(html)
-  
+
   // Wait for all stylesheets to load
-  const styleLinks = Array.from(doc.querySelectorAll<HTMLLinkElement>('link[rel="stylesheet"]'))
+  const styleLinks = Array.from(
+    doc.querySelectorAll<HTMLLinkElement>('link[rel="stylesheet"]')
+  )
   await Promise.all(
     styleLinks.map(
       (link) =>
@@ -230,13 +250,13 @@ async function buildIframeContent(iframe: HTMLIFrameElement, contentElement: Ele
         })
     )
   )
-  
+
   // Wait for fonts to be loaded if the Font Loading API is available
-  if ('fonts' in doc && doc.fonts) {
+  if ("fonts" in doc && doc.fonts) {
     try {
       await doc.fonts.ready
     } catch (error) {
-      console.warn('Font loading check failed:', error)
+      console.warn("Font loading check failed:", error)
     }
   }
 }
@@ -279,7 +299,7 @@ async function executePrint(iframe: HTMLIFrameElement): Promise<void> {
  */
 async function printHtml(element: Element): Promise<void> {
   const iframe = createPrintIframe()
-  
+
   try {
     await buildIframeContent(iframe, element)
     await executePrint(iframe)
@@ -299,7 +319,7 @@ async function printHtml(element: Element): Promise<void> {
  */
 export async function printView(view: EditorView): Promise<boolean> {
   const editorContent = view.dom.closest(".ProseMirror")
-  
+
   if (!editorContent) {
     console.warn("Could not find ProseMirror editor content")
     return false

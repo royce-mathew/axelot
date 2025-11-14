@@ -1,17 +1,17 @@
-'use client';
+"use client"
 
-import { useSession } from 'next-auth/react';
+import { useSession } from "next-auth/react"
 
 export function useAuth() {
-  const { data: session, status } = useSession();
+  const { data: session, status } = useSession()
 
-  const isLoading = status === 'loading';
-  const isAuthenticated = status === 'authenticated';
+  const isLoading = status === "loading"
+  const isAuthenticated = status === "authenticated"
 
   return {
     user: session?.user,
     isAuthenticated,
     isLoading,
     session,
-  };
+  }
 }

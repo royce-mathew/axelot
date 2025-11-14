@@ -28,42 +28,50 @@ const providers = [
     authorize: async (credentials) => {
       try {
         // Validate credentials with Zod
-        const { email, password } = await signInSchema.parseAsync(credentials);
+        const { email, password } = await signInSchema.parseAsync(credentials)
 
         // Get user from Firestore
-        const usersRef = firebaseAdminFirestore.collection('users');
-        const snapshot = await usersRef.where('email', '==', email.toLowerCase()).limit(1).get();
+        const usersRef = firebaseAdminFirestore.collection("users")
+        const snapshot = await usersRef
+          .where("email", "==", email.toLowerCase())
+          .limit(1)
+          .get()
 
         if (snapshot.empty) {
-          throw new Error("Invalid credentials.");
+          throw new Error("Invalid credentials.")
         }
 
-        const userDoc = snapshot.docs[0];
-        const userData = userDoc.data();
+        const userDoc = snapshot.docs[0]
+        const userData = userDoc.data()
 
         // Check if email is verified for credentials users
         if (userData.emailVerified === false) {
           // User hasn't verified their email yet
-          return null;
+          return null
         }
 
         // Get password hash from separate credentials collection
-        const credentialsRef = firebaseAdminFirestore.collection('credentials').doc(userDoc.id);
-        const credentialsDoc = await credentialsRef.get();
+        const credentialsRef = firebaseAdminFirestore
+          .collection("credentials")
+          .doc(userDoc.id)
+        const credentialsDoc = await credentialsRef.get()
 
         if (!credentialsDoc.exists) {
           // User doesn't have credentials (OAuth-only user)
           // Return null instead of throwing to avoid exposing that the email exists
-          return null;
+          return null
         }
 
-        const credentialsData = credentialsDoc.data();
-        
+        const credentialsData = credentialsDoc.data()
+
         // Verify password
-        const isValidPassword = await verifyPassword(password, credentialsData!.passwordHash);
+        const isValidPassword = await verifyPassword(
+          password,
+          credentialsData!.passwordHash
+        )
 
         if (!isValidPassword) {
-          return null;
+          return null
         }
 
         // Return user object
@@ -74,14 +82,14 @@ const providers = [
           image: userData.image,
           emailVerified: userData.emailVerified,
           username: userData.username,
-        };
+        }
       } catch (error) {
         if (error instanceof ZodError) {
           // Return null to indicate invalid credentials
-          return null;
+          return null
         }
-        console.error("Authorization error:", error);
-        return null;
+        console.error("Authorization error:", error)
+        return null
       }
     },
   }),
@@ -101,25 +109,27 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
     async jwt({ token, user }) {
       // Add user data to JWT token on sign-in
       if (user) {
-        token.sub = user.id;
+        token.sub = user.id
         if (user.username) {
-          token.username = user.username;
+          token.username = user.username
         }
       }
-      return token;
+      return token
     },
     async session({ session, token }) {
       // Add token data to session
       if (session.user && token.sub) {
-        session.user.id = token.sub;
-        session.user.username = token.username as string;
+        session.user.id = token.sub
+        session.user.username = token.username as string
 
         // Create a custom Firebase token for client-side authentication
-        const firebaseToken = await adminAuth.createCustomToken(token.sub as string);
-        session.firebaseToken = firebaseToken;
+        const firebaseToken = await adminAuth.createCustomToken(
+          token.sub as string
+        )
+        session.firebaseToken = firebaseToken
       }
-      
-      return session;
+
+      return session
     },
   },
   debug: false,
