@@ -1,0 +1,51 @@
+# Enforce consistent line endings across platforms
+# Treat all files as text by default and normalize to LF in the repo
+* text=auto
+
+# Force LF for common text/source files so Git stores LF in the repository
+*.js     text eol=lf
+*.cjs    text eol=lf
+*.mjs    text eol=lf
+*.ts     text eol=lf
+*.tsx    text eol=lf
+*.jsx    text eol=lf
+*.json   text eol=lf
+*.css    text eol=lf
+*.scss   text eol=lf
+*.html   text eol=lf
+*.md     text eol=lf
+*.yml    text eol=lf
+*.yaml   text eol=lf
+*.graphql text eol=lf
+*.env    text eol=lf
+*.txt    text eol=lf
+*.ps1    text eol=lf
+*.sh     text eol=lf
+
+# Lockfiles and manifests
+package.json    text eol=lf
+pnpm-lock.yaml  text eol=lf
+package-lock.json text eol=lf
+
+# Prettier / config / CI
+.prettierrc*    text eol=lf
+prettier.config.js text eol=lf
+.github/**      text eol=lf
+
+# Treat common binary files as binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.zip binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+
+# Do not attempt to normalize these (node modules, build outputs)
+node_modules/** -text
+.next/** -text
+dist/** -text
+build/** -text
