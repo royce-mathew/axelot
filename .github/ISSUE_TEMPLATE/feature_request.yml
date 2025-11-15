@@ -1,0 +1,65 @@
+name: "Feature request"
+description: "Suggest an idea or enhancement for Axelot"
+labels: [enhancement]
+title: "feat: <short description>"
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for proposing an improvement! Please describe the problem and your proposed solution clearly.
+
+  - type: input
+    id: problem
+    attributes:
+      label: Problem to solve
+      description: What user problem or limitation are you addressing?
+      placeholder: e.g. Difficult to discover documents trending in past 24h
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+      description: Describe your solution. If relevant, include API shape, UI sketches, or data model changes.
+      placeholder: What should be implemented and how?
+    validations:
+      required: true
+
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope / affected areas
+      description: Which parts of the system are impacted?
+      placeholder: Editor, Realtime, API, Auth, Firebase, UI, Trending, Build/Deploy
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      placeholder: Other approaches or trade‑offs you evaluated
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      placeholder: Bullet list of outcomes and validation steps
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      options:
+        - nice-to-have
+        - should-have
+        - must-have
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: contrib
+    attributes:
+      label: Willing to submit a PR?
+      options:
+        - label: I can help implement this
+          required: false

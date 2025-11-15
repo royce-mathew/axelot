@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Ask a question / Q&A
+    url: https://github.com/royce-mathew/axelot/discussions
+    about: Use Discussions for general questions, help, or ideas.
+  - name: Security policy
+    url: https://github.com/royce-mathew/axelot/security/policy
+    about: Please report security vulnerabilities privately via the Security Policy.

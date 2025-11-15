@@ -1,0 +1,37 @@
+name: "Performance issue"
+description: "Report slow pages, heavy bundles, or costly operations"
+labels: [performance]
+title: "perf: <route/component> — <short description>"
+body:
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: Where is the performance problem observed?
+      placeholder: Route(s), component(s), API handlers, Firestore queries, WebRTC peers, etc.
+    validations:
+      required: true
+
+  - type: textarea
+    id: metrics
+    attributes:
+      label: Evidence / metrics
+      description: Provide numbers, screenshots, or profiler output (Lighthouse, React Profiler, Web Vitals, Firestore logs).
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      placeholder: Clear steps and data shape for reproduction
+
+  - type: textarea
+    id: hypothesis
+    attributes:
+      label: Hypothesis / suspected cause
+      placeholder: e.g., large editor extension payload, unindexed Firestore query, N+1 reads
+
+  - type: textarea
+    id: ideas
+    attributes:
+      label: Potential improvement ideas
+      placeholder: Code splitting, memoization, indexes, caching, CRDT batching, etc.

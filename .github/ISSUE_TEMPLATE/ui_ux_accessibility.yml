@@ -1,0 +1,57 @@
+name: "UI/UX & Accessibility"
+description: "Report design, usability, or accessibility issues"
+labels: [ui/ux]
+title: "ui: <page/component> — <short description>"
+body:
+  - type: dropdown
+    id: type
+    attributes:
+      label: Type
+      options:
+        - Visual design
+        - Usability / UX
+        - Accessibility (a11y)
+        - Responsiveness
+        - Theming
+    validations:
+      required: true
+
+  - type: input
+    id: location
+    attributes:
+      label: Location
+      placeholder: Route/component (e.g., /(app)/editor, Header, BubbleMenu)
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      placeholder: What’s the issue and why is it problematic?
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce (if applicable)
+      placeholder: How to see the issue
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      placeholder: What should the experience look/feel like?
+
+  - type: textarea
+    id: accessibility
+    attributes:
+      label: Accessibility details (if applicable)
+      description: Include WCAG guideline references, screen reader output, focus order, color contrast, keyboard traps, etc.
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots / recordings
+      description: Drag-and-drop images or links to videos.

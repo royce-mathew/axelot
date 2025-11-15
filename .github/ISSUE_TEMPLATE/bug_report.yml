@@ -1,0 +1,143 @@
+name: "Bug report"
+description: "Report a reproducible problem in Axelot"
+labels: [bug]
+title: "bug: <short description>"
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping improve Axelot! Please fill out as much as possible so we can reproduce and fix the issue quickly.
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Pre‑flight checks
+      options:
+        - label: I have searched existing issues and discussions
+          required: true
+        - label: I am using the latest commit or release on the master branch
+          required: false
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Affected area
+      options:
+        - Editor / TipTap
+        - Realtime / Yjs / WebRTC
+        - API Routes
+        - Auth / NextAuth
+        - Firebase (Rules / Admin)
+        - UI / Theming (MUI)
+        - Trending / Cron
+        - Build / Deploy (Vercel)
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: desc
+    attributes:
+      label: Description
+      description: Clear, concise description of the problem.
+      placeholder: What happened and where?
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      description: Minimal, step-by-step reproduction. Include document state, user actions, and route visited if relevant.
+      placeholder: |
+        1. Go to ...
+        2. Click ...
+        3. Observe ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      placeholder: What should have happened?
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      placeholder: What actually happened? Include error messages.
+    validations:
+      required: true
+
+  - type: input
+    id: repro-link
+    attributes:
+      label: Reproduction link (optional)
+      description: GitHub repo, Codesandbox/StackBlitz, or a gist demonstrating the issue.
+      placeholder: https://...
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs / stack traces
+      description: Browser console, server logs (Next.js), and any Firebase errors.
+      render: shell
+
+  - type: dropdown
+    id: browsers
+    attributes:
+      label: Browser(s)
+      multiple: true
+      options:
+        - Chrome
+        - Firefox
+        - Edge
+        - Safari
+        - Other
+
+  - type: input
+    id: os
+    attributes:
+      label: OS
+      placeholder: Windows 11 / macOS 14 / Ubuntu 24.04 / Other
+
+  - type: input
+    id: node
+    attributes:
+      label: Node.js version
+      placeholder: e.g. 20.x
+
+  - type: input
+    id: package-manager
+    attributes:
+      label: Package manager & version
+      placeholder: pnpm 9.x (preferred)
+
+  - type: input
+    id: app-versions
+    attributes:
+      label: App dependency versions (if changed)
+      placeholder: Next.js 16.x, React 19.x, Firebase 12.x, TipTap 3.x, NextAuth 5 beta
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity
+      options:
+        - Low (minor issue)
+        - Medium (workaround exists)
+        - High (blocks feature)
+        - Critical (crash/data loss)
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: contrib
+    attributes:
+      label: Willing to submit a PR?
+      options:
+        - label: I can submit a PR to fix this
+          required: false
