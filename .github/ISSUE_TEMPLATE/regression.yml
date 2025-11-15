@@ -1,0 +1,42 @@
+name: "Regression"
+description: "Something that worked before now fails"
+labels: [bug, regression]
+title: "regression: <short description>"
+body:
+  - type: textarea
+    id: was-works
+    attributes:
+      label: Previously working version / commit
+      description: Tag, commit hash, or date where this worked.
+      placeholder: e.g., 9b8e4ad on 2025-10-02
+    validations:
+      required: true
+
+  - type: textarea
+    id: now-broken
+    attributes:
+      label: Now failing on
+      description: Commit hash, date, or version where it fails.
+      placeholder: e.g., master as of 2025-11-15
+    validations:
+      required: true
+
+  - type: textarea
+    id: change-suspect
+    attributes:
+      label: Suspected change
+      description: Link to PR/commit or area that likely introduced the regression.
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      placeholder: Clear, minimal reproduction steps
+    validations:
+      required: true
+
+  - type: textarea
+    id: impact
+    attributes:
+      label: Impact
+      placeholder: Scope and severity of the regression

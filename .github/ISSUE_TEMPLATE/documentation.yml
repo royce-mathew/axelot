@@ -1,0 +1,48 @@
+name: "Documentation"
+description: "Report missing, outdated, or unclear documentation"
+labels: [documentation]
+title: "docs: <area> — <short description>"
+body:
+  - type: dropdown
+    id: doc-area
+    attributes:
+      label: Documentation area
+      options:
+        - README
+        - Firebase (Rules / Setup)
+        - Auth / NextAuth
+        - API Routes
+        - Editor / TipTap
+        - Realtime / Yjs
+        - Contributing / Development
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: issue
+    attributes:
+      label: What’s wrong or missing?
+      placeholder: Describe what needs to be added, updated, or clarified
+    validations:
+      required: true
+
+  - type: input
+    id: link
+    attributes:
+      label: Link or section
+      placeholder: File path or anchor (e.g., README.md#quick-start)
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed change
+      placeholder: Suggest wording or structure; attach snippets or screenshots
+
+  - type: checkboxes
+    id: contrib
+    attributes:
+      label: Willing to submit a PR?
+      options:
+        - label: I can update the docs
+          required: false
