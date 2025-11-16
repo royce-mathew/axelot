@@ -1118,10 +1118,10 @@ export default function StoryPage({
                 CollaborationCaret.configure({
                   provider: provider,
                   user: {
-                    name: user!.name,
-                    image: user!.image,
-                    color: stringToHslColor(user!.name!),
-                    userId: user!.id,
+                    name: user?.name,
+                    image: user?.image,
+                    color: stringToHslColor(user?.name || "Anonymous"),
+                    userId: user?.id,
                   },
                 }),
                 TableOfContentsExtension.configure({
