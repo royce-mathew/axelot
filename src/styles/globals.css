@@ -91,6 +91,41 @@ body {
 .tableWrapper td,
 .tableWrapper th {
   min-width: 1em;
+
+/* Mermaid Preview */
+.tiptap-editor-content .tiptap-mermaid-preview {
+  margin-top: 8px;
+  padding: 8px;
+  border-radius: 8px;
+  background: rgba(127, 127, 127, 0.06);
+  overflow-x: auto;
+}
+.tiptap-editor-content .tiptap-mermaid-svg svg {
+  display: block;
+  height: auto;
+  max-width: 100%;
+}
+
+/* Hide the immediate code block when a preview widget is inserted before it */
+.tiptap-editor-content .tiptap-mermaid-preview + pre {
+  display: none !important;
+}
+
+/* Fallback: hide when plugin adds a class to the codeBlock node */
+.tiptap-editor-content pre.tiptap-mermaid-hide {
+  display: none !important;
+}
+
+/* Readonly/Preview: always hide mermaid code blocks by language class */
+.tiptap-editor-content.is-readonly pre[class*="language-mermaid"],
+.tiptap-editor-content.is-readonly code[class*="language-mermaid"] {
+  display: none !important;
+}
+
+/* Robust hide using :has to target pre that contains a mermaid code child */
+.tiptap-editor-content.is-readonly pre:has(> code[class*="language-mermaid"]) {
+  display: none !important;
+}
   border: 1px solid rgba(128, 128, 128, 0.3);
   padding: 0.5rem;
   vertical-align: top;
