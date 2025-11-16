@@ -33,6 +33,7 @@
 12. [Contribution Guidelines](#contribution-guidelines)
 13. [License](#license)
 14. [Mermaid Diagrams](#mermaid-diagrams)
+15. [Docker](#docker)
 
 ---
 
@@ -254,3 +255,19 @@ Distributed under the AGPL-3.0 License. See `LICENSE` for more information.
 ---
 
 <sub>© 2025 Royce Mathew & Sunny Patel. Built with ❤️ for developers. Contributions welcome.</sub>
+
+## Docker
+
+This project includes a production-ready Dockerfile based on Next.js' official "with-docker" example, adapted for pnpm and standalone output.
+
+Build and run locally:
+
+```powershell
+docker build -t axelot:dev .
+docker run --rm -p 3000:3000 --env-file .env.local axelot:dev
+```
+
+Notes:
+- We set `output: "standalone"` in `next.config.ts` to enable the minimal runtime bundle.
+- Do not bake secrets into images; supply env via `--env-file` or your platform's secret manager.
+- Container binds to `0.0.0.0:3000`.
