@@ -15,7 +15,9 @@ export const MermaidPreview = Extension.create({
   addProseMirrorPlugins() {
     // Assumes code block node name is 'codeBlock' from @tiptap/extension-code-block
     const show = !this.editor.isEditable
-    return [MermaidPreviewPlugin({ codeBlockName: "codeBlock", showPreview: show })]
+    return [
+      MermaidPreviewPlugin({ codeBlockName: "codeBlock", showPreview: show }),
+    ]
   },
 
   addCommands() {

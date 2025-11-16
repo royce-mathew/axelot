@@ -13,7 +13,7 @@ import {
   useTheme,
   useMediaQuery,
 } from "@mui/material"
-import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp'
+import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { DesktopNav } from "./DesktopNav"

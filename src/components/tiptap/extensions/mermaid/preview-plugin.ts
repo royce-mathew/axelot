@@ -15,7 +15,7 @@ async function ensureMermaidInitialized(theme: "default" | "dark") {
     const mermaid = (await import("mermaid")).default
     mermaid.initialize({ startOnLoad: false, theme })
     mermaidReady = true
-  } catch  {
+  } catch {
     // noop
   } finally {
     isInitializing = false
@@ -39,7 +39,8 @@ async function renderMermaid(container: HTMLElement, code: string) {
 function getThemeFromDocument(): "default" | "dark" {
   if (typeof document === "undefined") return "default"
   const root = document.documentElement
-  const isDark = root.classList.contains("dark") ||
+  const isDark =
+    root.classList.contains("dark") ||
     window.matchMedia?.("(prefers-color-scheme: dark)").matches
   return isDark ? "dark" : "default"
 }
