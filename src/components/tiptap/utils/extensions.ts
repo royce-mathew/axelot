@@ -34,6 +34,7 @@ import { Indent } from "../extensions/indent"
 import { LineHeight } from "../extensions/line-height"
 import { Print } from "../extensions/print"
 import { AIAutocomplete } from "../extensions/autocomplete/main-index"
+import { MermaidPreview } from "../extensions/mermaid"
 
 export const extensions: Extensions = [
   // Core extensions
@@ -116,6 +117,7 @@ export const extensions: Extensions = [
     visible: false, // Hidden by default, toggle with toolbar button
   }),
   Print,
+  MermaidPreview,
 
   // Special extensions
   MathExtension.configure({ evaluation: true }),

@@ -47,6 +47,7 @@ import UndoIcon from "@mui/icons-material/Undo"
 import VisibilityIcon from "@mui/icons-material/Visibility"
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff"
 import CodeIcon from "@mui/icons-material/Code"
+import AccountTreeIcon from "@mui/icons-material/AccountTree"
 import NumbersIcon from "@mui/icons-material/Numbers"
 import ViewColumnIcon from "@mui/icons-material/ViewColumn"
 import TableRowsIcon from "@mui/icons-material/TableRows"
@@ -1211,6 +1212,19 @@ const Toolbar2 = ({
             <ListItemText>Justify</ListItemText>
           </MenuItem>
         </Menu>
+
+        <Divider orientation="vertical" flexItem />
+
+        {/* Mermaid Diagram */}
+        <Tooltip title="Insert Mermaid Diagram" disableInteractive>
+          <IconButton
+            size="small"
+            onClick={() => editor.chain().focus().insertMermaid().run()}
+            aria-label="insert mermaid diagram"
+          >
+            <AccountTreeIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
       </Paper>
 
       {/* Table Picker Popover */}

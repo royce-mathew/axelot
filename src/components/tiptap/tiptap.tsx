@@ -34,7 +34,9 @@ const Tiptap2 = ({
   const editor = useEditor({
     editorProps: {
       attributes: {
-        class: "tiptap-editor-content",
+        class: readOnly
+          ? "tiptap-editor-content is-readonly"
+          : "tiptap-editor-content",
         style: readOnly
           ? "outline: none; min-height: 300px; padding: 8px 4px;" // Minimal padding for readonly mobile
           : "outline: none; min-height: 500px; padding: 24px;",

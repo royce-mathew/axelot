@@ -32,6 +32,7 @@
 11. [Security Notes](#security-notes)
 12. [Contribution Guidelines](#contribution-guidelines)
 13. [License](#license)
+14. [Mermaid Diagrams](#mermaid-diagrams)
 
 ---
 
@@ -100,6 +101,23 @@ pnpm dev
 ```
 
 Navigate to http://localhost:3000.
+
+## Mermaid Diagrams
+
+TipTap includes Mermaid diagram support for authoring and preview:
+
+- Author mode: insert a Mermaid block via Insert → “Mermaid Diagram” or type ```mermaid then Enter. You’ll see and edit the code only.
+- Preview/read‑only mode: the Mermaid code block is hidden; only the rendered diagram is shown.
+- Theme awareness: diagrams render in light/dark to match the app theme.
+
+Example snippet:
+
+```mermaid
+flowchart TD
+  A[Start] --> B{Choice}
+  B -->|Yes| C[Continue]
+  B -->|No| D[Stop]
+```
 
 ## Environment & API keys
 
