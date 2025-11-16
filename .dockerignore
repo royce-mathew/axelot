@@ -1,0 +1,34 @@
+# Based on Next.js with-docker example .dockerignore
+
+# Dependencies
+node_modules
+
+# Build output
+.next
+out
+dist
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Git
+.git
+.gitignore
+
+# Editors
+.vscode
+.idea
+
+# Misc
+Dockerfile
+Dockerfile.*
+*.md
+*.map
+.DS_Store
+*.tsbuildinfo
+
+# Env (do not bake secrets into images)
+.env*
