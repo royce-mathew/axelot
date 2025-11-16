@@ -15,20 +15,20 @@ async function ensureMermaidInitialized(theme: "default" | "dark") {
     const mermaid = (await import("mermaid")).default
     mermaid.initialize({ startOnLoad: false, theme })
     mermaidReady = true
-  } catch (e) {
+  } catch  {
     // noop
   } finally {
     isInitializing = false
   }
 }
 
-async function renderMermaid(container: HTMLElement, code: string, theme: "default" | "dark") {
+async function renderMermaid(container: HTMLElement, code: string) {
   const mermaid = (await import("mermaid")).default
   try {
     // Use a unique id per render to avoid collisions
     const id = `tiptap-mermaid-${Math.random().toString(36).slice(2)}`
     // Some mermaid versions expose render as promise-based
-    const result: any = await (mermaid as any).render?.(id, code)
+    const result = await mermaid.render?.(id, code)
     const svg = result?.svg || ""
     container.innerHTML = svg
   } catch (err) {
@@ -75,7 +75,7 @@ function createDecorations(
         // Defer rendering to next microtask so DOM attaches
         queueMicrotask(async () => {
           await ensureMermaidInitialized(theme)
-          await renderMermaid(container, code, theme)
+          await renderMermaid(container, code)
         })
 
         return outer
@@ -123,7 +123,7 @@ export function MermaidPreviewPlugin({
     },
     props: {
       decorations(state) {
-        return (this as any).getState(state)
+        return this.getState(state)
       },
     },
   })
