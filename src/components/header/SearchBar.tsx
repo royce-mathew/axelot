@@ -303,7 +303,11 @@ export const SearchBar = () => {
                           }
                         >
                           <ListItemAvatar>
-                            <Avatar sx={{ bgcolor: "secondary.main" }}>
+                            <Avatar
+                              src={user.image || undefined}
+                              alt={user.name || user.username || "User"}
+                              sx={{ bgcolor: "secondary.main" }}
+                            >
                               <PersonIcon fontSize="small" />
                             </Avatar>
                           </ListItemAvatar>
