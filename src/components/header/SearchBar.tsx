@@ -14,6 +14,7 @@ import {
   Typography,
   Divider,
   alpha,
+  useColorScheme,
 } from "@mui/material"
 import SearchIcon from "@mui/icons-material/Search"
 import DescriptionIcon from "@mui/icons-material/Description"
@@ -47,9 +48,16 @@ export const SearchBar = () => {
   })
   const [loading, setLoading] = useState(false)
   const searchRef = useRef<HTMLDivElement>(null)
+  const inputRef = useRef<HTMLInputElement | null>(null)
+  const [isFocused, setIsFocused] = useState(false)
   const router = useRouter()
   const { isAuthenticated } = useAuth()
   const hasResults = results.documents.length > 0 || results.users.length > 0
+  const isMac =
+    typeof navigator !== "undefined" &&
+    /Mac|iPod|iPhone|iPad/.test(navigator.platform)
+  const { mode } = useColorScheme()
+  const isDark = mode === "dark"
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -63,6 +71,43 @@ export const SearchBar = () => {
 
     document.addEventListener("mousedown", handleClickOutside)
     return () => document.removeEventListener("mousedown", handleClickOutside)
+  }, [])
+
+  // Global keyboard shortcuts: Ctrl/⌘+K to focus search (even in TipTap), Esc to close
+  useEffect(() => {
+    const isBlockedContext = (target: EventTarget | null) => {
+      if (!target || !(target as Element)) return false
+      const el = target as HTMLElement
+      const tag = (el.tagName || "").toUpperCase()
+      // Allow inside TipTap editor explicitly
+      if (el.closest && el.closest(".tiptap-editor-content")) return false
+      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return true
+      if (el.isContentEditable) return true
+      return false
+    }
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      const isK = e.key?.toLowerCase() === "k"
+      const hasMod = e.ctrlKey || e.metaKey
+      if (isK && hasMod) {
+        if (isBlockedContext(e.target)) return
+        e.preventDefault()
+        inputRef.current?.focus()
+        // Keep current open logic; do not force open on empty query
+        return
+      }
+
+      if (e.key === "Escape") {
+        // Close results and blur only if our input is active
+        if (document.activeElement === inputRef.current) {
+          setShowResults(false)
+          ;(document.activeElement as HTMLElement)?.blur()
+        }
+      }
+    }
+
+    window.addEventListener("keydown", onKeyDown)
+    return () => window.removeEventListener("keydown", onKeyDown)
   }, [])
 
   const handleSearch = (event: React.FormEvent) => {
@@ -212,11 +257,49 @@ export const SearchBar = () => {
             fontSize: "0.875rem",
             color: "inherit",
           }}
-          placeholder="Search.."
+          placeholder="Search..."
           value={searchQuery}
           onChange={handleInputChange}
           inputProps={{ "aria-label": "search" }}
+          inputRef={inputRef}
+          onKeyDown={(e) => {
+            if (e.key === "Escape") {
+              setShowResults(false)
+              ;(e.target as HTMLElement)?.blur()
+            }
+          }}
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => setIsFocused(false)}
         />
+
+        {/* Shortcut badge (Ctrl/⌘ K) */}
+        <Box
+          sx={(theme) => ({
+            mr: 1.5,
+            px: 1,
+            py: 0.25,
+            borderRadius: 1,
+            border: "1px solid",
+            borderColor: isDark
+              ? alpha(theme.palette.common.white, 0.2)
+              : alpha(theme.palette.text.primary, 0.15),
+            bgcolor: isDark
+              ? alpha(theme.palette.common.white, 0.08)
+              : alpha(theme.palette.text.primary, 0.06),
+            color: isDark
+              ? alpha(theme.palette.common.white, 0.85)
+              : alpha(theme.palette.text.primary, 0.8),
+            fontSize: "0.7rem",
+            lineHeight: 1,
+            display: { xs: "none", sm: "inline-flex" },
+            alignItems: "center",
+            gap: 0.5,
+            pointerEvents: "none",
+          })}
+          aria-hidden
+        >
+          {isFocused && showResults ? "Esc" : isMac ? "⌘ K" : "Ctrl K"}
+        </Box>
       </Paper>
 
       {/* Search Results Popup */}
