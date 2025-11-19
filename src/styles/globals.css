@@ -322,3 +322,10 @@ body {
   opacity: 0.25;
   mix-blend-mode: multiply;
 }
+
+/* Tiptap Codeblock Shiki */
+html.dark .tiptap .shiki,
+html.dark .tiptap .shiki span {
+  color: var(--shiki-dark) !important;
+  background-color: var(--shiki-dark-bg) !important;
+}
