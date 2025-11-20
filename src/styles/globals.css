@@ -91,42 +91,6 @@ body {
 .tableWrapper td,
 .tableWrapper th {
   min-width: 1em;
-
-  /* Mermaid Preview */
-  .tiptap-editor-content .tiptap-mermaid-preview {
-    margin-top: 8px;
-    padding: 8px;
-    border-radius: 8px;
-    background: rgba(127, 127, 127, 0.06);
-    overflow-x: auto;
-  }
-  .tiptap-editor-content .tiptap-mermaid-svg svg {
-    display: block;
-    height: auto;
-    max-width: 100%;
-  }
-
-  /* Hide the immediate code block when a preview widget is inserted before it */
-  .tiptap-editor-content .tiptap-mermaid-preview + pre {
-    display: none !important;
-  }
-
-  /* Fallback: hide when plugin adds a class to the codeBlock node */
-  .tiptap-editor-content pre.tiptap-mermaid-hide {
-    display: none !important;
-  }
-
-  /* Readonly/Preview: always hide mermaid code blocks by language class */
-  .tiptap-editor-content.is-readonly pre[class*="language-mermaid"],
-  .tiptap-editor-content.is-readonly code[class*="language-mermaid"] {
-    display: none !important;
-  }
-
-  /* Robust hide using :has to target pre that contains a mermaid code child */
-  .tiptap-editor-content.is-readonly
-    pre:has(> code[class*="language-mermaid"]) {
-    display: none !important;
-  }
   border: 1px solid rgba(128, 128, 128, 0.3);
   padding: 0.5rem;
   vertical-align: top;
@@ -328,4 +292,183 @@ html.dark .tiptap .shiki,
 html.dark .tiptap .shiki span {
   color: var(--shiki-dark) !important;
   background-color: var(--shiki-dark-bg) !important;
+}
+
+/* Code Block Styling */
+.tiptap-editor-content .code-block-with-lang,
+.tiptap-editor-content pre {
+  position: relative;
+}
+
+/* Code Block Controls Container */
+.tiptap-editor-content .code-block-controls {
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  pointer-events: none; /* Allow clicks to pass through to code if needed, but button needs events */
+  z-index: 50;
+}
+
+/* Language Indicator */
+.tiptap-editor-content .code-block-language-indicator {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  opacity: 0.5;
+  padding: 4px 8px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  user-select: none;
+  transition: opacity 0.2s ease;
+  color: inherit;
+}
+
+/* Copy Button */
+.tiptap-editor-content .code-block-copy-button {
+  position: absolute;
+  top: 50%;
+  right: 0;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 4px;
+  border-radius: 4px;
+  border: 1px solid rgba(128, 128, 128, 0.2);
+  background: rgba(255, 255, 255, 0.9);
+  color: #555;
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.2s ease;
+}
+
+/* Hover Behavior: Swap Language Indicator with Copy Button */
+
+/* Hide Language Indicator on Hover */
+.tiptap-editor-content
+  .code-block-with-lang:hover
+  .code-block-language-indicator,
+.tiptap-editor-content pre:hover .code-block-language-indicator,
+.tiptap-editor-content
+  .code-block-controls:hover
+  .code-block-language-indicator {
+  opacity: 0;
+}
+
+/* Show Copy Button on Hover */
+.tiptap-editor-content .code-block-with-lang:hover .code-block-copy-button,
+.tiptap-editor-content pre:hover .code-block-copy-button,
+.tiptap-editor-content .code-block-controls:hover .code-block-copy-button {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(-50%) scale(1);
+}
+
+/* Button Hover State */
+.tiptap-editor-content .code-block-copy-button:hover {
+  background: rgba(255, 255, 255, 1);
+  border-color: rgba(128, 128, 128, 0.4);
+  color: #000;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.tiptap-editor-content .code-block-copy-button:active {
+  transform: translateY(-50%) scale(0.95);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* Copied State (Green Check) */
+.tiptap-editor-content .code-block-copy-button.copied {
+  color: #4caf50;
+  border-color: #4caf50;
+  background: rgba(255, 255, 255, 1);
+}
+
+/* Dark Mode Adjustments */
+html.dark .tiptap-editor-content .code-block-language-indicator {
+  background: rgba(0, 0, 0, 0.3);
+  color: rgba(255, 255, 255, 0.6);
+}
+
+html.dark .tiptap-editor-content .code-block-copy-button {
+  background: rgba(40, 40, 40, 0.9);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.7);
+}
+
+html.dark .tiptap-editor-content .code-block-copy-button:hover {
+  background: rgba(50, 50, 50, 1);
+  border-color: rgba(255, 255, 255, 0.3);
+  color: #fff;
+}
+
+html.dark .tiptap-editor-content .code-block-copy-button.copied {
+  color: #66bb6a;
+  border-color: #66bb6a;
+}
+
+/* Mermaid Preview (when rendering diagrams) */
+.tiptap-editor-content .tiptap-mermaid-preview {
+  margin: 1rem 0;
+  padding: 1rem;
+  border-radius: 8px;
+  background: rgba(127, 127, 127, 0.06);
+  overflow-x: auto;
+  border: 1px solid rgba(128, 128, 128, 0.2);
+}
+
+.tiptap-editor-content .tiptap-mermaid-svg {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  /* Smooth transition to prevent layout shift */
+  transition: min-height 0.2s ease-out;
+}
+
+.tiptap-editor-content .tiptap-mermaid-svg svg {
+  display: block;
+  height: auto;
+  max-width: 100%;
+  /* Smooth fade in for new diagrams */
+  animation: mermaidFadeIn 0.2s ease-out;
+}
+
+@keyframes mermaidFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Dark mode styles for Mermaid preview */
+html.dark .tiptap-editor-content .tiptap-mermaid-preview {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+/* --- Mermaid Visibility Toggling based on Editor State --- */
+
+/* EDIT MODE: Show code block, hide preview */
+.tiptap[contenteditable="true"] .tiptap-mermaid-preview {
+  display: none;
+}
+.tiptap[contenteditable="true"] .tiptap-mermaid-code-block {
+  display: block;
+}
+
+/* READONLY MODE: Show preview, hide code block */
+.tiptap[contenteditable="false"] .tiptap-mermaid-preview {
+  display: block;
+}
+.tiptap[contenteditable="false"] .tiptap-mermaid-code-block {
+  display: none !important;
 }

@@ -32,7 +32,6 @@ function getDecorations({
     | undefined
 }) {
   const decorations: Decoration[] = []
-
   const codeBlocks = findChildren(doc, (node) => node.type.name === name)
 
   codeBlocks.forEach((block) => {
@@ -46,7 +45,6 @@ function getDecorations({
     const highlighter = getShiki()
 
     if (!highlighter) return
-
     if (!highlighter.getLoadedLanguages().includes(language)) {
       language = "plaintext"
     }
@@ -77,7 +75,7 @@ function getDecorations({
       decorations.push(
         Decoration.node(block.pos, block.pos + block.node.nodeSize, {
           style: styleToHtml(blockStyle),
-          class: "shiki",
+          class: "shiki code-block-with-lang",
         })
       )
     } else {
@@ -95,9 +93,60 @@ function getDecorations({
       decorations.push(
         Decoration.node(block.pos, block.pos + block.node.nodeSize, {
           style: `background-color: ${themeResolved.bg}`,
+          class: "code-block-with-lang",
         })
       )
     }
+
+    // Create a single container for language indicator and copy button
+    const container = document.createElement("div")
+    container.className = "code-block-controls"
+    container.setAttribute("contenteditable", "false")
+
+    // Language indicator (shown by default)
+    const langIndicator = document.createElement("span")
+    langIndicator.className = "code-block-language-indicator"
+    langIndicator.textContent = language
+
+    // Copy button (shown on hover)
+    const copyButton = document.createElement("button")
+    copyButton.className = "code-block-copy-button"
+    copyButton.setAttribute("type", "button")
+    copyButton.setAttribute("aria-label", "Copy code")
+
+    // Material Design Copy Icon
+    const copyIcon = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M16 1H4C2.9 1 2 1.9 2 3V17H4V3H16V1ZM19 5H8C6.9 5 6 5.9 6 7V21C6 22.1 6.9 23 8 23H19C20.1 23 21 22.1 21 21V7C21 5.9 20.1 5 19 5ZM19 21H8V7H19V21Z" fill="currentColor"/></svg>`
+
+    // Material Design Check Icon
+    const checkIcon = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 16.17L4.83 12L3.41 13.41L9 19L21 7L19.59 5.59L9 16.17Z" fill="currentColor"/></svg>`
+
+    copyButton.innerHTML = copyIcon
+
+    copyButton.addEventListener("click", async (e) => {
+      e.preventDefault()
+      e.stopPropagation()
+
+      try {
+        await navigator.clipboard.writeText(block.node.textContent)
+        copyButton.innerHTML = checkIcon
+        copyButton.classList.add("copied")
+        setTimeout(() => {
+          copyButton.innerHTML = copyIcon
+          copyButton.classList.remove("copied")
+        }, 2000)
+      } catch (err) {
+        console.error("Failed to copy:", err)
+      }
+    })
+
+    container.appendChild(langIndicator)
+    container.appendChild(copyButton)
+
+    decorations.push(
+      Decoration.widget(block.pos + 1, container, {
+        side: -1,
+      })
+    )
 
     for (const line of tokens.tokens) {
       for (const token of line) {
@@ -208,7 +257,6 @@ export function ShikiPlugin({
 
           // The asynchronous nature of this is potentially prone to
           // race conditions. Imma just hope it's fine lol
-
           if (didLoadSomething) {
             const tr = view.state.tr.setMeta("shikiPluginForceDecoration", true)
             view.dispatch(tr)

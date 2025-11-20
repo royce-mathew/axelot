@@ -1,4 +1,4 @@
-import { Extension, nodeInputRule } from "@tiptap/core"
+import { Extension, textblockTypeInputRule } from "@tiptap/core"
 import { MermaidPreviewPlugin } from "./preview-plugin"
 
 declare module "@tiptap/core" {
@@ -13,10 +13,10 @@ export const MermaidPreview = Extension.create({
   name: "mermaidPreview",
 
   addProseMirrorPlugins() {
-    // Assumes code block node name is 'codeBlock' from @tiptap/extension-code-block
-    const show = !this.editor.isEditable
     return [
-      MermaidPreviewPlugin({ codeBlockName: "codeBlock", showPreview: show }),
+      MermaidPreviewPlugin({
+        codeBlockName: "codeBlock",
+      }),
     ]
   },
 
@@ -43,9 +43,10 @@ export const MermaidPreview = Extension.create({
 
   addInputRules() {
     // Transform ```mermaid into a mermaid code block
+    // Use same input rules from codeblock
     return [
-      nodeInputRule({
-        find: /^```mermaid$/,
+      textblockTypeInputRule({
+        find: /^```mermaid[\s\n]$/,
         type: this.editor.schema.nodes.codeBlock,
         getAttributes: () => ({ language: "mermaid" }),
       }),

@@ -66,8 +66,8 @@ export const extensions: Extensions = [
     defaultTheme: "tokyo-night",
     themes: {
       light: "material-theme-lighter",
-      dark: "material-theme-darker"
-    }
+      dark: "material-theme-darker",
+    },
   }),
   HorizontalRule,
 
