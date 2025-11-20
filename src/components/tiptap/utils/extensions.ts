@@ -62,7 +62,13 @@ export const extensions: Extensions = [
   // Block extensions
   Heading.configure({ levels: [1, 2, 3, 4] }),
   Blockquote,
-  CodeBlockShiki,
+  CodeBlockShiki.configure({
+    defaultTheme: "tokyo-night",
+    themes: {
+      light: "material-theme-lighter",
+      dark: "material-theme-darker",
+    },
+  }),
   HorizontalRule,
 
   // List extensions
