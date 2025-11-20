@@ -173,9 +173,6 @@ importers:
       lib0:
         specifier: ^0.2.114
         version: 0.2.114
-      lowlight-mermaid:
-        specifier: ^0.0.0
-        version: 0.0.0
       mermaid:
         specifier: ^11.12.1
         version: 11.12.1
@@ -3554,9 +3551,6 @@ packages:
   loose-envify@1.4.0:
     resolution: {integrity: sha512-lyuxPGr/Wfhrlem2CL/UcnUc1zcqKAImBDzukY7Y5F/yQiNdko6+fRLevlw1HgMySw7f611UIY408EtxRSoK3Q==}
     hasBin: true
-
-  lowlight-mermaid@0.0.0:
-    resolution: {integrity: sha512-ptK596v+jRyC1p8uCRpTDi0U9Hm2STA47oKMyruY2zdkuBl2FQN4dkyvVTadeUb+KjDK7mI3rPpuiGjTvSozPQ==}
 
   lru-cache@5.1.1:
     resolution: {integrity: sha512-KpNARQA3Iwv+jTA0utUVVbrh+Jlrr1Fv0e56GGzAFOXN7dk/FviaDW8LHmK52DlcH4WP2n6gI8vN1aesBFgo9w==}
@@ -8358,8 +8352,6 @@ snapshots:
   loose-envify@1.4.0:
     dependencies:
       js-tokens: 4.0.0
-
-  lowlight-mermaid@0.0.0: {}
 
   lru-cache@5.1.1:
     dependencies:
