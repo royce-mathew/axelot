@@ -10,6 +10,7 @@
     "lint:fix": "eslint --fix .",
     "format": "prettier --write ./src/",
     "format:check": "prettier --check ./src/",
+    "test": "vitest",
     "prepare": "husky"
   },
   "dependencies": {
@@ -87,14 +88,20 @@
     "@eslint/eslintrc": "^3.3.1",
     "@ianvs/prettier-plugin-sort-imports": "4.6.2",
     "@prettier/plugin-oxc": "^0.0.4",
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.0",
     "@types/node": "^24.10.1",
     "@types/react": "^19.2.4",
     "@types/react-dom": "^19.2.3",
     "@types/unist": "^3.0.3",
+    "@vitejs/plugin-react": "^5.1.1",
     "eslint": "^9.39.1",
     "eslint-config-next": "^16.0.3",
     "husky": "^9.1.7",
+    "jsdom": "^27.2.0",
     "prettier": "^3.6.2",
-    "typescript": "5.9.3"
+    "typescript": "5.9.3",
+    "vitest": "^4.0.12"
   }
 }
