@@ -113,6 +113,11 @@ export default function StoryPage({
     ? unwrappedParams.storyId.split("-")[0]
     : unwrappedParams.storyId
 
+  /*
+    undefined: loading / no access
+    true: write access
+    false: read access
+  */
   const [access, setAccess] = useState<boolean | undefined>(undefined)
   const [saving, setSaving] = useState<boolean>(false)
   const [isPublic, setIsPublic] = useState<boolean>(false)
@@ -199,7 +204,7 @@ export default function StoryPage({
         console.log("GETTING DOCUMENT DATA")
 
         if (!docSnap.exists()) {
-          setAccess(false)
+          setAccess(undefined)
           setLoading(false)
           return
         }
@@ -233,7 +238,7 @@ export default function StoryPage({
         setLoading(false)
       } catch (error) {
         console.error("Error loading document:", error)
-        setAccess(false)
+        setAccess(undefined)
         setLoading(false)
       }
     }
@@ -618,21 +623,6 @@ export default function StoryPage({
     setShareDialogOpen(true)
   }
 
-  /* Wait for provider and document metadata (access) before rendering the editor.
-     Prevents mounting in the wrong state (e.g., read-only or missing cursors). */
-  if (!provider || loading) {
-    return (
-      <Box sx={{ minHeight: "100vh", bgcolor: "background.default" }}>
-        <Container maxWidth="lg" sx={{ py: 6 }}>
-          <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 4 }}>
-            <CircularProgress size={24} />
-            <Typography>Loading story...</Typography>
-          </Box>
-        </Container>
-      </Box>
-    )
-  }
-
   // Show access denied for users without permission (after loading completes)
   if (access === undefined && !loading) {
     return (
@@ -661,6 +651,21 @@ export default function StoryPage({
               Back to My Stories
             </Button>
           </Alert>
+        </Container>
+      </Box>
+    )
+  }
+
+  /* Wait for provider and document metadata (access) before rendering the editor.
+     Prevents mounting in the wrong state (e.g., read-only or missing cursors). */
+  if (loading || !provider) {
+    return (
+      <Box sx={{ minHeight: "100vh", bgcolor: "background.default" }}>
+        <Container maxWidth="lg" sx={{ py: 6 }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 4 }}>
+            <CircularProgress size={24} />
+            <Typography>Loading story...</Typography>
+          </Box>
         </Container>
       </Box>
     )
