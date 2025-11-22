@@ -75,6 +75,7 @@ import { FireProvider } from "@/lib/y-fire"
 import { useAuth } from "@/hooks/use-auth"
 import { useDocumentView } from "@/hooks/use-document-view"
 import { TableOfContents, TocAnchor } from "@/components/tiptap/TableOfContents"
+import { AccessLevel } from "@/types/access"
 
 const Tiptap = dynamic(() => import("@/components/tiptap/tiptap"), {
   ssr: false,
@@ -118,7 +119,7 @@ export default function StoryPage({
     true: write access
     false: read access
   */
-  const [access, setAccess] = useState<boolean | undefined>(undefined)
+  const [access, setAccess] = useState<AccessLevel | undefined>(undefined)
   const [saving, setSaving] = useState<boolean>(false)
   const [isPublic, setIsPublic] = useState<boolean>(false)
   const [title, setTitle] = useState<string>("")
@@ -184,7 +185,7 @@ export default function StoryPage({
     }
 
     newProvider.onDeleted = () => {
-      setAccess(false)
+      setAccess(AccessLevel.None) // Set access to 0 (no access) when provider is deleted
     }
 
     return () => {
@@ -204,7 +205,7 @@ export default function StoryPage({
         console.log("GETTING DOCUMENT DATA")
 
         if (!docSnap.exists()) {
-          setAccess(undefined)
+          setAccess(AccessLevel.None)
           setLoading(false)
           return
         }
@@ -223,7 +224,9 @@ export default function StoryPage({
           hasWritePermission
 
         if (hasReadPermission) {
-          setAccess(hasWritePermission ? true : false) // true for write, false for read-only
+          setAccess(
+            hasWritePermission ? AccessLevel.Write : AccessLevel.ReadOnly
+          )
           console.log(data)
           setDocument(data)
           setTitle(data.title || "")
@@ -231,14 +234,14 @@ export default function StoryPage({
           // Initialize lastSavedTitle to prevent unnecessary save on load
           lastSavedTitleRef.current = data.title || ""
         } else {
-          setAccess(undefined) // undefined means no access at all
+          setAccess(AccessLevel.None)
         }
 
         // Only set loading to false after access check is complete
         setLoading(false)
       } catch (error) {
         console.error("Error loading document:", error)
-        setAccess(undefined)
+        setAccess(AccessLevel.None)
         setLoading(false)
       }
     }
@@ -249,7 +252,7 @@ export default function StoryPage({
   // Auto-save title and update slug (only for write access users)
   useEffect(() => {
     // Only allow write access users to save title
-    if (access !== true) return
+    if (access !== AccessLevel.Write) return
     if (!storyId || !user?.id || !document || !provider || !title) return
 
     // Skip if title hasn't changed from last save
@@ -624,7 +627,7 @@ export default function StoryPage({
   }
 
   // Show access denied for users without permission (after loading completes)
-  if (access === undefined && !loading) {
+  if (access === AccessLevel.None && !loading) {
     return (
       <Box sx={{ minHeight: "100vh", bgcolor: "background.default" }}>
         <Container
@@ -698,7 +701,7 @@ export default function StoryPage({
         {/* Main Content Area */}
         <Box sx={{ flex: 1, minWidth: 0 }}>
           {/* Title and Actions Bar - Visible for owners; adapts to preview mode */}
-          {access === true && (
+          {access === AccessLevel.Write && (
             <Paper
               elevation={0}
               sx={{ p: 3, mb: 3, border: 1, borderColor: "divider" }}
@@ -716,7 +719,7 @@ export default function StoryPage({
                     placeholder="Untitled Story"
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
-                    disabled={access !== true}
+                    disabled={access !== AccessLevel.Write}
                     inputProps={{
                       readOnly: previewMode,
                       tabIndex: previewMode ? -1 : undefined,
@@ -799,7 +802,7 @@ export default function StoryPage({
                     )}
 
                     {/* Public/Private - Desktop only as switch */}
-                    {access === true && (
+                    {access === AccessLevel.Write && (
                       <FormControlLabel
                         control={
                           <Switch
@@ -846,7 +849,8 @@ export default function StoryPage({
                     )}
 
                     {/* Active Users - Show for all authenticated users */}
-                    {(access === true || access === false) &&
+                    {(access === AccessLevel.Write ||
+                      access === AccessLevel.ReadOnly) &&
                       activeUsers.length > 0 && (
                         <Tooltip
                           title={
@@ -894,7 +898,7 @@ export default function StoryPage({
                   </Stack>
 
                   {/* Right side: Preview toggle + Menu button */}
-                  {access === true && (
+                  {access === AccessLevel.Write && (
                     <Stack direction="row" spacing={1} alignItems="center">
                       <FormControlLabel
                         control={
@@ -920,7 +924,7 @@ export default function StoryPage({
           {/* Read-only Title Display - Show for read access only.
       Owners' preview is handled above inside the editable header, so
       avoid rendering the title again when an owner toggles previewMode. */}
-          {access !== true && document && (
+          {access !== AccessLevel.Write && document && (
             <Box
               sx={{
                 mb: { xs: 2, sm: 3 },
@@ -1047,7 +1051,7 @@ export default function StoryPage({
           )}
 
           {/* Options Menu - Only for write access */}
-          {access === true && (
+          {access === AccessLevel.Write && (
             <Menu
               anchorEl={menuAnchorEl}
               open={menuOpen}
@@ -1113,9 +1117,9 @@ export default function StoryPage({
           >
             <Tiptap
               key={previewMode ? "preview" : "edit"}
-              editable={access === true && !previewMode}
+              editable={access === AccessLevel.Write && !previewMode}
               onEditorReady={setCurrentEditor}
-              readOnly={access !== true || previewMode}
+              readOnly={access !== AccessLevel.Write || previewMode}
               passedExtensions={[
                 Collaboration.configure({
                   document: provider.doc,
