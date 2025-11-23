@@ -15,27 +15,16 @@
 
 </div>
 
----
-
 ## Table of Contents
 
-1. [Overview](#overview)
-2. [Feature Highlights](#feature-highlights)
-3. [Architecture](#architecture)
-4. [Tech Stack](#tech-stack)
-5. [Quick Start](#quick-start)
-6. [Environment Variables](#environment--api-keys)
-7. [Scripts](#scripts)
-8. [Folder Structure](#folder-structure)
-9. [Trending Algorithm](#trending-algorithm)
-10. [Cron & Background Jobs](#cron--background-jobs)
-11. [Security Notes](#security-notes)
-12. [Contribution Guidelines](#contribution-guidelines)
-13. [License](#license)
-14. [Mermaid Diagrams](#mermaid-diagrams)
-15. [Docker](#docker)
-
----
+- [Overview](#overview)
+- [Quick Start](#quick-start)
+- [Environment & API keys](#environment--api-keys)
+- [Architecture](#architecture)
+- [Trending Algorithm](#trending-algorithm)
+- [Security Notes](#security-notes)
+- [Contribution Guidelines](#contribution-guidelines)
+- [License](#license)
 
 ## Overview
 
@@ -47,52 +36,6 @@ Axelot is a modern, real‑time collaborative document platform combining:
 - Real‑time presence & conflict‑free syncing (Yjs + WebRTC + Firestore persistence).
 - Trending discovery, user dashboards, search and profile pages.
 
-## Feature Highlights
-
-| Domain        | Features                                                                                                                                      |
-| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| Editing       | TipTap extensions (tables, headings, typography, font size, line height, bubble menu, table picker, math, code syntax highlighting via Shiki) |
-| Collaboration | Yjs CRDT documents, WebRTC peers (simple-peer-light), presence carets, character count popup                                                  |
-| AI            | `/api/completion` streaming chat completions, text transform endpoint, autocomplete hooks                                                     |
-| Auth          | NextAuth v5 (beta) + Firebase Firestore adapter + credentials provider (with password hashing via bcryptjs & Zod validation)                  |
-| Data Layer    | Firebase Admin (server) + Firebase JS SDK (client), Firestore security rules, server utilities for auth tokens                                |
-| Discovery     | Trending score computation + scheduled cron job; search; user profile stories                                                                 |
-| Theming       | Light/dark theme toggle (MUI theme integration)                                                                                               |
-| Validation    | Zod schemas for auth and inputs                                                                                                               |
-| DX            | Turbopack dev/build, ESLint, Prettier formatting script, Husky + Commitlint                                                                   |
-
-## Architecture
-
-High‑level flow:
-
-1. User authenticates through NextAuth (OAuth or credentials). Credentials flow validates against Firestore `users` + `credentials` collections; verified email required.
-2. A Firebase custom token is minted server‑side and attached to the session for secure client SDK usage.
-3. Document editing uses TipTap bound to a Yjs document; Yjs sync layer uses WebRTC for peer mesh and can persist snapshots/metadata in Firestore.
-4. AI endpoints proxy to OpenRouter streaming completions (serverless route handler streaming Response.body).
-5. Trending computation cron (Vercel) calls a protected route updating scores based on recency, views and activity.
-6. Frontend pages under `src/app/(app)` provide dashboard, search, stories, per‑user documents, etc.
-
-### Data & Realtime Components
-
-- Firestore collections: `users`, `credentials`, `documents` (inferred), trending metadata fields: `viewCount`, `trendingScore`, `trendingLastComputed`, timestamps.
-- Yjs provider utilities in `src/lib/y-fire/` manage awareness, graph propagation & WebRTC signaling.
-
-## Tech Stack
-
-**Runtime & Framework**: Next.js 16 App Router, React 19, TypeScript 5.
-
-**Collaboration & Editor**: TipTap 3, Yjs, simple-peer-light, Shiki (syntax highlighting), KaTeX (math), custom extensions (font-size, line-height, table of contents, print, indent).
-
-**Backend / APIs**: Next.js route handlers, Firebase Admin SDK, OpenRouter (LLM), Cron (Vercel).
-
-**Auth**: NextAuth v5 beta, Google, GitHub, Credentials (password hashed via bcryptjs), Firestore Adapter, email verification flow.
-
-**UI / UX**: MUI (Material UI 7), Emotion, custom theming, responsive header & nav components.
-
-**Quality / Tooling**: ESLint 9, Commitlint + Husky, Prettier formatting, Turbopack, Zod validation.
-
-**Other Libraries**: date-fns, idb-keyval (local caching), unist-util-visit (MD/AST utils).
-
 ## Quick Start
 
 ```bash
@@ -103,24 +46,7 @@ pnpm dev
 
 Navigate to http://localhost:3000.
 
-## Mermaid Diagrams
-
-TipTap includes Mermaid diagram support for authoring and preview:
-
-- Author mode: insert a Mermaid block via Insert → “Mermaid Diagram” or type ```mermaid then Enter. You’ll see and edit the code only.
-- Preview/read‑only mode: the Mermaid code block is hidden; only the rendered diagram is shown.
-- Theme awareness: diagrams render in light/dark to match the app theme.
-
-Example snippet:
-
-```mermaid
-flowchart TD
-  A[Start] --> B{Choice}
-  B -->|Yes| C[Continue]
-  B -->|No| D[Stop]
-```
-
-## Environment & API keys
+### Environment & API keys
 
 This project requires several API keys and credentials. Copy `.env.local.example` to `.env.local` and fill in the values before running the app locally or deploying.
 
@@ -173,33 +99,53 @@ Below are short instructions for obtaining each key and how to set them (origina
 - **OPENROUTER_API_KEY**
   - Obtain from OpenRouter (or compatible gateway) & paste.
 
-> Tip: Use a password manager or `direnv` / 1Password CLI for local secret management.
+### Docker
 
-## Scripts
+This project includes a production-ready Dockerfile based on Next.js' official "with-docker" example, adapted for pnpm and standalone output.
 
-| Script          | Description                                  |
-| --------------- | -------------------------------------------- |
-| `pnpm dev`      | Start dev server (Next.js 16 with Turbopack) |
-| `pnpm build`    | Production build                             |
-| `pnpm start`    | Start built app                              |
-| `pnpm lint`     | Run ESLint over repo                         |
-| `pnpm lint:fix` | Auto-fix lint issues                         |
-| `pnpm format`   | Prettier format selected directories         |
-| `pnpm prepare`  | Husky git hook install                       |
+Build and run locally:
 
-## Folder Structure
-
+```powershell
+docker build -t axelot:dev .
+docker run --rm -p 3000:3000 --env-file .env.local axelot:dev
 ```
-src/
-	app/                # App Router pages & route handlers (API under api/)
-	components/         # UI components (header, tiptap editor suite, navigation)
-	hooks/              # Custom React hooks (auth, stories cache, mount utils)
-	lib/                # Core logic: firebase, trending, validations, y-fire, converters
-	styles/             # Global CSS
-	types/              # TypeScript type definitions (auth, document, user, css)
-public/images/        # Static assets (404.webp, Error.gif)
-firebase/             # Firestore rules & indexes
-patches/              # Patch files (e.g., rehype-pretty-code customization)
+
+Notes:
+
+- Do not bake secrets into images; supply env via `--env-file` or your platform's secret manager.
+- Container binds to `0.0.0.0:3000`.
+
+## Architecture
+
+High‑level flow:
+
+1. User authenticates through NextAuth (OAuth or credentials). Credentials flow validates against Firestore `users` + `credentials` collections; verified email required.
+2. A Firebase custom token is minted server‑side and attached to the session for secure client SDK usage.
+3. Document editing uses TipTap bound to a Yjs document; Yjs sync layer uses WebRTC for peer mesh and can persist snapshots/metadata in Firestore.
+4. AI endpoints proxy to OpenRouter streaming completions (serverless route handler streaming Response.body).
+5. Trending computation cron (Vercel) calls a protected route updating scores based on recency, views and activity.
+6. Frontend pages under `src/app/(app)` provide dashboard, search, stories, per‑user documents, etc.
+
+### Data & Realtime Components
+
+- Firestore collections: `users`, `credentials`, `documents` (inferred), trending metadata fields: `viewCount`, `trendingScore`, `trendingLastComputed`, timestamps.
+- Yjs provider utilities in `src/lib/y-fire/` manage awareness, graph propagation & WebRTC signaling.
+
+## Mermaid Diagrams
+
+TipTap includes Mermaid diagram support for authoring and preview:
+
+- Author mode: insert a Mermaid block via Insert → “Mermaid Diagram” or type ```mermaid then Enter. You’ll see and edit the code only.
+- Preview/read‑only mode: the Mermaid code block is hidden; only the rendered diagram is shown.
+- Theme awareness: diagrams render in light/dark to match the app theme.
+
+Example snippet:
+
+```mermaid
+flowchart TD
+  A[Start] --> B{Choice}
+  B -->|Yes| C[Continue]
+  B -->|No| D[Stop]
 ```
 
 ## Trending Algorithm
@@ -240,34 +186,6 @@ The trending score (see `src/lib/trending-algorithm.ts`) blends recency, logarit
 4. Conventional commits encouraged (Commitlint enforced). Example: `feat(editor): add math inline rendering`.
 5. Open a PR; describe motivation & screenshots if UI related.
 
-### Roadmap / Nice‑to‑Haves
-
-- Add automated testing (Playwright + Vitest / Jest) for editor & API.
-- Implement role-based access & per-document permissions.
-- Add offline sync queue & diff merging for intermittent connectivity.
-- Export formats: Markdown, PDF (print extension partial), HTML.
-- Real-time commenting & inline annotations.
-
 ## License
 
 Distributed under the AGPL-3.0 License. See `LICENSE` for more information.
-
----
-
-<sub>© 2025 Royce Mathew & Sunny Patel. Built with ❤️ for developers. Contributions welcome.</sub>
-
-## Docker
-
-This project includes a production-ready Dockerfile based on Next.js' official "with-docker" example, adapted for pnpm and standalone output.
-
-Build and run locally:
-
-```powershell
-docker build -t axelot:dev .
-docker run --rm -p 3000:3000 --env-file .env.local axelot:dev
-```
-
-Notes:
-- We set `output: "standalone"` in `next.config.ts` to enable the minimal runtime bundle.
-- Do not bake secrets into images; supply env via `--env-file` or your platform's secret manager.
-- Container binds to `0.0.0.0:3000`.
