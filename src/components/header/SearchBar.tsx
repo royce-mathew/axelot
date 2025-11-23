@@ -274,28 +274,30 @@ export const SearchBar = () => {
 
         {/* Shortcut badge (Ctrl/⌘ K) */}
         <Box
-          sx={(theme) => ({
-            mr: 1.5,
-            px: 1,
-            py: 0.25,
-            borderRadius: 1,
-            border: "1px solid",
-            borderColor: isDark
-              ? alpha(theme.palette.common.white, 0.2)
-              : alpha(theme.palette.text.primary, 0.15),
-            bgcolor: isDark
-              ? alpha(theme.palette.common.white, 0.08)
-              : alpha(theme.palette.text.primary, 0.06),
-            color: isDark
-              ? alpha(theme.palette.common.white, 0.85)
-              : alpha(theme.palette.text.primary, 0.8),
-            fontSize: "0.7rem",
-            lineHeight: 1,
-            display: { xs: "none", sm: "inline-flex" },
-            alignItems: "center",
-            gap: 0.5,
-            pointerEvents: "none",
-          })}
+          sx={[
+            (theme) => ({
+              mr: 1.5,
+              px: 1,
+              py: 0.25,
+              borderRadius: 1,
+              border: "1px solid",
+              borderColor: alpha(theme.palette.text.primary, 0.15),
+              bgcolor: alpha(theme.palette.text.primary, 0.06),
+              color: alpha(theme.palette.text.primary, 0.8),
+              fontSize: "0.7rem",
+              lineHeight: 1,
+              display: { xs: "none", sm: "inline-flex" },
+              alignItems: "center",
+              gap: 0.5,
+              pointerEvents: "none",
+            }),
+            (theme) =>
+              theme.applyStyles("dark", {
+                borderColor: alpha(theme.palette.common.white, 0.2),
+                bgcolor: alpha(theme.palette.common.white, 0.08),
+                color: alpha(theme.palette.common.white, 0.85),
+              }),
+          ]}
           aria-hidden
         >
           {isFocused && showResults ? "Esc" : isMac ? "⌘ K" : "Ctrl K"}

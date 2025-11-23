@@ -82,18 +82,31 @@ export const Header = () => {
                     },
                   }}
                 >
-                  <Image
-                    src="/axolotl.svg"
-                    alt="Axelot Logo"
-                    width={50}
-                    height={50}
-                    priority
-                    style={{
-                      filter: isDark ? "brightness(1.8)" : "brightness(0.25)",
-                      maxWidth: "100%",
-                      height: "auto",
-                    }}
-                  />
+                  <Box
+                    sx={[
+                      {
+                        "& img": {
+                          filter: "brightness(0.25)",
+                          maxWidth: "100%",
+                          height: "auto",
+                        },
+                      },
+                      (theme) =>
+                        theme.applyStyles("dark", {
+                          "& img": {
+                            filter: "brightness(1.8)",
+                          },
+                        }),
+                    ]}
+                  >
+                    <Image
+                      src="/axolotl.svg"
+                      alt="Axelot Logo"
+                      width={50}
+                      height={50}
+                      priority
+                    />
+                  </Box>
                 </IconButton>
                 <SearchBar />
               </Box>
@@ -147,18 +160,31 @@ export const Header = () => {
                   },
                 }}
               >
-                <Image
-                  src="/axolotl.svg"
-                  alt="Axelot Logo"
-                  width={50}
-                  height={50}
-                  priority
-                  style={{
-                    filter: isDark ? "brightness(1.8)" : "brightness(0.25)",
-                    maxWidth: "100%",
-                    height: "auto",
-                  }}
-                />
+                <Box
+                  sx={[
+                    {
+                      "& img": {
+                        filter: "brightness(0.25)",
+                        maxWidth: "100%",
+                        height: "auto",
+                      },
+                    },
+                    (theme) =>
+                      theme.applyStyles("dark", {
+                        "& img": {
+                          filter: "brightness(1.8)",
+                        },
+                      }),
+                  ]}
+                >
+                  <Image
+                    src="/axolotl.svg"
+                    alt="Axelot Logo"
+                    width={50}
+                    height={50}
+                    priority
+                  />
+                </Box>
               </IconButton>
               <SearchBar />
             </Box>

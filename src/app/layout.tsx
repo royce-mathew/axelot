@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next"
-import { DM_Sans, Outfit } from "next/font/google"
+import { DM_Sans, Outfit, EB_Garamond } from "next/font/google"
 import InitColorSchemeScript from "@mui/material/InitColorSchemeScript"
 import { GoogleAnalytics } from "@next/third-parties/google"
 import { Providers } from "@/components/Providers"
@@ -14,6 +14,12 @@ const dmSans = DM_Sans({
 const outfit = Outfit({
   subsets: ["latin"],
   variable: "--font-outfit",
+  display: "swap",
+})
+
+const ebGaramond = EB_Garamond({
+  subsets: ["latin"],
+  variable: "--font-eb-garamond",
   display: "swap",
 })
 
@@ -40,7 +46,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <head />
       <body
-        className={`${dmSans.variable} ${outfit.variable}`}
+        className={`${dmSans.variable} ${outfit.variable} ${ebGaramond.variable}`}
         style={{
           minHeight: "100vh",
           backgroundColor: "var(--mui-palette-background-default)",

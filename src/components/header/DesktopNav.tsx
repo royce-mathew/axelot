@@ -132,11 +132,21 @@ export const DesktopNav = () => {
             >
               <Box sx={{ display: "flex", alignItems: "center" }}>
                 <ListItemIcon>
-                  {mode === "dark" ? (
-                    <DarkModeIcon fontSize="small" />
-                  ) : (
-                    <LightModeIcon fontSize="small" />
-                  )}
+                  <DarkModeIcon
+                    fontSize="small"
+                    sx={[
+                      { display: "none" },
+                      (theme) =>
+                        theme.applyStyles("dark", { display: "block" }),
+                    ]}
+                  />
+                  <LightModeIcon
+                    fontSize="small"
+                    sx={[
+                      { display: "block" },
+                      (theme) => theme.applyStyles("dark", { display: "none" }),
+                    ]}
+                  />
                 </ListItemIcon>
                 <ListItemText>Theme</ListItemText>
               </Box>

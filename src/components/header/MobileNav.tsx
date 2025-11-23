@@ -160,11 +160,22 @@ export const MobileNav = () => {
                 >
                   <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                     <ListItemIcon sx={{ minWidth: "30px" }}>
-                      {mode === "dark" ? (
-                        <DarkModeIcon fontSize="small" />
-                      ) : (
-                        <LightModeIcon fontSize="small" />
-                      )}
+                      <DarkModeIcon
+                        fontSize="small"
+                        sx={[
+                          { display: "none" },
+                          (theme) =>
+                            theme.applyStyles("dark", { display: "block" }),
+                        ]}
+                      />
+                      <LightModeIcon
+                        fontSize="small"
+                        sx={[
+                          { display: "block" },
+                          (theme) =>
+                            theme.applyStyles("dark", { display: "none" }),
+                        ]}
+                      />
                     </ListItemIcon>
                     <Typography variant="body2">Theme</Typography>
                   </Box>
