@@ -141,6 +141,7 @@ export default function StoryPage({
   const [menuAnchorEl, setMenuAnchorEl] = useState<null | HTMLElement>(null)
   const yDocRef = useRef<Y.Doc | null>(null)
   const [provider, setProvider] = useState<FireProvider | null>(null)
+  const [providerError, setProviderError] = useState<string | null>(null)
   const [currentEditor, setCurrentEditor] = useState<Editor | null>(null)
   const [activeUsers, setActiveUsers] = useState<Array<AwarenessUser>>([])
   const [tableOfContents, setTableOfContents] = useState<Array<TocAnchor>>([])
@@ -158,12 +159,16 @@ export default function StoryPage({
 
   // Initialize Y.js provider
   useEffect(() => {
-    // Allow initialization for anonymous users viewing public documents
     if (!storyId) return
 
     // Create a new Y.Doc for this story
     const yDoc = new Y.Doc()
     yDocRef.current = yDoc
+
+    // Determine if this should be read-only based on current access
+    // Note: This effect runs before access is determined, so we use a conservative approach
+    // If user is not authenticated, assume read-only until proven otherwise
+    const isReadOnlyMode = !user?.id
 
     const newProvider = new FireProvider({
       firebaseApp: firebaseApp,
@@ -173,11 +178,13 @@ export default function StoryPage({
         content: bytes,
         lastUpdated: Timestamp.now(),
       }),
+      readOnly: isReadOnlyMode,
     })
 
     newProvider.onReady = () => {
       console.log("Editor ready for story:", storyId)
       setProvider(newProvider)
+      setProviderError(null)
     }
 
     newProvider.onSaving = (status: boolean) => {
@@ -185,15 +192,25 @@ export default function StoryPage({
     }
 
     newProvider.onDeleted = () => {
-      setAccess(AccessLevel.None) // Set access to 0 (no access) when provider is deleted
+      // Provider reported permission denied or document deleted
+      // Trigger a re-check instead of immediately setting access to None
+      console.warn("Provider deleted callback triggered - checking access")
+      setProviderError("Connection lost. Checking permissions...")
+      // The loadDocument effect will re-run and update access appropriately
+    }
+
+    newProvider.onError = (error) => {
+      console.error("Provider error:", error)
+      setProviderError("Failed to connect to collaborative editor")
     }
 
     return () => {
       console.log("Destroying provider for story:", storyId)
       newProvider.destroy()
       yDocRef.current = null
+      setProviderError(null)
     }
-  }, [storyId])
+  }, [storyId, user?.id])
 
   // Fetch the document metadata
   useEffect(() => {
@@ -582,15 +599,27 @@ export default function StoryPage({
 
     const updateActiveUsers = () => {
       const awareness = provider.awareness
-      if (!awareness || !user || !user.name || !user.id) return
+      if (!awareness) return
 
       // Set local user info in awareness state
-      awareness.setLocalStateField("user", {
-        name: user.name,
-        userId: user.id,
-        color: stringToHslColor(user.name),
-        image: user.image || "",
-      })
+      if (user && user.name && user.id) {
+        // Authenticated user
+        awareness.setLocalStateField("user", {
+          name: user.name,
+          userId: user.id,
+          color: stringToHslColor(user.name),
+          image: user.image || "",
+        })
+      } else if (access === AccessLevel.ReadOnly) {
+        // Anonymous read-only user - set minimal awareness
+        // This allows them to see other users but not be seen
+        awareness.setLocalStateField("user", {
+          name: "Guest",
+          userId: "anonymous",
+          color: "#999999",
+          image: "",
+        })
+      }
 
       const states = Array.from(awareness.getStates().entries())
       const users = states
@@ -611,7 +640,7 @@ export default function StoryPage({
     return () => {
       provider.awareness?.off("change", updateActiveUsers)
     }
-  }, [provider, user])
+  }, [provider, user, access])
 
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     setMenuAnchorEl(event.currentTarget)
@@ -1106,6 +1135,17 @@ export default function StoryPage({
             </Menu>
           )}
 
+          {/* Provider Error Alert */}
+          {providerError && (
+            <Alert
+              severity="warning"
+              onClose={() => setProviderError(null)}
+              sx={{ mb: 3 }}
+            >
+              {providerError}
+            </Alert>
+          )}
+
           {/* Editor */}
           <Box
             sx={{
@@ -1124,15 +1164,19 @@ export default function StoryPage({
                 Collaboration.configure({
                   document: provider.doc,
                 }),
-                CollaborationCaret.configure({
-                  provider: provider,
-                  user: {
-                    name: user?.name,
-                    image: user?.image,
-                    color: stringToHslColor(user?.name || "Anonymous"),
-                    userId: user?.id,
-                  },
-                }),
+                ...(user?.id
+                  ? [
+                      CollaborationCaret.configure({
+                        provider: provider,
+                        user: {
+                          name: user.name || "Anonymous",
+                          image: user.image,
+                          color: stringToHslColor(user.name || "Anonymous"),
+                          userId: user.id,
+                        },
+                      }),
+                    ]
+                  : []),
                 TableOfContentsExtension.configure({
                   onUpdate: (anchors) => {
                     setTimeout(() => {

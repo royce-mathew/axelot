@@ -25,6 +25,7 @@ export interface Parameters {
   maxUpdatesThreshold?: number
   maxWaitTime?: number
   maxWaitFirestoreTime?: number
+  readOnly?: boolean
 }
 
 interface PeersRTC {
@@ -54,6 +55,7 @@ export class FireProvider extends ObservableV2<any> {
   readonly firebaseApp: FirebaseApp
   readonly db: Firestore
   uid?: string
+  readOnly: boolean = false
   timeOffset: number = 0 // offset to server time in mili seconds
 
   clients: string[] = []
@@ -92,19 +94,29 @@ export class FireProvider extends ObservableV2<any> {
   public onReady: () => void = () => {}
   public onDeleted: () => void = () => {}
   public onSaving: (status: boolean) => void = () => {}
+  public onError: (error: unknown) => void = () => {}
 
   init = async () => {
     this.trackData() // initiate this before creating instance, so that users with read permissions can also view the document
-    try {
-      const data = await initiateInstance(this.db, this.documentPath)
-      this.instanceConnection.on("closed", this.trackConnections)
-      this.uid = data.uid
-      this.timeOffset = data.offset
-      this.initiateHandler()
-      addEventListener("beforeunload", this.destroy) // destroy instance on window close
-    } catch (error) {
-      this.consoleHandler("Could not connect to a peer network.", error)
-      this.kill(true) // destroy provider but keep the read-only stream alive
+
+    if (this.readOnly) {
+      // Read-only mode: skip peer network, just sync from Firestore
+      this.consoleHandler("FireProvider initiated in read-only mode")
+      // onReady will be called by trackData when first snapshot arrives
+    } else {
+      // Full collaborative mode
+      try {
+        const data = await initiateInstance(this.db, this.documentPath)
+        this.instanceConnection.on("closed", this.trackConnections)
+        this.uid = data.uid
+        this.timeOffset = data.offset
+        this.initiateHandler()
+        addEventListener("beforeunload", this.destroy) // destroy instance on window close
+      } catch (error) {
+        this.consoleHandler("Could not connect to a peer network.", error)
+        if (this.onError) this.onError(error)
+        this.kill(true) // destroy provider but keep the read-only stream alive
+      }
     }
   }
 
@@ -136,10 +148,12 @@ export class FireProvider extends ObservableV2<any> {
 
   initiateHandler = async () => {
     this.consoleHandler("FireProvider initiated!")
-    this.awareness.on("update", this.awarenessUpdateHandler)
-    // We will track the mesh document on Firestore to
-    // keep track of selected peers
-    this.trackMesh()
+    if (!this.readOnly) {
+      this.awareness.on("update", this.awarenessUpdateHandler)
+      // We will track the mesh document on Firestore to
+      // keep track of selected peers
+      this.trackMesh()
+    }
     this.doc.on("update", this.updateHandler)
     this.syncLocal() // if there's any data in indexedDb, get and apply
   }
@@ -447,7 +461,7 @@ export class FireProvider extends ObservableV2<any> {
     // 4. User received update from Firestore -> origin: string = 'origin:firebase/update'
     // 5. Update triggered because user applied updates from the above sources -> origin: string = uid
 
-    if (origin !== this.uid && this.uid) {
+    if (origin !== this.uid && this.uid && !this.readOnly) {
       // We will not allow no. 5. to propagate any further
       // Convert no. 1 and 2 to uid, because we want these to eventually trigger 'save' to Firestore
       // sendToQueue method will either:
@@ -459,6 +473,9 @@ export class FireProvider extends ObservableV2<any> {
       })
 
       this.saveToLocal() // save data to local indexedDb
+    } else if (this.readOnly && origin === "origin:firebase/update") {
+      // In read-only mode, only save updates from Firestore to local
+      this.saveToLocal()
     }
   }
 
@@ -543,6 +560,7 @@ export class FireProvider extends ObservableV2<any> {
     maxUpdatesThreshold,
     maxWaitTime,
     maxWaitFirestoreTime,
+    readOnly,
   }: Parameters) {
     super()
 
@@ -551,6 +569,7 @@ export class FireProvider extends ObservableV2<any> {
     this.db = getFirestore(this.firebaseApp)
     this.doc = ydoc
     this.documentPath = path
+    if (readOnly) this.readOnly = readOnly
     if (docMapper) this.documentMapper = docMapper
     if (maxUpdatesThreshold) this.maxCacheUpdates = maxUpdatesThreshold
     if (maxWaitTime) this.maxRTCWait = maxWaitTime
@@ -560,6 +579,7 @@ export class FireProvider extends ObservableV2<any> {
     // Initialize the provider
     this.init().catch((err) => {
       this.consoleHandler("Failed to initialize provider", err)
+      if (this.onError) this.onError(err)
       this.kill(true) // Ensure cleanup on init failure
     })
   }
