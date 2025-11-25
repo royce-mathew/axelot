@@ -153,7 +153,7 @@ export default function StoryPage({
   const lastSavedTitleRef = useRef<string>("")
 
   // Track document view
-  useDocumentView(storyId, user?.id)
+  useDocumentView(storyId)
 
   const menuOpen = Boolean(menuAnchorEl)
 
