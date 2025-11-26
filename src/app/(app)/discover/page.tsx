@@ -1,12 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback, useRef } from "react"
-import {
-  Box,
-  Container,
-  Typography,
-  CircularProgress,
-} from "@mui/material"
+import { Box, Container, Typography, CircularProgress } from "@mui/material"
 import { BentoHeroGrid } from "@/components/discover/BentoHeroGrid"
 import {
   DiscoverNavigation,

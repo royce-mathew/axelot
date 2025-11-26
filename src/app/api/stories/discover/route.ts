@@ -14,7 +14,7 @@ const CACHE_DURATION = {
 // Cached function to fetch stories based on mode with pagination
 async function getCachedStories(mode: string, page: number, pageSize: number) {
   "use cache"
-  
+
   const offset = page * pageSize
 
   let query = firebaseAdminFirestore
