@@ -155,7 +155,7 @@ The trending score (see `src/lib/trending-algorithm.ts`) blends recency, logarit
 - Recency decay: recent updates get temporary boosts.
 - View count: `log10(views + 1) * 4` caps runaway popularity.
 - Activity: additional boost for fresh edits (first 1–6 hours).
-  Cron job periodically recalculates selective or full sets via `/api/trending/update` with modes `all | recent | stats`.
+  Cron job periodically recalculates selective or full sets via `/api/trending/cron` with modes `all | recent | stats`.
 
 ## Cron & Background Jobs
 
@@ -163,7 +163,7 @@ The trending score (see `src/lib/trending-algorithm.ts`) blends recency, logarit
   ```json
   {
     "crons": [
-      { "path": "/api/trending/update?mode=recent", "schedule": "0 0 * * *" }
+      { "path": "/api/trending/cron?mode=recent", "schedule": "0 0 * * *" }
     ]
   }
   ```

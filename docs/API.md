@@ -32,7 +32,9 @@
 > Namespace: All HTTP endpoints are under Next.js App Router `/api/*` unless otherwise noted. Real‑time and server actions are invoked internally but documented here for completeness.
 
 ---
+
 ## Master Table of Contents
+
 <details>
 <summary><b>Expand / Collapse</b></summary>
 
@@ -64,8 +66,11 @@
 </details>
 
 ---
+
 ## Executive Overview
+
 Axelot delivers a collaborative story/document platform with:
+
 - Multi‑provider authentication (OAuth: Google/GitHub + Credentials).
 - Real‑time collaborative editing backed by Yjs, transported over WebRTC and Firestore signaling.
 - AI augmentation (completion & text transformation) via OpenRouter.
@@ -75,7 +80,9 @@ Axelot delivers a collaborative story/document platform with:
 Design priorities: Low latency collaboration, secure credential segregation, horizontal scalability (stateless serverless routes), and future extensibility (planned versioning & quotas).
 
 ---
+
 ## High-Level Architecture
+
 ```
 Client (Next.js + React + TipTap Editor)
    |-- Auth (NextAuth: cookies + JWT) -> Session includes firebaseToken
@@ -89,10 +96,10 @@ Serverless (Next.js App Router) Layers:
    /api/completion -> Stream proxy to OpenRouter
    /api/text-transform -> SSE transform stream (OpenRouter base)
    /api/document/view -> Auth’d view count increment
-   /api/trending/update -> Cron-secured trending compute/statistics
+   /api/trending/cron -> Cron-secured trending compute/statistics
 
 Background Jobs:
-   Vercel Cron (Bearer secret) -> /api/trending/update?mode=recent
+   Vercel Cron (Bearer secret) -> /api/trending/cron?mode=recent
    (Optional) manual POST for full recompute
 
 Data Layer:
@@ -104,33 +111,39 @@ Real-Time Mesh:
 ```
 
 ---
+
 ## Authentication & Identity
+
 > [!NOTE]
 > Sessions use JWT strategy. Session callback embeds a short‑lived Firebase Custom Token (`session.firebaseToken`) for client exchange → Firebase ID token, enabling protected API calls.
 
 Mechanisms employed:
 
-| Mechanism | Transport | Purpose | Source |
-|-----------|-----------|---------|--------|
-| NextAuth OAuth (Google/GitHub) | Cookie (HTTPOnly) + JWT session | Primary federated identity | `/api/auth/[...nextauth]` |
-| NextAuth Credentials | Cookie + JWT | Email/password sign-in (requires emailVerified) | `/api/auth/[...nextauth]` |
-| Firebase Custom Token | Added to NextAuth session | Enables client issuance of Firebase ID token for Firestore secure ops | NextAuth session callback |
-| Firebase ID Token | Bearer header | AuthZ for protected Firestore-backed endpoint `/api/document/view` | Client after firebaseToken exchange |
-| Cron Secret | Bearer header | Secures scheduled maintenance endpoint `/api/trending/update` | Environment variable |
+| Mechanism                      | Transport                       | Purpose                                                               | Source                              |
+| ------------------------------ | ------------------------------- | --------------------------------------------------------------------- | ----------------------------------- |
+| NextAuth OAuth (Google/GitHub) | Cookie (HTTPOnly) + JWT session | Primary federated identity                                            | `/api/auth/[...nextauth]`           |
+| NextAuth Credentials           | Cookie + JWT                    | Email/password sign-in (requires emailVerified)                       | `/api/auth/[...nextauth]`           |
+| Firebase Custom Token          | Added to NextAuth session       | Enables client issuance of Firebase ID token for Firestore secure ops | NextAuth session callback           |
+| Firebase ID Token              | Bearer header                   | AuthZ for protected Firestore-backed endpoint `/api/document/view`    | Client after firebaseToken exchange |
+| Cron Secret                    | Bearer header                   | Secures scheduled maintenance endpoint `/api/trending/cron`           | Environment variable                |
 
 Session Enrichment Flow:
-1. User authenticates (provider or credentials).  
-2. NextAuth `jwt` callback attaches `sub` (user id) & optional `username`.  
-3. `session` callback issues Firebase Custom Token via Admin SDK -> `session.firebaseToken`.  
+
+1. User authenticates (provider or credentials).
+2. NextAuth `jwt` callback attaches `sub` (user id) & optional `username`.
+3. `session` callback issues Firebase Custom Token via Admin SDK -> `session.firebaseToken`.
 4. Client exchanges custom token for Firebase ID token using Firebase client SDK; stores ephemeral token for subsequent Bearer operations.
 
 Identity Considerations:
+
 - Username may be null until set; helpers in `username-utils.ts` enforce uniqueness & reserved list.
 - Credentials users blocked until `emailVerified === true` (email verification route updates flag).
 - Sessions employ JWT strategy for stateless scaling.
 
 ---
+
 ## Authorization Model
+
 Access tiers for stories:
 | Role/Condition | Capabilities |
 |----------------|-------------|
@@ -141,23 +154,30 @@ Access tiers for stories:
 | Archived (`isArchived == true`) | Hidden from regular listing, counts for trending skip logic. |
 
 Enforcement Layer:
-- Firestore Security Rules (primary source of truth).  
-- Server endpoints rely on ID token verification (`/api/document/view`) or secret (`/api/trending/update`).  
+
+- Firestore Security Rules (primary source of truth).
+- Server endpoints rely on ID token verification (`/api/document/view`) or secret (`/api/trending/cron`).
 - Credentials endpoints rely on NextAuth’s built-in provider gating.
 
 ---
+
 ## Data Model: Firestore Collections
+
 ### users
+
 Fields (typical): `email`, `name`, `emailVerified`, `image`, `username`, `bio`, `created`, `updated`.
 Access: Public read, self write only.
 
 ### credentials (server-only)
+
 Fields: `userId`, `passwordHash`, timestamps.
 Access: Denied to client; only Admin SDK (NextAuth Credentials provider). Increased isolation reduces accidental leakage.
 
 ### stories
+
 Core collaborative documents.
 Representative Schema:
+
 ```json
 {
   "owner": "<uid>",
@@ -178,27 +198,33 @@ Representative Schema:
   "trendingLastComputed": <Timestamp>
 }
 ```
+
 Subcollections:
+
 - `instances/*` (real-time collaboration mesh:
   - `calls/{peerUid}` ephemeral signaling documents.
   - `answers/{peerUid}` ephemeral responses.
   - Additional encryption / handshake metadata.
-)
+    )
 
 ### sessions / accounts (NextAuth adapter)
+
 Used internally by FirestoreAdapter; client access denied by rules.
 
 ### indexes
+
 Defined in `firebase/firestore.indexes.json` to optimize queries sorting by `created`, `lastUpdated`, filtering `isPublic`, `isArchived`, and `owner` for personalized dashboards & trending recomputation.
 
 ---
+
 ## Firestore Security Rules Summary
+
 Source: `firebase/firestore.rules`.
 Key Constraints:
 | Collection | Read | Write | Notes |
 |-----------|------|-------|-------|
 | stories | Public if `isPublic` OR owner/readAccess/writeAccess | Owner or writeAccess (update), owner only (delete) | Fine-grained arrays for access control. |
-| stories/instances/* | Authenticated read/write | Real-time handshake + Yjs updates; performance oriented. |
+| stories/instances/\* | Authenticated read/write | Real-time handshake + Yjs updates; performance oriented. |
 | users | All read | Self write | Public profiles. |
 | credentials | None | None | Admin SDK only. |
 | sessions/accounts | None | None | NextAuth internal state. |
@@ -206,47 +232,59 @@ Key Constraints:
 Validation on create (stories): must include mandatory keys & correct types (booleans + list types).
 
 ---
+
 ## Firestore Index Strategy
+
 Indexes improve feed & compute jobs:
-1. `(isPublic ASC, created DESC)` recent publishing feed.  
-2. `(isPublic ASC, lastUpdated DESC)` activity-based sorting.  
-3. `(owner ASC, lastUpdated DESC)` per-user dashboard / last edits.  
+
+1. `(isPublic ASC, created DESC)` recent publishing feed.
+2. `(isPublic ASC, lastUpdated DESC)` activity-based sorting.
+3. `(owner ASC, lastUpdated DESC)` per-user dashboard / last edits.
 4. `(isPublic ASC, isArchived ASC, lastUpdated DESC)` trending candidate selection excluding archived.
 
 Operational Impact: Reduces read amplification during cron trending recalculations; ensures deterministic ordering for homepage server action.
 
 ---
+
 ## Server Actions (App Router “use server” APIs)
+
 These run server-side, not exposed as REST endpoints but functionally act like internal RPC.
 
 ### `signUpAction(formData)` (`src/app/(app)/auth/sign-up/actions.ts`)
+
 Purpose: Secure user creation with validation & credential segregation.
 Steps:
-1. Extract `name`, `email`, `password`.  
-2. Validate via Zod `signUpSchema`.  
-3. Ensure email unique (`users` query).  
-4. Insert `users` doc with `emailVerified: false`.  
-5. Hash password -> store in `credentials/{userId}`.  
+
+1. Extract `name`, `email`, `password`.
+2. Validate via Zod `signUpSchema`.
+3. Ensure email unique (`users` query).
+4. Insert `users` doc with `emailVerified: false`.
+5. Hash password -> store in `credentials/{userId}`.
 6. Return success with email; client initiates verification flow.
-Failure Modes: Validation (ZodError), data race (duplicate email), general exception -> structured `{ success: false, error }`.
+   Failure Modes: Validation (ZodError), data race (duplicate email), general exception -> structured `{ success: false, error }`.
 
 ---
+
 ## HTTP Endpoints Inventory
+
 > [!TIP]
 > Keep client paths aligned with server routes. See “Client Integration Notes” below for two places to update.
 
-| Method(s) | Path | Category | Auth | Stream | Idempotent | Notes |
-|-----------|------|----------|------|--------|-----------|-------|
-| GET/POST | `/api/auth/[...nextauth]` | Auth | Cookie/JWT | N | Varies | Provider callbacks & session mgmt. |
-| POST | `/api/auth/verify-email` | Auth Utility | None | N | Y (flag set) | Sets `emailVerified=true` if user exists. |
-| POST | `/api/completion` | AI | None | Raw | N | Proxy to OpenRouter; requires model param. |
-| POST | `/api/document/view` | Telemetry | Firebase ID | N | Y (increment) | Increments view counter; eventual consistency. |
-| POST | `/api/text-transform` | AI | None | SSE | N | Streams transformation chunks. |
-| GET/POST | `/api/trending/update` | Maintenance | Cron Secret | N | N | Batch recompute or stats. |
+| Method(s) | Path                      | Category     | Auth        | Stream | Idempotent    | Notes                                          |
+| --------- | ------------------------- | ------------ | ----------- | ------ | ------------- | ---------------------------------------------- |
+| GET/POST  | `/api/auth/[...nextauth]` | Auth         | Cookie/JWT  | N      | Varies        | Provider callbacks & session mgmt.             |
+| POST      | `/api/auth/verify-email`  | Auth Utility | None        | N      | Y (flag set)  | Sets `emailVerified=true` if user exists.      |
+| POST      | `/api/completion`         | AI           | None        | Raw    | N             | Proxy to OpenRouter; requires model param.     |
+| POST      | `/api/document/view`      | Telemetry    | Firebase ID | N      | Y (increment) | Increments view counter; eventual consistency. |
+| POST      | `/api/text-transform`     | AI           | None        | SSE    | N             | Streams transformation chunks.                 |
+| GET/POST  | `/api/trending/cron`      | Maintenance  | Cron Secret | N      | N             | Batch recompute or stats.                      |
 
 ---
+
 ## Endpoint Specifications
+
 ### Authentication Aggregator `/api/auth/[...nextauth]`
+
 Provider Matrix:
 | Provider | Scope | Linking | Risk Controls |
 |----------|-------|--------|---------------|
@@ -255,6 +293,7 @@ Provider Matrix:
 | Credentials | Internal | Disallowed until email verified | Password hash + emailVerified flag |
 
 JWT Session Structure (simplified):
+
 ```json
 {
   "sub": "<uid>",
@@ -264,30 +303,38 @@ JWT Session Structure (simplified):
   "exp": 1731973600
 }
 ```
+
 Security Considerations: CSRF mitigated by NextAuth built-in protections; recommend enabling PKCE for OAuth providers (default). Credentials route guarded through validation + timing-safe password verification.
 
 ### Email Verification `/api/auth/verify-email` (POST)
+
 Idempotent: Repeating request keeps `emailVerified: true`.
 Future Enhancement: Add signed verification token pattern to avoid direct API toggling.
 
 ### AI Completion `/api/completion` (POST)
+
 External Call: `https://openrouter.ai/api/v1/chat/completions` with `stream: true`.
 Timeout Behavior: Relies on platform default; consider explicit AbortController for enterprise resiliency.
 Observability: Recommend counting tokens & latency histogram per `model`.
 
 ### Document View Tracking `/api/document/view` (POST)
+
 Concurrency: Firestore atomic `increment(1)` ensures thread-safe count.
 Audit: Could append view events to BigQuery (future) for analytics beyond simple counter.
 
 ### Text Transform `/api/text-transform` (POST)
+
 Protocol: SSE.
 Event Format:
+
 ```text
 data: {"type":"content","content":"partial string"}\n\n
 ```
+
 Potential Extension: Introduce event types `meta`, `done`, `error` for structured client handling.
 
-### Trending Update `/api/trending/update` (GET/POST)
+### Trending Update `/api/trending/cron` (GET/POST)
+
 Modes & Capacity:
 | Mode | Purpose | Volume Strategy |
 |------|---------|----------------|
@@ -297,7 +344,9 @@ Modes & Capacity:
 Performance: Batching logic commits after reaching batchSize or end. Skips recompute if `shouldRecomputeTrendingScore(document)` false.
 
 ---
+
 ### Client Integration Notes (UI → API mapping)
+
 - TipTap Text Transform dialog (`text-transform-dialog.tsx`) currently calls `POST /api/openrouter/text-transform`, while the implemented route is `POST /api/text-transform`. Align by either:
   - Updating the dialog to use `/api/text-transform` (recommended), or
   - Adding an alias route at `/api/openrouter/text-transform` that forwards to the existing handler.
@@ -305,9 +354,12 @@ Performance: Batching logic commits after reaching batchSize or end. Skips recom
 - useDocumentView hook posts to `/api/document/view` with `Authorization: Bearer <firebaseToken>` which matches the implemented route and server-side token verification.
 
 ---
+
 ## AI Integration (OpenRouter Proxy)
+
 Endpoints: `/api/completion`, `/api/text-transform`.
 Common Request Envelope:
+
 ```json
 {
   "model": "openai/gpt-4o-mini",
@@ -316,18 +368,23 @@ Common Request Envelope:
   "temperature": 0.8
 }
 ```
+
 Security:
+
 - Secret: `OPENROUTER_API_KEY` (server only). Do not expose client-side.
 - Consider per-user rate & cost tracking.
-Resilience:
+  Resilience:
 - Retries currently absent (single pass). For enterprise SLA, implement exponential backoff & circuit breaker (e.g., fast fail on repeated gateway errors).
 
 Client Paths:
+
 - Autocomplete: change `apiEndpoint` from `/api/complete` → `/api/completion`.
 - Transform: change Text Transform dialog from `/api/openrouter/text-transform` → `/api/text-transform`.
 
 ---
+
 ## Real‑Time Collaboration Protocol (Yjs + FireProvider + WebRTC)
+
 Components:
 | Layer | Responsibility |
 |-------|---------------|
@@ -337,21 +394,24 @@ Components:
 | IndexedDB (idb-keyval) | Local cache for offline & recovery. |
 
 Lifecycle:
-1. `init()` -> Firestore snapshot subscription for base content.  
-2. Instance creation -> assign `uid`, compute time offset.  
-3. Mesh tracking builds directed graph of peers (senders/receivers).  
-4. WebRTC handshake via Firestore ephemeral docs `calls/` & `answers/`.  
-5. Data Channel established -> encrypted Yjs updates propagate.  
+
+1. `init()` -> Firestore snapshot subscription for base content.
+2. Instance creation -> assign `uid`, compute time offset.
+3. Mesh tracking builds directed graph of peers (senders/receivers).
+4. WebRTC handshake via Firestore ephemeral docs `calls/` & `answers/`.
+5. Data Channel established -> encrypted Yjs updates propagate.
 6. Local updates batched in cache (merge up to `maxCacheUpdates`) -> flush -> peers + Firestore save queue.
 
 Encryption:
 `generateKey(callerUid, peerUid)` produces a symmetric key used to encrypt data payloads (see `encryptData`/`decryptData`).
 
 Zombie Peer Handling:
+
 - Timer (30s) per connection; failure to connect triggers `killZombie` -> removes stale instance doc; peer destroyed.
 
 Persistence Strategy:
-- Firestore save defers if recent peer saved (optimizes write cost).  
+
+- Firestore save defers if recent peer saved (optimizes write cost).
 - Local IndexedDB cleared after successful Firestore commit.
 
 Failure Modes & Mitigations:
@@ -362,15 +422,19 @@ Failure Modes & Mitigations:
 | High update churn | Cache merges + threshold flush reduce channel spam. |
 
 Scaling Considerations:
-- For very large rooms, refine mesh algorithm (present star or partial broadcast).  
+
+- For very large rooms, refine mesh algorithm (present star or partial broadcast).
 - Introduce selective awareness broadcasting to reduce bandwidth.
 
 Related Firestore Collections:
+
 - `stories/{id}/instances`: Handshake channel for peers (`calls/*`, `answers/*`).
 - `stories/{id}`: Document state persisted (encoded Yjs update bytes under `content` via `Bytes`).
 
 ---
+
 ## Trending Score Computation Pipeline
+
 Functions (`trending-jobs.ts`):
 | Function | Purpose |
 |----------|---------|
@@ -379,24 +443,31 @@ Functions (`trending-jobs.ts`):
 | `getTrendingStats(db)` | Monitoring summary: totals, needingUpdate, recentlyUpdated. |
 
 Performance Controls:
-- Batch size max 500 (Firestore limit).  
-- Skips: documents not needing recompute reduce Firestore write ops.  
+
+- Batch size max 500 (Firestore limit).
+- Skips: documents not needing recompute reduce Firestore write ops.
 - Duration logged for observability; recommend adding structured logs.
 
 ---
+
 ## Data Converters & Types
+
 Converters define strict read/write mapping to Firestore for type safety and query performance:
+
 - `lib/converters/document.ts` → `Document` schema with optional denormalized fields (`authorNames`, trending metrics). Provides helpers: `documentRef(id)`, `documentsByOwnerRef(ownerId)`, `publicDocumentsRef()`, `allDocumentsRef()`.
 - `lib/converters/user.ts` → `User` schema; public readable, self-writable per rules. Helpers: `userRef(userId)`, `usersCollectionRef()`.
 
 Types:
+
 - `types/document.ts` → full contract for collaborative stories (ownership, visibility, timestamps, tags, trending metrics).
 - `types/user.ts` → public user profile contract.
 
 Contract Guarantee: Converters only persist optional fields when defined, minimizing sparse-index bloat and accidental null writes.
 
 ---
+
 ## Username Utility & Profile Services
+
 Helpers in `username-utils.ts`:
 | Function | Description |
 |----------|-------------|
@@ -413,17 +484,28 @@ Helpers in `username-utils.ts`:
 Enterprise Note: Add caching (e.g., Redis) for high-frequency availability checks to reduce Firestore reads.
 
 ---
+
 ## Session Shape Augmentation
+
 File: `types/next-auth.d.ts` augments NextAuth types:
+
 - `session.user.id` and optional `session.user.username` always present for authenticated users.
 - `session.firebaseToken?: string` carries Firebase Custom Token issued server-side (via Admin SDK in `auth.ts` session callback). Clients exchange it for a Firebase ID token to call protected endpoints like `/api/document/view`.
 
 ---
+
 ## Error and Status Conventions
+
 Unified Error Envelope:
+
 ```json
-{ "error": "<message>", "code": "<optional-code>", "details": {"field": "issue"} }
+{
+  "error": "<message>",
+  "code": "<optional-code>",
+  "details": { "field": "issue" }
+}
 ```
+
 Current Implementation: Minimal `{ error: string }`; recommended extension for machine parsing.
 
 Mapping:
@@ -440,20 +522,26 @@ Mapping:
 | 500 | Unhandled server error | Trending batch failure, external API error |
 
 ---
+
 ## Streaming Patterns (SSE & Raw Streams)
-| Endpoint | Type | Transport | Framing | Consumer Guidance |
-|----------|------|----------|---------|-------------------|
-| `/api/completion` | Raw stream | Fetch body reader | Plain text chunks | Accumulate & tokenize after final chunk. |
-| `/api/text-transform` | SSE | EventSource | `data: {json}` lines | Append progressive transform; detect completion when stream closes. |
+
+| Endpoint              | Type       | Transport         | Framing              | Consumer Guidance                                                   |
+| --------------------- | ---------- | ----------------- | -------------------- | ------------------------------------------------------------------- |
+| `/api/completion`     | Raw stream | Fetch body reader | Plain text chunks    | Accumulate & tokenize after final chunk.                            |
+| `/api/text-transform` | SSE        | EventSource       | `data: {json}` lines | Append progressive transform; detect completion when stream closes. |
 
 Backpressure: Browser’s streaming reader handles flow-control; ensure client sets reasonable `AbortController` for UX cancellations.
 
 ---
+
 ## Route Protection Middleware
+
 File: `src/proxy.ts` implements a guard for matched paths (configured `matcher: ["/stories"]`). If no NextAuth session is found, it redirects to `GET /api/auth/signin?callbackUrl=<original>` ensuring unauthenticated users are routed through NextAuth before accessing protected app pages.
 
 ---
+
 ## Versioning & Deprecation Policy
+
 Current: Single implicit version (`/api/*`).
 Planned:
 | Phase | Action |
@@ -465,18 +553,24 @@ Planned:
 Semantic Guidelines: Avoid breaking field removals; add new optional fields only until new version cut.
 
 ---
+
 ## Rate Limiting & Quotas (Planned)
+
 Targets:
+
 - Per-user per-minute token usage for AI.
-- Per-IP sign-up throttle (exponential backoff).  
+- Per-IP sign-up throttle (exponential backoff).
 - Cron endpoint guarding via secret rotation schedule.
-Instrumentation base: Use edge middleware or upstream reverse proxy (e.g., Cloudflare Workers) for distributed counters.
+  Instrumentation base: Use edge middleware or upstream reverse proxy (e.g., Cloudflare Workers) for distributed counters.
 
 ---
+
 ## Security Hardening & Recommendations
+
 Controls Implemented:
-- Credential isolation: password hashes segregated in `credentials` (no client rule access).  
-- Firebase Rules enforce least privilege for stories & collaboration.  
+
+- Credential isolation: password hashes segregated in `credentials` (no client rule access).
+- Firebase Rules enforce least privilege for stories & collaboration.
 - Cron secret gating prevents arbitrary trending recompute.
 
 Recommended Enhancements:
@@ -490,7 +584,9 @@ Recommended Enhancements:
 | Supply Chain | Lock dependency versions & enable SCA scanning | Vulnerability management |
 
 ---
+
 ## Observability & Operational Metrics
+
 Metrics to instrument:
 | Domain | Metric | Type |
 |--------|--------|------|
@@ -501,33 +597,39 @@ Metrics to instrument:
 | Errors | Http4xx, Http5xx | Counter |
 
 Logging Standards:
+
 - Structured JSON logs `{ ts, level, route, durationMs, error }`.
 - PII redaction: exclude raw email/password; log userId only.
-Tracing: Add request-id header propagation for multi-hop debugging (client->API->OpenRouter).
+  Tracing: Add request-id header propagation for multi-hop debugging (client->API->OpenRouter).
 
 ---
+
 ## Environment Configuration
-| Variable | Scope | Description | Exposure |
-|----------|-------|-------------|---------|
-| `AUTH_GOOGLE_ID` / `AUTH_GOOGLE_SECRET` | Server | OAuth credentials | Secret |
-| `AUTH_GITHUB_ID` / `AUTH_GITHUB_SECRET` | Server | OAuth credentials | Secret |
-| `OPENROUTER_API_KEY` | Server | AI provider key | Secret |
-| `CRON_SECRET` | Server | Protect trending update endpoint | Secret |
-| `FIREBASE_PROJECT_ID` | Server (Admin SDK) | Firebase project id | Secret |
-| `FIREBASE_CLIENT_EMAIL` | Server (Admin SDK) | Service account client email | Secret |
-| `FIREBASE_PRIVATE_KEY` | Server (Admin SDK) | Service account private key (preserve newlines) | Secret |
-| `NEXT_PUBLIC_FIREBASE_API_KEY` | Client | Firebase config key | Public |
-| `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN` | Client | Firebase domain | Public |
-| `NEXT_PUBLIC_FIREBASE_PROJECT_ID` | Client | Project id used in Firestore paths | Public |
-| `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET` | Client | Storage bucket | Public |
-| `NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID` | Client | Messaging sender id | Public |
-| `NEXT_PUBLIC_FIREBASE_APP_ID` | Client | Firebase app id | Public |
+
+| Variable                                   | Scope              | Description                                     | Exposure |
+| ------------------------------------------ | ------------------ | ----------------------------------------------- | -------- |
+| `AUTH_GOOGLE_ID` / `AUTH_GOOGLE_SECRET`    | Server             | OAuth credentials                               | Secret   |
+| `AUTH_GITHUB_ID` / `AUTH_GITHUB_SECRET`    | Server             | OAuth credentials                               | Secret   |
+| `OPENROUTER_API_KEY`                       | Server             | AI provider key                                 | Secret   |
+| `CRON_SECRET`                              | Server             | Protect trending update endpoint                | Secret   |
+| `FIREBASE_PROJECT_ID`                      | Server (Admin SDK) | Firebase project id                             | Secret   |
+| `FIREBASE_CLIENT_EMAIL`                    | Server (Admin SDK) | Service account client email                    | Secret   |
+| `FIREBASE_PRIVATE_KEY`                     | Server (Admin SDK) | Service account private key (preserve newlines) | Secret   |
+| `NEXT_PUBLIC_FIREBASE_API_KEY`             | Client             | Firebase config key                             | Public   |
+| `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN`         | Client             | Firebase domain                                 | Public   |
+| `NEXT_PUBLIC_FIREBASE_PROJECT_ID`          | Client             | Project id used in Firestore paths              | Public   |
+| `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET`      | Client             | Storage bucket                                  | Public   |
+| `NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID` | Client             | Messaging sender id                             | Public   |
+| `NEXT_PUBLIC_FIREBASE_APP_ID`              | Client             | Firebase app id                                 | Public   |
 
 Secret Management Policy (Recommended): Use platform secrets manager; audit quarterly; enforce minimum length & entropy for `CRON_SECRET` (>=32 chars).
 
 ---
+
 ## OpenAPI Skeleton
+
 > This is a condensed illustrative excerpt; full generated schema can be automated later.
+
 ```yaml
 openapi: 3.1.0
 info:
@@ -548,9 +650,9 @@ paths:
                 email:
                   type: string
       responses:
-        '200': { description: Email verified }
-        '400': { description: Missing email }
-        '404': { description: User not found }
+        "200": { description: Email verified }
+        "400": { description: Missing email }
+        "404": { description: User not found }
   /api/document/view:
     post:
       security: [{ firebaseIdToken: [] }]
@@ -563,8 +665,8 @@ paths:
               properties:
                 documentId: { type: string }
       responses:
-        '200': { description: Success }
-  /api/trending/update:
+        "200": { description: Success }
+  /api/trending/cron:
     get:
       security: [{ cronSecret: [] }]
       parameters:
@@ -572,7 +674,7 @@ paths:
           name: mode
           schema: { type: string, enum: [all, recent, stats] }
       responses:
-        '200': { description: Trending update result }
+        "200": { description: Trending update result }
 components:
   securitySchemes:
     firebaseIdToken:
@@ -584,25 +686,30 @@ components:
 ```
 
 ---
+
 ## Change Log
-| Date | Change |
-|------|--------|
+
+| Date       | Change                                       |
+| ---------- | -------------------------------------------- |
 | 2025-11-19 | Initial draft & enterprise expansion (v0.1). |
 
 ---
+
 ## Glossary
-| Term | Definition |
-|------|------------|
-| Yjs | CRDT framework enabling concurrent editing without central lock. |
-| Awareness | Yjs protocol for presence metadata (cursors, users). |
-| WebRTC | Peer-to-peer transport; used for low-latency Yjs update propagation. |
-| FireProvider | Custom orchestrator integrating Firestore persistence with Yjs + WebRTC mesh. |
-| Cron Secret | Shared bearer token securing scheduled maintenance endpoint. |
-| Trending Score | Computed metric for story ranking based on recency & engagement. |
-| Server Action | Next.js app router server-side function invoked by components (`use server`). |
-| Increment | Firestore atomic field update increasing numeric value. |
+
+| Term           | Definition                                                                    |
+| -------------- | ----------------------------------------------------------------------------- |
+| Yjs            | CRDT framework enabling concurrent editing without central lock.              |
+| Awareness      | Yjs protocol for presence metadata (cursors, users).                          |
+| WebRTC         | Peer-to-peer transport; used for low-latency Yjs update propagation.          |
+| FireProvider   | Custom orchestrator integrating Firestore persistence with Yjs + WebRTC mesh. |
+| Cron Secret    | Shared bearer token securing scheduled maintenance endpoint.                  |
+| Trending Score | Computed metric for story ranking based on recency & engagement.              |
+| Server Action  | Next.js app router server-side function invoked by components (`use server`). |
+| Increment      | Firestore atomic field update increasing numeric value.                       |
 
 ---
+
 **Next Steps**: Generate full OpenAPI spec, implement rate limiting, add structured error codes, and integrate metrics emission. For changes, update both spec & this reference in same PR.
 
 <!-- End of Enterprise API Reference -->

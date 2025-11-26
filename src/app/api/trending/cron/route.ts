@@ -19,14 +19,14 @@ import {
  * - mode: 'all' | 'recent' | 'stats' (default: 'all')
  *
  * Usage:
- * - Full update: GET /api/trending/update?mode=all
- * - Recent only: GET /api/trending/update?mode=recent
- * - Get stats: GET /api/trending/update?mode=stats
+ * - Full update: GET /api/trending/cron?mode=all
+ * - Recent only: GET /api/trending/cron?mode=recent
+ * - Get stats: GET /api/trending/cron?mode=stats
  *
  * Setup in vercel.json:
  * {
  *   "crons": [{
- *     "path": "/api/trending/update?mode=recent",
+ *     "path": "/api/trending/cron?mode=recent",
  *     "schedule": "0 0 * * *"
  *   }]
  * }
