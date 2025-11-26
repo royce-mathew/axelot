@@ -15,7 +15,7 @@
   },
   "dependencies": {
     "@aarkue/tiptap-math-extension": "^1.4.0",
-    "@ai-sdk/react": "^2.0.93",
+    "@ai-sdk/react": "^2.0.102",
     "@auth/core": "^0.41.1",
     "@auth/firebase-adapter": "^2.11.1",
     "@emotion/cache": "^11.14.0",
@@ -25,7 +25,7 @@
     "@mui/icons-material": "^7.3.5",
     "@mui/material": "^7.3.5",
     "@mui/material-nextjs": "^7.3.5",
-    "@next/third-parties": "^16.0.3",
+    "@next/third-parties": "^16.0.4",
     "@number-flow/react": "^0.5.10",
     "@tiptap/core": "^3.11.0",
     "@tiptap/extension-blockquote": "^3.11.0",
@@ -70,7 +70,7 @@
     "katex": "^0.16.25",
     "lib0": "^0.2.114",
     "mermaid": "^11.12.1",
-    "next": "^16.0.3",
+    "next": "^16.0.4",
     "next-auth": "5.0.0-beta.30",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
@@ -80,7 +80,7 @@
     "unist-util-visit": "^5.0.0",
     "y-protocols": "^1.0.6",
     "yjs": "^13.6.27",
-    "zod": "^4.1.12"
+    "zod": "^4.1.13"
   },
   "devDependencies": {
     "@commitlint/cli": "^20.1.0",
@@ -92,16 +92,16 @@
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.0",
     "@types/node": "^24.10.1",
-    "@types/react": "^19.2.4",
+    "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
     "@types/unist": "^3.0.3",
     "@vitejs/plugin-react": "^5.1.1",
     "eslint": "^9.39.1",
-    "eslint-config-next": "^16.0.3",
+    "eslint-config-next": "^16.0.4",
     "husky": "^9.1.7",
     "jsdom": "^27.2.0",
     "prettier": "^3.6.2",
     "typescript": "5.9.3",
-    "vitest": "^4.0.12"
+    "vitest": "^4.0.14"
   }
 }
