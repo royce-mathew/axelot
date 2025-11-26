@@ -1,10 +1,21 @@
 import { formatDistanceToNow } from "date-fns"
 import { Timestamp } from "firebase/firestore"
 
-export function timeAgo(timestamp: Timestamp) {
+export function timeAgo(timestamp: any) {
   try {
+    // If the value is a plain object with Firestore timestamp fields, convert it
+    if (
+      !(timestamp instanceof Timestamp) &&
+      typeof timestamp === "object" &&
+      timestamp !== null &&
+      "_seconds" in timestamp &&
+      "_nanoseconds" in timestamp
+    ) {
+      timestamp = new Timestamp(timestamp._seconds, timestamp._nanoseconds)
+    }
+
     return formatDistanceToNow(timestamp.toDate(), { addSuffix: true })
-  } catch {
+  } catch (err) {
     return "Never"
   }
 }

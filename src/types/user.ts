@@ -6,6 +6,6 @@ export interface User {
   image?: string // Profile image URL
   username?: string // Unique username for profile URLs (e.g., @username)
   bio?: string // User bio/description
-  createdAt?: Date
-  updatedAt?: Date
+  created?: Date
+  updated?: Date
 }

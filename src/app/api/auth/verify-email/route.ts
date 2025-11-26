@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { firebaseAdminFirestore } from "@/lib/firebase/server"
+import { Timestamp } from "firebase-admin/firestore"
 
 export async function POST(request: NextRequest) {
   try {
@@ -24,7 +25,7 @@ export async function POST(request: NextRequest) {
     const userDoc = snapshot.docs[0]
     await userDoc.ref.update({
       emailVerified: true,
-      updatedAt: new Date(),
+      lastUpdated: Timestamp.now(),
     })
 
     return NextResponse.json({ success: true })

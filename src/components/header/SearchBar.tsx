@@ -112,10 +112,25 @@ export const SearchBar = () => {
 
   const handleSearch = (event: React.FormEvent) => {
     event.preventDefault()
-    if (searchQuery.trim()) {
-      router.push(`/search?q=${encodeURIComponent(searchQuery)}`)
-      setShowResults(false)
+    if (!searchQuery.trim()) return
+
+    // If we have document results, go to the first one
+    if (results.documents.length > 0) {
+      const doc = results.documents[0]
+      handleResultClick("document", doc.id, doc)
+      return
     }
+
+    // If we have user results, go to the first one
+    if (results.users.length > 0) {
+      const user = results.users[0]
+      handleResultClick("user", user.id, user)
+      return
+    }
+
+    // No results found, do nothing or maybe show a toast?
+    // For now, just close the results
+    setShowResults(false)
   }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -214,6 +229,10 @@ export const SearchBar = () => {
     if (user.username) {
       router.push(`/u/@${user.username}`)
     }
+  }
+
+  if (!isAuthenticated) {
+    return null
   }
 
   return (

@@ -33,7 +33,7 @@ export const Header = () => {
   const handleLogoClick = (e: React.MouseEvent) => {
     e.preventDefault()
     if (!isLoading) {
-      router.push(isAuthenticated ? "/dashboard" : "/")
+      router.push(isAuthenticated ? "/discover" : "/")
     }
   }
 

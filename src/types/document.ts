@@ -54,4 +54,7 @@ export interface Document {
   lastViewed?: Timestamp
   trendingScore?: number // Computed field for efficient queries
   trendingLastComputed?: Timestamp
+
+  // Virtual fields (not stored in DB, but returned by API)
+  preview?: string
 }

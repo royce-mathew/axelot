@@ -118,7 +118,7 @@ const RESERVED_USERNAMES = [
   "admin",
   "api",
   "auth",
-  "dashboard",
+  "discover",
   "documents",
   "search",
   "stories",

@@ -149,7 +149,7 @@ Enforcement Layer:
 ---
 ## Data Model: Firestore Collections
 ### users
-Fields (typical): `email`, `name`, `emailVerified`, `image`, `username`, `bio`, `createdAt`, `updatedAt`.
+Fields (typical): `email`, `name`, `emailVerified`, `image`, `username`, `bio`, `created`, `updated`.
 Access: Public read, self write only.
 
 ### credentials (server-only)

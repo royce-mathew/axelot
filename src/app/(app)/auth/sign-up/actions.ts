@@ -45,8 +45,8 @@ export async function signUpAction(formData: FormData) {
       image: null,
       username: null,
       bio: null,
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      created: new Date(),
+      updated: new Date(),
     })
 
     // Store password hash in separate credentials collection
@@ -57,8 +57,8 @@ export async function signUpAction(formData: FormData) {
     await credentialsRef.set({
       userId: userRef.id,
       passwordHash: hashedPassword,
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      created: new Date(),
+      updated: new Date(),
     })
 
     // Return email for client-side verification link sending

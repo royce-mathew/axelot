@@ -23,8 +23,8 @@ const userDataConverter: FirestoreDataConverter<User> = {
       image: data.image,
       username: data.username,
       bio: data.bio,
-      createdAt: data.createdAt?.toDate(),
-      updatedAt: data.updatedAt?.toDate(),
+      created: data.created?.toDate(),
+      updated: data.updated?.toDate(),
     }
   },
   toFirestore(document: User): DocumentData {
@@ -32,7 +32,7 @@ const userDataConverter: FirestoreDataConverter<User> = {
       email: document.email,
       emailVerified: document.emailVerified,
       name: document.name,
-      updatedAt: new Date(),
+      updated: new Date(),
     }
     if (document.image) {
       doc.image = document.image
@@ -43,8 +43,8 @@ const userDataConverter: FirestoreDataConverter<User> = {
     if (document.bio) {
       doc.bio = document.bio
     }
-    if (document.createdAt) {
-      doc.createdAt = document.createdAt
+    if (document.created) {
+      doc.created = document.created
     }
     return doc
   },

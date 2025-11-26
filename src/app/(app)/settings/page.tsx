@@ -19,7 +19,7 @@ import {
   TextField,
   Typography,
 } from "@mui/material"
-import { doc, getDoc, setDoc } from "firebase/firestore"
+import { doc, getDoc, setDoc, Timestamp } from "firebase/firestore"
 import { db } from "@/lib/firebase/client"
 import {
   isReservedUsername,
@@ -148,7 +148,7 @@ export default function SettingsPage() {
         {
           username: newUsername,
           bio: bio || "",
-          updatedAt: new Date(),
+          lastUpdated: Timestamp.now(),
         },
         { merge: true }
       )

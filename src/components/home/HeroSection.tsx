@@ -1,21 +1,12 @@
 "use client"
 
-import { useRouter } from "next/navigation"
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward"
 import FormatBoldIcon from "@mui/icons-material/FormatBold"
 import FormatItalicIcon from "@mui/icons-material/FormatItalic"
 import FormatListBulletedIcon from "@mui/icons-material/FormatListBulleted"
 import CodeIcon from "@mui/icons-material/Code"
 import LinkIcon from "@mui/icons-material/Link"
-import {
-  Box,
-  Button,
-  Container,
-  Stack,
-  Typography,
-  useTheme,
-} from "@mui/material"
-import { useAuth } from "@/hooks/use-auth"
+import { Box, Button, Container, Stack, Typography } from "@mui/material"
 
 const FloatingIcon = ({
   icon,
@@ -61,10 +52,6 @@ const FloatingIcon = ({
 }
 
 export const HeroSection = () => {
-  const router = useRouter()
-  const { isAuthenticated } = useAuth()
-  const theme = useTheme()
-
   return (
     <Box
       sx={[
@@ -194,7 +181,7 @@ export const HeroSection = () => {
             <Button
               variant="outlined"
               size="large"
-              onClick={() => router.push("/search")}
+              href="https://r0yce.com/projects/axelot"
               sx={{
                 px: 4,
                 py: 1.5,
@@ -209,7 +196,7 @@ export const HeroSection = () => {
                 },
               }}
             >
-              Explore Stories
+              Documentation
             </Button>
           </Stack>
         </Stack>
