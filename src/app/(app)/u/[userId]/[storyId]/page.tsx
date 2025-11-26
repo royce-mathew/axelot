@@ -68,7 +68,7 @@ import { Document } from "@/types/document"
 import { User } from "@/types/user"
 import { generateSlug } from "@/lib/content-utils"
 import { documentRef } from "@/lib/converters/document"
-import { db, firebaseApp } from "@/lib/firebase/client"
+import { db, firebaseApp, logEvent } from "@/lib/firebase/client"
 import { syncAuthorNames } from "@/lib/update-author-data"
 import { stringToHslColor, timeAgo } from "@/lib/utils"
 import { FireProvider } from "@/lib/y-fire"
@@ -250,6 +250,18 @@ export default function StoryPage({
           setIsPublic(data.isPublic || false)
           // Initialize lastSavedTitle to prevent unnecessary save on load
           lastSavedTitleRef.current = data.title || ""
+
+          logEvent("view_item", {
+            currency: "USD",
+            value: 0,
+            items: [
+              {
+                item_id: storyId,
+                item_name: data.title,
+                item_category: "story",
+              },
+            ],
+          })
         } else {
           setAccess(AccessLevel.None)
         }
@@ -328,6 +340,10 @@ export default function StoryPage({
         isPublic: checked,
       })
       setIsPublic(checked)
+      logEvent(checked ? "make_public" : "make_private", {
+        content_type: "story",
+        item_id: storyId,
+      })
     } catch (error) {
       console.error("Error updating visibility:", error)
     }
@@ -451,6 +467,13 @@ export default function StoryPage({
       // Update local document state
       setDocument({ ...document, ...updateData })
 
+      // Log analytics event
+      logEvent("share", {
+        method: "add_collaborator",
+        content_type: "story",
+        item_id: storyId,
+      })
+
       // Reset form
       setSharingEmail("")
       setSearchedUser(null)
@@ -529,6 +552,11 @@ export default function StoryPage({
       await navigator.clipboard.writeText(publicLink)
       setLinkCopied(true)
       setTimeout(() => setLinkCopied(false), 2000)
+      logEvent("share", {
+        method: "copy_link",
+        content_type: "story",
+        item_id: storyId,
+      })
     } catch (error) {
       console.error("Error copying link:", error)
     }

@@ -1,4 +1,5 @@
 import type { Metadata } from "next"
+import { auth } from "@/auth"
 import { firebaseAdminFirestore } from "@/lib/firebase/server"
 import { SerializableDocument } from "@/types/document"
 import { serializeDocument } from "@/lib/serializers/document"
@@ -43,13 +44,55 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const story = await getStory(storyId)
 
-  // If story doesn't exist or is private, return basic metadata
-  if (!story || !story.isPublic) {
+  // If story doesn't exist, return basic metadata
+  if (!story) {
     return {
       title: "Story Not Found",
-      description: "This story is either private or does not exist.",
+      description: "This story does not exist.",
       robots: {
         index: false,
+        follow: false,
+      },
+    }
+  }
+
+  // Check if the story is private and user has access
+  if (!story.isPublic) {
+    // Get current user session
+    const session = await auth()
+    const currentUserId = session?.user?.id
+
+    // Check if user has access to this private story
+    const hasAccess =
+      currentUserId &&
+      (story.owner === currentUserId ||
+        story.readAccess?.includes(currentUserId) ||
+        story.writeAccess?.includes(currentUserId))
+
+    // If user doesn't have access, return "not found" metadata
+    if (!hasAccess) {
+      return {
+        title: "Story Not Found",
+        description: "This story is private or does not exist.",
+        robots: {
+          index: false,
+          follow: false,
+        },
+      }
+    }
+
+    // User has access to private story - show metadata but don't index
+    const title = story.title || "Untitled Story"
+    const description =
+      story.description ||
+      story.preview ||
+      `Read "${title}" on Axelot - A collaborative storytelling platform.`
+
+    return {
+      title,
+      description,
+      robots: {
+        index: false, // Don't index private stories
         follow: false,
       },
     }

@@ -17,7 +17,7 @@ import {
 } from "@mui/material"
 import { getAuth, sendSignInLinkToEmail } from "firebase/auth"
 import { signIn } from "next-auth/react"
-import { firebaseApp } from "@/lib/firebase/client"
+import { firebaseApp, logEvent } from "@/lib/firebase/client"
 import { useAuth } from "@/hooks/use-auth"
 import { signUpAction } from "./actions"
 
@@ -65,6 +65,7 @@ export default function SignUpPage() {
             "Account created! Check your email for a verification link."
           )
           setEmailSent(true)
+          logEvent("sign_up", { method: "credentials" })
         } catch (emailError) {
           console.error("Error sending verification email:", emailError)
           setError(

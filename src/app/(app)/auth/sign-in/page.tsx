@@ -20,6 +20,7 @@ import {
 } from "@mui/material"
 import { signIn } from "next-auth/react"
 import { useAuth } from "@/hooks/use-auth"
+import { logEvent } from "@/lib/firebase/client"
 
 function SignInContent() {
   const searchParams = useSearchParams()
@@ -59,6 +60,7 @@ function SignInContent() {
           "Invalid email or password. If you just signed up, please verify your email first."
         )
       } else {
+        logEvent("login", { method: "credentials" })
         router.push(callbackUrl)
       }
     } catch {

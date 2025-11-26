@@ -20,7 +20,7 @@ import DescriptionIcon from "@mui/icons-material/Description"
 import PersonIcon from "@mui/icons-material/Person"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/hooks/use-auth"
-import { db } from "@/lib/firebase/client"
+import { db, logEvent } from "@/lib/firebase/client"
 import {
   collection,
   getDocs,
@@ -110,6 +110,8 @@ export const SearchBar = () => {
   const handleSearch = (event: React.FormEvent) => {
     event.preventDefault()
     if (!searchQuery.trim()) return
+
+    logEvent("search", { search_term: searchQuery })
 
     // If we have document results, go to the first one
     if (results.documents.length > 0) {

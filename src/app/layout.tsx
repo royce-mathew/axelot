@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from "next"
 import { DM_Sans, Outfit, EB_Garamond } from "next/font/google"
 import InitColorSchemeScript from "@mui/material/InitColorSchemeScript"
-import { GoogleAnalytics } from "@next/third-parties/google"
 import { Providers } from "@/components/Providers"
 import "@/styles/globals.css"
 
@@ -100,11 +99,6 @@ export default function RootLayout({
         <InitColorSchemeScript attribute="class" />
         <Providers>{children}</Providers>
       </body>
-      {/* Google Analytics */}
-      {process.env.NODE_ENV === "production" &&
-        process.env.NEXT_PUBLIC_ANALYTICS_ID && (
-          <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_ANALYTICS_ID} />
-        )}
     </html>
   )
 }

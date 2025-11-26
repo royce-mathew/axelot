@@ -48,6 +48,7 @@ import {
 } from "@/lib/converters/document"
 import { timeAgo } from "@/lib/utils"
 import { useAuth } from "@/hooks/use-auth"
+import { logEvent } from "@/lib/firebase/client"
 
 export default function StoriesPage() {
   const { user, isAuthenticated, isLoading } = useAuth()
@@ -136,6 +137,11 @@ export default function StoriesPage() {
       }
 
       const newDoc = await addDoc(allDocumentsRef(), completeDocData)
+
+      logEvent("create_story", {
+        content_type: "story",
+        item_id: newDoc.id,
+      })
 
       setCreateDialogOpen(false)
       setNewTitle("")
