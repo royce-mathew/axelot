@@ -1,56 +1,85 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import {
   Box,
   Container,
   Typography,
-  Tabs,
-  Tab,
-  TextField,
-  InputAdornment,
-  Grid,
-  Alert,
   Stack,
+  CircularProgress,
 } from "@mui/material"
-import { Search as SearchIcon } from "@mui/icons-material"
+import { BentoHeroGrid } from "@/components/discover/BentoHeroGrid"
+import {
+  DiscoverNavigation,
+  DiscoverMode,
+} from "@/components/discover/DiscoverNavigation"
 import { StoryCard, StoryCardProps } from "@/components/StoryCard"
-import { StoryCardSkeleton } from "@/components/StoryCardSkeleton"
-
-type SortMode = "trending" | "recent" | "all"
 
 export default function DiscoverPage() {
-  const [sortMode, setSortMode] = useState<SortMode>("trending")
-  const [searchQuery, setSearchQuery] = useState("")
+  const [mode, setMode] = useState<DiscoverMode>("all")
   const [stories, setStories] = useState<StoryCardProps[]>([])
+  const [heroStories, setHeroStories] = useState<StoryCardProps[]>([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [loadingMore, setLoadingMore] = useState(false)
+  const [hasMore, setHasMore] = useState(true)
+  const [page, setPage] = useState(0)
+  const [heroLoaded, setHeroLoaded] = useState(false)
 
-  // Cache for stories by sort mode
-  const storiesCache = useRef<Record<SortMode, StoryCardProps[] | null>>({
-    trending: null,
-    recent: null,
+  // Client-side cache for each tab's data
+  const tabCache = useRef<Record<DiscoverMode, StoryCardProps[] | null>>({
     all: null,
+    foryou: null,
+    fresh: null,
   })
 
-  // Fetch stories whenever sort mode or search changes
+  // Track which tabs have been loaded
+  const tabsLoaded = useRef<Record<DiscoverMode, boolean>>({
+    all: false,
+    foryou: false,
+    fresh: false,
+  })
+
+  // Fetch hero stories once on mount
   useEffect(() => {
-    const fetchStories = async () => {
-      // If we have cached data for this sort mode and no search query, use it immediately
-      if (!searchQuery && storiesCache.current[sortMode]) {
-        setStories(storiesCache.current[sortMode]!)
+    const fetchHero = async () => {
+      try {
+        const res = await fetch("/api/stories/trending?page=0&pageSize=5")
+        if (!res.ok) throw new Error("Failed to fetch hero stories")
+
+        const data = await res.json()
+        setHeroStories(data.stories || [])
+        setHeroLoaded(true)
+      } catch (err) {
+        console.error("Error fetching hero stories:", err)
+        setHeroLoaded(true)
+      }
+    }
+
+    fetchHero()
+  }, [])
+
+  // Fetch stories for current mode
+  const fetchStories = useCallback(
+    async (currentPage: number, reset = false) => {
+      // If resetting and we have cached data for this mode, use it
+      if (reset && tabCache.current[mode]) {
+        setStories(tabCache.current[mode]!)
         setLoading(false)
+        setHasMore(false) // Already loaded all for this tab
         return
       }
 
-      setLoading(true)
-      setError(null)
+      if (reset) {
+        setLoading(true)
+      } else {
+        setLoadingMore(true)
+      }
 
       try {
         const params = new URLSearchParams({
-          sort: sortMode,
-          limit: "20",
-          ...(searchQuery ? { search: searchQuery } : {}),
+          mode,
+          page: currentPage.toString(),
+          pageSize: "20",
         })
 
         const res = await fetch(`/api/stories/discover?${params}`)
@@ -59,169 +88,151 @@ export default function DiscoverPage() {
         const data = await res.json()
         const fetchedStories = data.stories || []
 
-        setStories(fetchedStories)
-
-        // Update cache if not searching
-        if (!searchQuery) {
-          storiesCache.current[sortMode] = fetchedStories
+        if (reset) {
+          setStories(fetchedStories)
+          // Cache the first page for this tab
+          tabCache.current[mode] = fetchedStories
+          tabsLoaded.current[mode] = true
+        } else {
+          const newStories = [...stories, ...fetchedStories]
+          setStories(newStories)
+          // Update cache with accumulated stories
+          tabCache.current[mode] = newStories
         }
+
+        setHasMore(data.hasMore || false)
       } catch (err) {
         console.error("Error fetching stories:", err)
-        setError("Failed to load stories. Please try again.")
       } finally {
         setLoading(false)
+        setLoadingMore(false)
       }
-    }
+    },
+    [mode, stories]
+  )
 
-    // Debounce search
-    const timer = setTimeout(fetchStories, searchQuery ? 500 : 0)
-    return () => clearTimeout(timer)
-  }, [sortMode, searchQuery])
+  // Load stories when mode changes
+  useEffect(() => {
+    setPage(0)
+    setHasMore(true)
+    fetchStories(0, true)
+  }, [mode])
 
-  const handleTabChange = (
-    _event: React.SyntheticEvent,
-    newValue: SortMode
-  ) => {
-    setSortMode(newValue)
+  // Handle mode change
+  const handleModeChange = (newMode: DiscoverMode) => {
+    setMode(newMode)
   }
 
-  const heroStory = stories[0]
-  const gridStories = stories.slice(1)
+  // Load more for infinite scroll
+  const loadMore = useCallback(() => {
+    if (!loadingMore && hasMore) {
+      const nextPage = page + 1
+      setPage(nextPage)
+      fetchStories(nextPage, false)
+    }
+  }, [page, loadingMore, hasMore, fetchStories])
 
   return (
-    <Box sx={{ minHeight: "100vh", bgcolor: "background.default", py: 4 }}>
-      <Container maxWidth="lg">
-        {/* Header */}
-        <Stack spacing={3} sx={{ mb: 4 }}>
-          <Typography
-            variant="h3"
-            component="h1"
-            fontWeight="bold"
-            sx={{ fontSize: { xs: "2rem", sm: "2.5rem", md: "3rem" } }}
-          >
-            Discover Stories
-          </Typography>
-
-          {/* Tabs and Search */}
-          <Stack
-            direction={{ xs: "column", sm: "row" }}
-            spacing={2}
-            alignItems={{ xs: "stretch", sm: "center" }}
-            justifyContent="space-between"
-          >
-            <Tabs
-              value={sortMode}
-              onChange={handleTabChange}
-              variant="scrollable"
-              scrollButtons="auto"
-              sx={{
-                "& .MuiTabs-indicator": {
-                  height: 3,
-                },
-              }}
-            >
-              <Tab label="🔥 Trending" value="trending" />
-              <Tab label="🕒 Recent" value="recent" />
-              <Tab label="📚 All" value="all" />
-            </Tabs>
-
-            <TextField
-              size="small"
-              placeholder="Search stories..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <SearchIcon />
-                  </InputAdornment>
-                ),
-              }}
-              sx={{
-                minWidth: { xs: "100%", sm: 250 },
-              }}
-            />
-          </Stack>
-        </Stack>
-
-        {/* Error state */}
-        {error && (
-          <Alert severity="error" sx={{ mb: 3 }}>
-            {error}
-          </Alert>
+    <Box sx={{ minHeight: "100vh", bgcolor: "background.default" }}>
+      <Container maxWidth="lg" sx={{ py: 4 }}>
+        {/* Hero Bento Grid - Only renders once on mount */}
+        {heroLoaded && heroStories.length > 0 && (
+          <Box sx={{ mb: 4 }}>
+            <BentoHeroGrid stories={heroStories} />
+          </Box>
         )}
 
-        {/* Loading state */}
-        {loading && (
-          <Box>
-            {/* Hero skeleton */}
-            <Box sx={{ mb: 4 }}>
-              <StoryCardSkeleton variant="hero" />
+        {/* Sticky Navigation */}
+        <DiscoverNavigation value={mode} onChange={handleModeChange} />
+
+        {/* Content with top spacing */}
+        <Box sx={{ mt: 3 }}>
+          {/* Loading state - only show on initial load, not when switching tabs */}
+          {loading && !tabsLoaded.current[mode] && (
+            <Box sx={{ display: "flex", justifyContent: "center", py: 8 }}>
+              <CircularProgress />
             </Box>
+          )}
 
-            {/* Grid skeletons */}
-            <Grid container spacing={3}>
-              {[1, 2, 3, 4, 5, 6].map((i) => (
-                <Grid size={{ xs: 12, sm: 6, md: 4 }} key={i}>
-                  <StoryCardSkeleton />
-                </Grid>
-              ))}
-            </Grid>
-          </Box>
-        )}
-
-        {/* Empty state */}
-        {!loading && stories.length === 0 && (
-          <Box
-            sx={{
-              textAlign: "center",
-              py: 8,
-            }}
-          >
-            <Typography variant="h5" color="text.secondary" gutterBottom>
-              {searchQuery ? "No stories found" : "No public stories yet"}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              {searchQuery
-                ? "Try adjusting your search query"
-                : "Be the first to publish a public story!"}
-            </Typography>
-          </Box>
-        )}
-
-        {/* Content */}
-        {!loading && stories.length > 0 && (
-          <Box>
-            {/* Hero story */}
-            {heroStory && (
-              <Box sx={{ mb: 4 }}>
-                <StoryCard {...heroStory} variant="hero" />
-              </Box>
-            )}
-
-            {/* Story grid */}
-            <Grid container spacing={3}>
-              {gridStories.map((story) => (
-                <Grid size={{ xs: 12, sm: 6, md: 4 }} key={story.id}>
-                  <StoryCard {...story} />
-                </Grid>
-              ))}
-            </Grid>
-
-            {/* Footer message */}
-            {stories.length > 0 && (
-              <Typography
-                variant="body2"
-                color="text.secondary"
-                textAlign="center"
-                sx={{ mt: 4 }}
-              >
-                Showing {stories.length}{" "}
-                {stories.length === 1 ? "story" : "stories"}
+          {/* Empty state */}
+          {!loading && stories.length === 0 && (
+            <Box sx={{ textAlign: "center", py: 8 }}>
+              <Typography variant="h5" color="text.secondary" gutterBottom>
+                No stories found
               </Typography>
-            )}
-          </Box>
-        )}
+              <Typography variant="body2" color="text.secondary">
+                Be the first to publish a public story!
+              </Typography>
+            </Box>
+          )}
+
+          {/* Story Feed with Infinite Scroll */}
+          {stories.length > 0 && (
+            <Box>
+              <Box
+                sx={{
+                  display: "grid",
+                  gridTemplateColumns: {
+                    xs: "1fr",
+                    sm: "repeat(2, 1fr)",
+                    md: "repeat(3, 1fr)",
+                  },
+                  gap: 2,
+                  mb: 3,
+                }}
+              >
+                {stories.map((story) => (
+                  <StoryCard key={story.id} {...story} />
+                ))}
+              </Box>
+
+              {/* Load more indicator */}
+              {loadingMore && (
+                <Box sx={{ display: "flex", justifyContent: "center", py: 2 }}>
+                  <CircularProgress size={24} />
+                </Box>
+              )}
+
+              {/* End of results */}
+              {!hasMore && stories.length > 0 && (
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  textAlign="center"
+                  sx={{ py: 2 }}
+                >
+                  No more stories
+                </Typography>
+              )}
+
+              {/* Intersection observer for infinite scroll */}
+              {hasMore && !loadingMore && (
+                <Box
+                  ref={(el: HTMLDivElement | null) => {
+                    if (!el) return
+
+                    const observer = new IntersectionObserver(
+                      (entries) => {
+                        if (entries[0]?.isIntersecting) {
+                          loadMore()
+                        }
+                      },
+                      { threshold: 0.5 }
+                    )
+
+                    observer.observe(el)
+
+                    // Cleanup
+                    return () => {
+                      observer.disconnect()
+                    }
+                  }}
+                  sx={{ height: 20 }}
+                />
+              )}
+            </Box>
+          )}
+        </Box>
       </Container>
     </Box>
   )

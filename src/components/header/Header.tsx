@@ -6,12 +6,11 @@ import {
   Box,
   IconButton,
   useColorScheme,
-  Slide,
-  useScrollTrigger,
   Fab,
   Zoom,
   useTheme,
   useMediaQuery,
+  useScrollTrigger,
 } from "@mui/material"
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp"
 import Image from "next/image"
@@ -28,7 +27,6 @@ export const Header = () => {
   const router = useRouter()
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"))
-  const hideTrigger = useScrollTrigger()
 
   const handleLogoClick = (e: React.MouseEvent) => {
     e.preventDefault()
@@ -39,163 +37,82 @@ export const Header = () => {
 
   return (
     <>
-      {isMobile ? (
-        <Slide appear={false} direction="down" in={!hideTrigger}>
-          <AppBar
-            position="sticky"
-            elevation={0}
+      <AppBar
+        position="sticky"
+        elevation={0}
+        sx={{
+          boxShadow: 3,
+          bgcolor: "background.paper",
+          borderBottom: 1,
+          borderColor: "divider",
+        }}
+      >
+        <Toolbar
+          sx={{
+            maxWidth: 1200,
+            mx: "auto",
+            width: "100%",
+            px: { xs: 2, sm: 3 },
+            justifyContent: "space-between",
+            minHeight: { xs: 56, sm: 64 },
+          }}
+        >
+          <Box
             sx={{
-              boxShadow: 3,
-              bgcolor: "background.paper",
-              borderBottom: 1,
-              borderColor: "divider",
+              display: "flex",
+              alignItems: "center",
+              gap: 1,
+              width: "100%",
+              maxWidth: 448,
             }}
           >
-            <Toolbar
+            <IconButton
+              onClick={handleLogoClick}
               sx={{
-                maxWidth: 1200,
-                mx: "auto",
-                width: "100%",
-                px: { xs: 2, sm: 3 },
-                justifyContent: "space-between",
-                minHeight: { xs: 56, sm: 64 },
+                width: 50,
+                height: 50,
+                p: 0.5,
+                borderRadius: 1,
+                "&:hover": {
+                  bgcolor: "action.hover",
+                },
               }}
             >
               <Box
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 1,
-                  width: "100%",
-                  maxWidth: 448,
-                }}
-              >
-                <IconButton
-                  onClick={handleLogoClick}
-                  sx={{
-                    width: 50,
-                    height: 50,
-                    p: 0.5,
-                    borderRadius: 1,
-                    "&:hover": {
-                      bgcolor: "action.hover",
+                sx={[
+                  {
+                    "& img": {
+                      filter: "brightness(0.25)",
+                      maxWidth: "100%",
+                      height: "auto",
                     },
-                  }}
-                >
-                  <Box
-                    sx={[
-                      {
-                        "& img": {
-                          filter: "brightness(0.25)",
-                          maxWidth: "100%",
-                          height: "auto",
-                        },
-                      },
-                      (theme) =>
-                        theme.applyStyles("dark", {
-                          "& img": {
-                            filter: "brightness(1.8)",
-                          },
-                        }),
-                    ]}
-                  >
-                    <Image
-                      src="/axolotl.svg"
-                      alt="Axelot Logo"
-                      width={50}
-                      height={50}
-                      priority
-                    />
-                  </Box>
-                </IconButton>
-                <SearchBar />
-              </Box>
-
-              <Box sx={{ display: "flex", alignItems: "center" }}>
-                <DesktopNav />
-                <MobileNav />
-              </Box>
-            </Toolbar>
-          </AppBar>
-        </Slide>
-      ) : (
-        <AppBar
-          position="sticky"
-          elevation={0}
-          sx={{
-            boxShadow: 3,
-            bgcolor: "background.paper",
-            borderBottom: 1,
-            borderColor: "divider",
-          }}
-        >
-          <Toolbar
-            sx={{
-              maxWidth: 1200,
-              mx: "auto",
-              width: "100%",
-              px: { xs: 2, sm: 3 },
-              justifyContent: "space-between",
-              minHeight: { xs: 56, sm: 64 },
-            }}
-          >
-            <Box
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                gap: 1,
-                width: "100%",
-                maxWidth: 448,
-              }}
-            >
-              <IconButton
-                onClick={handleLogoClick}
-                sx={{
-                  width: 50,
-                  height: 50,
-                  p: 0.5,
-                  borderRadius: 1,
-                  "&:hover": {
-                    bgcolor: "action.hover",
                   },
-                }}
-              >
-                <Box
-                  sx={[
-                    {
+                  (theme) =>
+                    theme.applyStyles("dark", {
                       "& img": {
-                        filter: "brightness(0.25)",
-                        maxWidth: "100%",
-                        height: "auto",
+                        filter: "brightness(1.8)",
                       },
-                    },
-                    (theme) =>
-                      theme.applyStyles("dark", {
-                        "& img": {
-                          filter: "brightness(1.8)",
-                        },
-                      }),
-                  ]}
-                >
-                  <Image
-                    src="/axolotl.svg"
-                    alt="Axelot Logo"
-                    width={50}
-                    height={50}
-                    priority
-                  />
-                </Box>
-              </IconButton>
-              <SearchBar />
-            </Box>
+                    }),
+                ]}
+              >
+                <Image
+                  src="/axolotl.svg"
+                  alt="Axelot Logo"
+                  width={50}
+                  height={50}
+                  priority
+                />
+              </Box>
+            </IconButton>
+            <SearchBar />
+          </Box>
 
-            <Box sx={{ display: "flex", alignItems: "center" }}>
-              <DesktopNav />
-              <MobileNav />
-            </Box>
-          </Toolbar>
-        </AppBar>
-      )}
+          <Box sx={{ display: "flex", alignItems: "center" }}>
+            <DesktopNav />
+            <MobileNav />
+          </Box>
+        </Toolbar>
+      </AppBar>
 
       {/* Scroll-to-top FAB for mobile */}
       {isMobile && <ScrollTopFab />}

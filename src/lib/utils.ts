@@ -1,5 +1,6 @@
 import { formatDistanceToNow } from "date-fns"
 import { Timestamp } from "firebase/firestore"
+import * as Y from "yjs"
 
 export function timeAgo(timestamp: any) {
   try {
@@ -17,6 +18,23 @@ export function timeAgo(timestamp: any) {
     return formatDistanceToNow(timestamp.toDate(), { addSuffix: true })
   } catch (err) {
     return "Never"
+  }
+}
+
+export function extractPreview(content: any): string {
+  if (!content) return ""
+
+  try {
+    const update = content.toUint8Array ? content.toUint8Array() : content
+    const ydoc = new Y.Doc()
+    Y.applyUpdate(ydoc, update)
+
+    const fragment = ydoc.getXmlFragment("default")
+    const xmlString = fragment.toString()
+    const plainText = xmlString.replace(/<[^>]+>/g, " ")
+    return plainText.replace(/\s+/g, " ").trim().slice(0, 300)
+  } catch (e) {
+    return ""
   }
 }
 

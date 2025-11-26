@@ -7,8 +7,8 @@ import {
   Archive as ArchiveIcon,
   Article as ArticleIcon,
   MoreVert as MoreVertIcon,
-  Public as PublicIcon,
   Settings as SettingsIcon,
+  Visibility as VisibilityIcon,
 } from "@mui/icons-material"
 import {
   Avatar,
@@ -29,11 +29,6 @@ import {
   Stack,
   Typography,
 } from "@mui/material"
-import { getDoc, getDocs, orderBy, query, where } from "firebase/firestore"
-import { Document } from "@/types/document"
-import { User } from "@/types/user"
-import { allDocumentsRef } from "@/lib/converters/document"
-import { userRef } from "@/lib/converters/user"
 import {
   getUserIdByUsername,
   isUsernameParam,
@@ -42,14 +37,38 @@ import {
 import { timeAgo } from "@/lib/utils"
 import { useAuth } from "@/hooks/use-auth"
 
+interface UserProfile {
+  id: string
+  name: string | null
+  username: string | null
+  bio: string | null
+  image: string | null
+}
+
+interface Story {
+  id: string
+  title: string
+  slug: string
+  owner: string
+  authorNames: string[]
+  viewCount: number
+  trendingScore: number
+  isPublic: boolean
+  isArchived: boolean
+  created: any
+  lastUpdated: any
+  lastViewed: any
+  preview: string
+}
+
 export default function UserProfilePage(props: {
   params: Promise<{ userId: string }>
 }) {
   const params = use(props.params)
   const { user: currentUser } = useAuth()
   const router = useRouter()
-  const [documents, setDocuments] = useState<Document[]>([])
-  const [user, setUser] = useState<User | null>(null)
+  const [stories, setStories] = useState<Story[]>([])
+  const [user, setUser] = useState<UserProfile | null>(null)
   const [loading, setLoading] = useState(true)
   const [userLoading, setUserLoading] = useState(true)
   const [actualUserId, setActualUserId] = useState<string>("")
@@ -58,7 +77,7 @@ export default function UserProfilePage(props: {
 
   const isOwnProfile = currentUser?.id === actualUserId
 
-  // Get display username (with @ if it's a username param)
+  // Get display username
   const displayParam = isUsernameParam(params.userId)
     ? params.userId
     : user?.username
@@ -69,25 +88,19 @@ export default function UserProfilePage(props: {
   useEffect(() => {
     const resolveUser = async () => {
       try {
-        // Decode the parameter in case it's URL-encoded (%40masq -> @masq)
         const paramId = decodeURIComponent(params.userId)
 
-        // Check if it starts with @ (username format)
         if (isUsernameParam(paramId)) {
-          // It's a username with @ prefix, resolve it (cached)
           const username = stripUsernamePrefix(paramId)
-          // Skip cache for debugging
           const resolvedId = await getUserIdByUsername(username)
           if (resolvedId) {
             setActualUserId(resolvedId)
           } else {
-            // Not found
             setActualUserId("")
             setUserLoading(false)
             setLoading(false)
           }
         } else {
-          // No @ prefix means it's a Firebase ID, use directly (0 reads!)
           setActualUserId(paramId)
         }
       } catch (error) {
@@ -101,16 +114,17 @@ export default function UserProfilePage(props: {
     resolveUser()
   }, [params.userId])
 
-  // Fetch user profile
+  // Fetch user profile from API
   useEffect(() => {
     if (!actualUserId) return
 
     const loadUser = async () => {
       try {
-        const userSnap = await getDoc(userRef(actualUserId))
-        if (userSnap.exists()) {
-          setUser(userSnap.data())
-        }
+        const res = await fetch(`/api/users/${actualUserId}/profile`)
+        if (!res.ok) throw new Error("Failed to fetch user")
+
+        const data = await res.json()
+        setUser(data.profile)
       } catch (error) {
         console.error("Error fetching user:", error)
       } finally {
@@ -121,47 +135,40 @@ export default function UserProfilePage(props: {
     loadUser()
   }, [actualUserId])
 
-  // Fetch user's public documents
+  // Fetch user's stories from API
   useEffect(() => {
     if (!actualUserId) return
 
-    const loadDocuments = async () => {
+    const loadStories = async () => {
       try {
-        // Query just by owner, then filter in memory to avoid composite index
-        const q = query(
-          allDocumentsRef(),
-          where("owner", "==", actualUserId),
-          where("isPublic", "==", true),
-          orderBy("lastUpdated", "desc")
+        const res = await fetch(
+          `/api/users/${actualUserId}/stories?page=0&pageSize=20`
         )
+        if (!res.ok) throw new Error("Failed to fetch stories")
 
-        const snapshot = await getDocs(q)
-        const allDocs = snapshot.docs.map((doc) => doc.data())
-
-        // Filter for public stories only
-        const docs = allDocs.filter((doc) => doc.isPublic === true)
-        setDocuments(docs)
+        const data = await res.json()
+        setStories(data.stories || [])
       } catch (error) {
-        console.error("Error fetching user documents:", error)
+        console.error("Error fetching stories:", error)
       } finally {
         setLoading(false)
       }
     }
 
-    loadDocuments()
+    loadStories()
   }, [actualUserId])
 
-  const handleCardClick = (doc: Document) => {
-    if (doc.id && doc.slug && user?.username) {
-      router.push(`/u/@${user.username}/${doc.id}-${doc.slug}`)
-    } else if (doc.id && user?.username) {
-      router.push(`/u/@${user.username}/${doc.id}`)
-    } else if (doc.id) {
-      router.push(`/u/${params.userId}/${doc.id}`)
+  const handleCardClick = (story: Story) => {
+    if (story.id && story.slug && user?.username) {
+      router.push(`/u/@${user.username}/${story.id}-${story.slug}`)
+    } else if (story.id && user?.username) {
+      router.push(`/u/@${user.username}/${story.id}`)
+    } else if (story.id) {
+      router.push(`/u/${params.userId}/${story.id}`)
     }
   }
 
-  const getInitials = (name?: string, userId?: string) => {
+  const getInitials = (name?: string | null, userId?: string) => {
     if (name) {
       return name
         .split(" ")
@@ -179,7 +186,7 @@ export default function UserProfilePage(props: {
   if (!userLoading && !actualUserId) {
     return (
       <Box sx={{ minHeight: "100vh", bgcolor: "background.default" }}>
-        <Container maxWidth="md" sx={{ py: 6, textAlign: "center" }}>
+        <Container maxWidth="lg" sx={{ py: 6, textAlign: "center" }}>
           <Typography variant="h4" gutterBottom>
             User Not Found
           </Typography>
@@ -196,12 +203,12 @@ export default function UserProfilePage(props: {
 
   return (
     <Box sx={{ minHeight: "100vh", bgcolor: "background.default" }}>
-      <Container maxWidth="md" sx={{ py: 6 }}>
+      <Container maxWidth="lg" sx={{ py: 6 }}>
         {/* User Profile Header */}
-        <Stack spacing={3} sx={{ mb: 3 }}>
+        <Stack spacing={3} sx={{ mb: 4 }}>
           {userLoading ? (
             <Stack direction="row" spacing={2} alignItems="center">
-              <Skeleton variant="circular" width={80} height={80} />
+              <Skeleton variant="circular" width={96} height={96} />
               <Box sx={{ flex: 1 }}>
                 <Skeleton variant="text" width={200} height={40} />
                 <Skeleton variant="text" width={150} height={24} />
@@ -211,34 +218,34 @@ export default function UserProfilePage(props: {
             <>
               <Stack
                 direction="row"
-                spacing={2}
+                spacing={3}
                 alignItems="center"
                 justifyContent="space-between"
               >
                 <Stack
                   direction="row"
-                  spacing={2}
+                  spacing={3}
                   alignItems="center"
                   sx={{ flex: 1 }}
                 >
                   <Avatar
                     src={user?.image || undefined}
                     sx={{
-                      width: 80,
-                      height: 80,
-                      fontSize: "2rem",
+                      width: 96,
+                      height: 96,
+                      fontSize: "2.5rem",
                       bgcolor: "primary.main",
                     }}
                   >
                     {!user?.image && getInitials(user?.name, params.userId)}
                   </Avatar>
                   <Box>
-                    <Typography variant="h4" fontWeight={700}>
+                    <Typography variant="h3" fontWeight={700}>
                       {displayName}
                     </Typography>
                     {user?.username && (
                       <Typography
-                        variant="body2"
+                        variant="body1"
                         color="text.secondary"
                         sx={{ mt: 0.5 }}
                       >
@@ -247,9 +254,9 @@ export default function UserProfilePage(props: {
                     )}
                     {user?.bio && (
                       <Typography
-                        variant="body2"
+                        variant="body1"
                         color="text.secondary"
-                        sx={{ mt: 1 }}
+                        sx={{ mt: 1.5, maxWidth: 600 }}
                       >
                         {user.bio}
                       </Typography>
@@ -314,7 +321,7 @@ export default function UserProfilePage(props: {
           spacing={2}
           alignItems="center"
           justifyContent="space-between"
-          sx={{ mt: 2, mb: 2 }}
+          sx={{ mb: 3 }}
         >
           <Typography variant="h5" fontWeight={600}>
             Public Stories
@@ -322,25 +329,35 @@ export default function UserProfilePage(props: {
           <Stack direction="row" spacing={1} alignItems="center">
             <ArticleIcon fontSize="small" color="action" />
             <Typography variant="body2" color="text.secondary">
-              {documents.length} {documents.length === 1 ? "story" : "stories"}
+              {stories.length} {stories.length === 1 ? "story" : "stories"}
             </Typography>
           </Stack>
         </Stack>
 
-        {/* Stories List */}
+        {/* Stories Grid */}
         {loading ? (
-          <Stack spacing={3}>
+          <Box
+            sx={{
+              display: "grid",
+              gridTemplateColumns: {
+                xs: "1fr",
+                sm: "repeat(2, 1fr)",
+                md: "repeat(3, 1fr)",
+              },
+              gap: 3,
+            }}
+          >
             {[1, 2, 3].map((i) => (
               <Card key={i}>
                 <CardContent>
-                  <Skeleton variant="text" width="60%" height={40} />
-                  <Skeleton variant="text" width="80%" />
-                  <Skeleton variant="text" width="40%" />
+                  <Skeleton variant="text" width="80%" height={32} />
+                  <Skeleton variant="text" width="100%" />
+                  <Skeleton variant="text" width="60%" />
                 </CardContent>
               </Card>
             ))}
-          </Stack>
-        ) : documents.length === 0 ? (
+          </Box>
+        ) : stories.length === 0 ? (
           <Card
             sx={{
               textAlign: "center",
@@ -357,24 +374,44 @@ export default function UserProfilePage(props: {
             </Typography>
           </Card>
         ) : (
-          <Stack spacing={3}>
-            {documents.map((doc) => (
+          <Box
+            sx={{
+              display: "grid",
+              gridTemplateColumns: {
+                xs: "1fr",
+                sm: "repeat(2, 1fr)",
+                md: "repeat(3, 1fr)",
+              },
+              gap: 3,
+            }}
+          >
+            {stories.map((story) => (
               <Card
-                key={doc.id}
+                key={story.id}
                 sx={{
+                  height: "100%",
+                  display: "flex",
+                  flexDirection: "column",
                   transition: "all 0.2s",
                   "&:hover": {
-                    boxShadow: 4,
-                    transform: "translateY(-2px)",
+                    boxShadow: 6,
+                    transform: "translateY(-4px)",
                   },
                 }}
               >
-                <CardActionArea onClick={() => handleCardClick(doc)}>
-                  <CardContent>
-                    <Typography variant="h5" fontWeight={600} gutterBottom>
-                      {doc.title}
+                <CardActionArea
+                  onClick={() => handleCardClick(story)}
+                  sx={{
+                    height: "100%",
+                    display: "flex",
+                    flexDirection: "column",
+                  }}
+                >
+                  <CardContent sx={{ flexGrow: 1, width: "100%" }}>
+                    <Typography variant="h6" fontWeight={600} gutterBottom>
+                      {story.title}
                     </Typography>
-                    {doc.description && (
+                    {story.preview && (
                       <Typography
                         variant="body2"
                         color="text.secondary"
@@ -383,11 +420,11 @@ export default function UserProfilePage(props: {
                           overflow: "hidden",
                           textOverflow: "ellipsis",
                           display: "-webkit-box",
-                          WebkitLineClamp: 2,
+                          WebkitLineClamp: 3,
                           WebkitBoxOrient: "vertical",
                         }}
                       >
-                        {doc.description}
+                        {story.preview}
                       </Typography>
                     )}
                     <Stack
@@ -395,14 +432,9 @@ export default function UserProfilePage(props: {
                       spacing={1}
                       alignItems="center"
                       flexWrap="wrap"
+                      sx={{ mt: "auto" }}
                     >
-                      <Chip
-                        icon={<PublicIcon />}
-                        label="Public"
-                        size="small"
-                        color="success"
-                      />
-                      {doc.isArchived && (
+                      {story.isArchived && (
                         <Chip
                           icon={<ArchiveIcon />}
                           label="Archived"
@@ -410,25 +442,31 @@ export default function UserProfilePage(props: {
                           color="default"
                         />
                       )}
-                      {doc.tags &&
-                        doc.tags
-                          .slice(0, 3)
-                          .map((tag, index) => (
-                            <Chip key={index} label={tag} size="small" />
-                          ))}
-                      <Typography
-                        variant="caption"
-                        color="text.secondary"
+                      <Stack
+                        direction="row"
+                        spacing={0.5}
+                        alignItems="center"
                         sx={{ ml: "auto" }}
                       >
-                        {timeAgo(doc.lastUpdated)}
+                        <VisibilityIcon
+                          sx={{ fontSize: "1rem", color: "text.secondary" }}
+                        />
+                        <Typography variant="caption" color="text.secondary">
+                          {story.viewCount.toLocaleString()}
+                        </Typography>
+                      </Stack>
+                      <Typography variant="caption" color="text.secondary">
+                        •
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        {timeAgo(story.lastUpdated)}
                       </Typography>
                     </Stack>
                   </CardContent>
                 </CardActionArea>
               </Card>
             ))}
-          </Stack>
+          </Box>
         )}
       </Container>
     </Box>

@@ -82,7 +82,6 @@ Client (Next.js + React + TipTap Editor)
    |-- AI Requests -> /api/completion | /api/text-transform -> OpenRouter
    |-- View Tracking -> /api/document/view -> Firestore (stories.viewCount)
    |-- Collaboration -> FireProvider (Firestore + WebRTC mesh + Yjs updates)
-   |-- Story Discovery -> getHomepageStories (Server Action)
 
 Serverless (Next.js App Router) Layers:
    /api/auth/[...nextauth] -> NextAuth core (Firestore Adapter)
@@ -219,14 +218,6 @@ Operational Impact: Reduces read amplification during cron trending recalculatio
 ---
 ## Server Actions (App Router “use server” APIs)
 These run server-side, not exposed as REST endpoints but functionally act like internal RPC.
-
-### `getHomepageStories()` (`src/app/(app)/actions.ts`)
-Purpose: Assemble homepage payload with recent and trending stories.
-Flow:
-1. Query public stories ordered by `created DESC` limit 6.  
-2. Query public stories ordered by `trendingScore DESC` limit 6.  
-3. Return `{ recent, trending }` arrays.
-Errors: Returns empty arrays on failure (logs to console). No exception propagation to caller component.
 
 ### `signUpAction(formData)` (`src/app/(app)/auth/sign-up/actions.ts`)
 Purpose: Secure user creation with validation & credential segregation.
