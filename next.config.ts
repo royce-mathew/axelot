@@ -5,6 +5,7 @@ import type { NextConfig } from "next"
 // minimal server files from .next/standalone for a slimmer image.
 const nextConfig: NextConfig = {
   output: "standalone",
+  cacheComponents: true,
 }
 
 export default nextConfig

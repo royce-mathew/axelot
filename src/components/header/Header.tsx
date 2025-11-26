@@ -5,7 +5,6 @@ import {
   Toolbar,
   Box,
   IconButton,
-  useColorScheme,
   Fab,
   Zoom,
   useTheme,
@@ -21,8 +20,6 @@ import { SearchBar } from "./SearchBar"
 import { useAuth } from "@/hooks/use-auth"
 
 export const Header = () => {
-  const { mode } = useColorScheme()
-  const isDark = mode === "dark"
   const { isAuthenticated, isLoading } = useAuth()
   const router = useRouter()
   const theme = useTheme()

@@ -58,3 +58,15 @@ export interface Document {
   // Virtual fields (not stored in DB, but returned by API)
   preview?: string
 }
+
+// Define a serializable version of the Document interface for caching
+export interface SerializableDocument
+  extends Omit<
+    Document,
+    "created" | "lastUpdated" | "lastViewed" | "trendingLastComputed"
+  > {
+  created: Date
+  lastUpdated: Date
+  lastViewed?: Date
+  trendingLastComputed?: Date
+}

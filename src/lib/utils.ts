@@ -2,21 +2,41 @@ import { formatDistanceToNow } from "date-fns"
 import { Timestamp } from "firebase/firestore"
 import * as Y from "yjs"
 
-export function timeAgo(timestamp: any) {
+export function timeAgo(timestamp: Timestamp | Date | string | number | null) {
   try {
-    // If the value is a plain object with Firestore timestamp fields, convert it
+    if (!timestamp) return "Never"
+
+    let date: Date
+
+    // Handle Firestore Timestamp
     if (
-      !(timestamp instanceof Timestamp) &&
-      typeof timestamp === "object" &&
-      timestamp !== null &&
-      "_seconds" in timestamp &&
-      "_nanoseconds" in timestamp
+      timestamp instanceof Timestamp ||
+      (typeof timestamp === "object" &&
+        "_seconds" in timestamp &&
+        "_nanoseconds" in timestamp)
     ) {
-      timestamp = new Timestamp(timestamp._seconds, timestamp._nanoseconds)
+      const ts =
+        timestamp instanceof Timestamp
+          ? timestamp
+          : new Timestamp(
+              (timestamp as { _seconds: number })._seconds,
+              (timestamp as { _nanoseconds: number })._nanoseconds
+            )
+      date = ts.toDate()
+    }
+    // Handle Date object
+    else if (timestamp instanceof Date) {
+      date = timestamp
+    }
+    // Handle string (ISO format) or number (timestamp)
+    else if (typeof timestamp === "string" || typeof timestamp === "number") {
+      date = new Date(timestamp)
+    } else {
+      return "Never"
     }
 
-    return formatDistanceToNow(timestamp.toDate(), { addSuffix: true })
-  } catch (err) {
+    return formatDistanceToNow(date, { addSuffix: true })
+  } catch {
     return "Never"
   }
 }
@@ -33,7 +53,7 @@ export function extractPreview(content: any): string {
     const xmlString = fragment.toString()
     const plainText = xmlString.replace(/<[^>]+>/g, " ")
     return plainText.replace(/\s+/g, " ").trim().slice(0, 300)
-  } catch (e) {
+  } catch {
     return ""
   }
 }

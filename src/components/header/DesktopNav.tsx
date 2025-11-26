@@ -13,7 +13,6 @@ import {
   Divider,
   Tooltip,
   Avatar,
-  useColorScheme,
 } from "@mui/material"
 import Link from "next/link"
 import LogoutIcon from "@mui/icons-material/Logout"
@@ -28,7 +27,6 @@ import { signIn, signOut } from "next-auth/react"
 export const DesktopNav = () => {
   const { isAuthenticated, isLoading, user } = useAuth()
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
-  const { mode } = useColorScheme()
   const open = Boolean(anchorEl)
 
   const handleSignIn = () => {

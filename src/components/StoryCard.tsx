@@ -18,8 +18,8 @@ export interface StoryCardProps {
   owner: string
   authorNames: string[]
   viewCount: number
-  created: Timestamp
-  lastUpdated: Timestamp
+  created: Timestamp | Date | string | number
+  lastUpdated: Timestamp | Date | string | number
   preview?: string
   variant?: "hero" | "standard"
 }
@@ -153,7 +153,7 @@ export function StoryCard({
                   sx={{ fontSize: "0.875rem", color: "text.secondary" }}
                 />
                 <Typography variant="caption" color="text.secondary">
-                  {viewCount.toLocaleString()}
+                  {(viewCount || 0).toLocaleString()}
                 </Typography>
               </Stack>
             </Box>

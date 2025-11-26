@@ -1,34 +1,28 @@
 import { NextRequest, NextResponse } from "next/server"
 import { firebaseAdminFirestore } from "@/lib/firebase/server"
-import { unstable_cache } from "next/cache"
 
 // Cached function to fetch user profile
-const getUserProfile = unstable_cache(
-  async (userId: string) => {
-    const userDoc = await firebaseAdminFirestore
-      .collection("users")
-      .doc(userId)
-      .get()
+async function getUserProfile(userId: string) {
+  "use cache"
+  const userDoc = await firebaseAdminFirestore
+    .collection("users")
+    .doc(userId)
+    .get()
 
-    if (!userDoc.exists) {
-      return null
-    }
-
-    const data = userDoc.data()
-    return {
-      id: userDoc.id,
-      name: data?.name || null,
-      username: data?.username || null,
-      bio: data?.bio || null,
-      image: data?.image || null,
-      email: data?.email || null,
-    }
-  },
-  ["user-profile"],
-  {
-    tags: ["user-profile"],
+  if (!userDoc.exists) {
+    return null
   }
-)
+
+  const data = userDoc.data()
+  return {
+    id: userDoc.id,
+    name: data?.name || null,
+    username: data?.username || null,
+    bio: data?.bio || null,
+    image: data?.image || null,
+    email: data?.email || null,
+  }
+}
 
 // GET /api/users/[userId]/profile
 export async function GET(

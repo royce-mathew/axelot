@@ -33,8 +33,53 @@ export const viewport: Viewport = {
 }
 
 export const metadata: Metadata = {
-  title: "Axelot",
-  description: "A place to read, write, and deepen your understanding",
+  title: {
+    default: "Axelot - Read, Write, and Deepen Your Understanding",
+    template: "%s | Axelot",
+  },
+  description:
+    "A collaborative storytelling platform where you can read, write, and deepen your understanding. Create and share stories with real-time collaboration.",
+  keywords: [
+    "collaborative writing",
+    "storytelling",
+    "real-time collaboration",
+    "writing platform",
+    "content creation",
+    "stories",
+    "creative writing",
+  ],
+  authors: [{ name: "Axelot" }],
+  creator: "Axelot",
+  publisher: "Axelot",
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"
+  ),
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    url: "/",
+    siteName: "Axelot",
+    title: "Axelot - Read, Write, and Deepen Your Understanding",
+    description:
+      "A collaborative storytelling platform where you can read, write, and deepen your understanding. Create and share stories with real-time collaboration.",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Axelot - Read, Write, and Deepen Your Understanding",
+    description:
+      "A collaborative storytelling platform where you can read, write, and deepen your understanding.",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
 }
 
 export default function RootLayout({

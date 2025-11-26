@@ -145,7 +145,7 @@ function HeroCard({ story, variant }: HeroCardProps) {
           <Stack direction="row" spacing={0.5} alignItems="center">
             <VisibilityIcon sx={{ fontSize: "0.875rem" }} />
             <Typography variant="caption">
-              {story.viewCount.toLocaleString()}
+              {(story.viewCount || 0).toLocaleString()}
             </Typography>
           </Stack>
         </Stack>

@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
 import { firebaseAdminFirestore } from "@/lib/firebase/server"
-import { type Document } from "@/types/document"
-import { unstable_cache } from "next/cache"
+import { SerializableDocument, type Document } from "@/types/document"
 import { extractPreview } from "@/lib/utils"
+import { serializeDocument } from "@/lib/serializers/document"
 
 // Cache duration based on mode (in seconds)
 const CACHE_DURATION = {
@@ -12,59 +12,44 @@ const CACHE_DURATION = {
 }
 
 // Cached function to fetch stories based on mode with pagination
-const getCachedStories = unstable_cache(
-  async (mode: string, page: number, pageSize: number) => {
-    const offset = page * pageSize
+async function getCachedStories(mode: string, page: number, pageSize: number) {
+  "use cache"
+  const offset = page * pageSize
 
-    let query = firebaseAdminFirestore
-      .collection("stories")
-      .where("isPublic", "==", true)
-      .where("isArchived", "==", false)
+  let query = firebaseAdminFirestore
+    .collection("stories")
+    .where("isPublic", "==", true)
+    .where("isArchived", "==", false)
 
-    // Apply ordering based on mode
-    if (mode === "fresh") {
-      query = query.orderBy("created", "desc")
-    } else if (mode === "foryou") {
-      query = query.orderBy("trendingScore", "desc")
-    } else {
-      query = query.orderBy("lastUpdated", "desc")
-    }
-
-    // Apply pagination
-    const snapshot = await query.limit(pageSize).offset(offset).get()
-
-    if (snapshot.empty) {
-      return []
-    }
-
-    // Map and process stories
-    return snapshot.docs.map((doc) => {
-      const data: Document = doc.data() as Document
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const preview = extractPreview((data as any).content)
-
-      return {
-        id: doc.id,
-        title: data.title || "Untitled",
-        slug: data.slug || "",
-        owner: data.owner,
-        authorNames: data.authorNames || [],
-        viewCount: data.viewCount || 0,
-        trendingScore: data.trendingScore || 0,
-        isPublic: data.isPublic,
-        isArchived: data.isArchived,
-        created: data.created,
-        lastUpdated: data.lastUpdated,
-        lastViewed: data.lastViewed,
-        preview,
-      }
-    })
-  },
-  ["discover-stories"],
-  {
-    tags: ["discover-stories"],
+  // Apply ordering based on mode
+  if (mode === "fresh") {
+    query = query.orderBy("created", "desc")
+  } else if (mode === "foryou") {
+    query = query.orderBy("trendingScore", "desc")
+  } else {
+    query = query.orderBy("lastUpdated", "desc")
   }
-)
+
+  // Apply pagination
+  const snapshot = await query.limit(pageSize).offset(offset).get()
+
+  if (snapshot.empty) {
+    return []
+  }
+
+  // Map and process stories
+  return snapshot.docs.map((doc) => {
+    const data = doc.data()
+    const serializedData = serializeDocument(doc.id, data)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const preview = extractPreview((data as any).content)
+
+    return {
+      ...serializedData,
+      preview,
+    }
+  })
+}
 
 // GET /api/stories/discover
 export async function GET(req: NextRequest) {

@@ -67,7 +67,6 @@ describe("utils", () => {
     })
 
     it("should handle errors gracefully", () => {
-      // @ts-ignore - Testing invalid input
       expect(timeAgo(null)).toBe("Never")
     })
   })

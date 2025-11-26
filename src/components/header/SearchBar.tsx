@@ -14,7 +14,6 @@ import {
   Typography,
   Divider,
   alpha,
-  useColorScheme,
 } from "@mui/material"
 import SearchIcon from "@mui/icons-material/Search"
 import DescriptionIcon from "@mui/icons-material/Description"

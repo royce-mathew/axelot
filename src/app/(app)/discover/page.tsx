@@ -14,7 +14,6 @@ import {
   DiscoverMode,
 } from "@/components/discover/DiscoverNavigation"
 import { StoryCard, StoryCardProps } from "@/components/StoryCard"
-
 export default function DiscoverPage() {
   const [mode, setMode] = useState<DiscoverMode>("all")
   const [stories, setStories] = useState<StoryCardProps[]>([])

@@ -14,7 +14,6 @@ import {
   Typography,
   Avatar,
   ListItemIcon,
-  useColorScheme,
   useTheme,
 } from "@mui/material"
 import Link from "next/link"
@@ -32,7 +31,6 @@ import { signIn, signOut } from "next-auth/react"
 export const MobileNav = () => {
   const [drawerOpen, setDrawerOpen] = useState(false)
   const { isAuthenticated, isLoading, user } = useAuth()
-  const { mode } = useColorScheme()
   const theme = useTheme() // Still needed for palette colors
 
   const handleSignIn = () => {
