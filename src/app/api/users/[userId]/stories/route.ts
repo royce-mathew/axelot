@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server"
+import { connection, NextRequest, NextResponse } from "next/server"
 import { firebaseAdminFirestore } from "@/lib/firebase/server"
 import { extractPreview } from "@/lib/utils"
 import { serializeDocument } from "@/lib/serializers/document"
@@ -39,6 +39,7 @@ export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ userId: string }> }
 ) {
+  await connection() // Exclude From PPR
   try {
     const { userId } = await params
     const { searchParams } = new URL(req.url)

@@ -1,6 +1,6 @@
 "use client"
 
-import { use, useEffect, useState } from "react"
+import { use, useEffect, useState, Suspense } from "react"
 import { useRouter } from "next/navigation"
 import {
   Add as AddIcon,
@@ -28,6 +28,7 @@ import {
   Skeleton,
   Stack,
   Typography,
+  CircularProgress,
 } from "@mui/material"
 import {
   getUserIdByUsername,
@@ -36,6 +37,7 @@ import {
 } from "@/lib/username-utils"
 import { timeAgo } from "@/lib/utils"
 import { useAuth } from "@/hooks/use-auth"
+import { SerializableDocument } from "@/types/document"
 
 interface UserProfile {
   id: string
@@ -45,29 +47,28 @@ interface UserProfile {
   image: string | null
 }
 
-interface Story {
-  id: string
-  title: string
-  slug: string
-  owner: string
-  authorNames: string[]
-  viewCount: number
-  trendingScore: number
-  isPublic: boolean
-  isArchived: boolean
-  created: any
-  lastUpdated: any
-  lastViewed: any
-  preview: string
-}
 
 export default function UserProfilePage(props: {
+  params: Promise<{ userId: string }>
+}) {
+  return (
+    <Suspense fallback={
+      <Box sx={{ minHeight: "100vh", bgcolor: "background.default", display: "flex", justifyContent: "center", alignItems: "center" }}>
+        <CircularProgress />
+      </Box>
+    }>
+      <UserProfilePageInner {...props} />
+    </Suspense>
+  )
+}
+
+function UserProfilePageInner(props: {
   params: Promise<{ userId: string }>
 }) {
   const params = use(props.params)
   const { user: currentUser } = useAuth()
   const router = useRouter()
-  const [stories, setStories] = useState<Story[]>([])
+  const [stories, setStories] = useState<SerializableDocument[]>([])
   const [user, setUser] = useState<UserProfile | null>(null)
   const [loading, setLoading] = useState(true)
   const [userLoading, setUserLoading] = useState(true)
@@ -158,7 +159,7 @@ export default function UserProfilePage(props: {
     loadStories()
   }, [actualUserId])
 
-  const handleCardClick = (story: Story) => {
+  const handleCardClick = (story: SerializableDocument) => {
     if (story.id && story.slug && user?.username) {
       router.push(`/u/@${user.username}/${story.id}-${story.slug}`)
     } else if (story.id && user?.username) {
@@ -452,7 +453,7 @@ export default function UserProfilePage(props: {
                           sx={{ fontSize: "1rem", color: "text.secondary" }}
                         />
                         <Typography variant="caption" color="text.secondary">
-                          {story.viewCount.toLocaleString()}
+                          {(story.viewCount ?? 0).toLocaleString()}
                         </Typography>
                       </Stack>
                       <Typography variant="caption" color="text.secondary">

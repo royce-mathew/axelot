@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server"
+import { connection, NextRequest, NextResponse } from "next/server"
 import { firebaseAdminFirestore } from "@/lib/firebase/server"
 import { SerializableDocument, type Document } from "@/types/document"
 import { extractPreview } from "@/lib/utils"
@@ -14,6 +14,7 @@ const CACHE_DURATION = {
 // Cached function to fetch stories based on mode with pagination
 async function getCachedStories(mode: string, page: number, pageSize: number) {
   "use cache"
+  
   const offset = page * pageSize
 
   let query = firebaseAdminFirestore
@@ -53,6 +54,7 @@ async function getCachedStories(mode: string, page: number, pageSize: number) {
 
 // GET /api/stories/discover
 export async function GET(req: NextRequest) {
+  await connection() // Exclude From PPR
   try {
     const { searchParams } = new URL(req.url)
     const mode = searchParams.get("mode") || "all"

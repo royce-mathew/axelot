@@ -5,7 +5,6 @@ import {
   Box,
   Container,
   Typography,
-  Stack,
   CircularProgress,
 } from "@mui/material"
 import { BentoHeroGrid } from "@/components/discover/BentoHeroGrid"

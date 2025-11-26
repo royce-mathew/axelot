@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server"
+import { connection, NextRequest, NextResponse } from "next/server"
 import { firebaseAdminFirestore } from "@/lib/firebase/server"
 import { SerializableDocument } from "@/types/document"
 import { extractPreview } from "@/lib/utils"
@@ -7,6 +7,7 @@ import { serializeDocument } from "@/lib/serializers/document"
 // Cached function to fetch trending stories with pagination
 async function getTrendingStories(page: number, pageSize: number) {
   "use cache"
+
   const offset = page * pageSize
 
   // Fetch with Firestore ordering and limit
@@ -39,6 +40,8 @@ async function getTrendingStories(page: number, pageSize: number) {
 
 // GET /api/stories/trending
 export async function GET(req: NextRequest) {
+  await connection() // Exclude From PPR
+
   try {
     const { searchParams } = new URL(req.url)
     const page = parseInt(searchParams.get("page") || "0")
