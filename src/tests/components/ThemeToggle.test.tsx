@@ -43,7 +43,7 @@ describe("ThemeToggle", () => {
 
     const button = screen.getByRole("button")
     expect(button).toBeInTheDocument()
-    expect(button).toHaveAttribute("aria-label", "Switch to dark mode")
+    expect(button).toHaveAttribute("aria-label", "Switch theme mode")
   })
 
   it("renders correctly in dark mode", () => {
@@ -52,7 +52,7 @@ describe("ThemeToggle", () => {
 
     const button = screen.getByRole("button")
     expect(button).toBeInTheDocument()
-    expect(button).toHaveAttribute("aria-label", "Switch to light mode")
+    expect(button).toHaveAttribute("aria-label", "Switch theme mode")
   })
 
   it("toggles to dark mode when clicked in light mode", () => {

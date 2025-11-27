@@ -2,14 +2,6 @@ import { describe, it, expect, vi } from "vitest"
 import { timeAgo, getInitials, hslToHex, stringToHslColor } from "@/lib/utils"
 import { Timestamp } from "firebase/firestore"
 
-// Mock Firebase Timestamp
-vi.mock("firebase/firestore", () => ({
-  Timestamp: {
-    now: () => ({ toDate: () => new Date() }),
-    fromDate: (date: Date) => ({ toDate: () => date }),
-  },
-}))
-
 describe("utils", () => {
   describe("getInitials", () => {
     it('should return "??" for null or undefined', () => {
@@ -61,7 +53,9 @@ describe("utils", () => {
     it("should return relative time string", () => {
       const now = new Date()
       const past = new Date(now.getTime() - 1000 * 60 * 5) // 5 minutes ago
-      const timestamp = { toDate: () => past } as Timestamp
+
+      // Create a proper Timestamp object that matches what the implementation expects
+      const timestamp = Timestamp.fromDate(past)
 
       expect(timeAgo(timestamp)).toBe("5 minutes ago")
     })
