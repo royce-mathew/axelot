@@ -7,6 +7,7 @@ import {
   Delete as DeleteIcon,
   Description as DescriptionIcon,
   Edit as EditIcon,
+  Explore as ExploreIcon,
   Lock as LockIcon,
   MoreVert as MoreVertIcon,
   Public as PublicIcon,
@@ -206,14 +207,24 @@ export default function StoriesPage() {
           <Typography variant="h3" component="h1" fontWeight={700}>
             My Stories
           </Typography>
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={() => setCreateDialogOpen(true)}
-            size="large"
-          >
-            New Story
-          </Button>
+          <Stack direction="row" spacing={2}>
+            <Button
+              variant="outlined"
+              startIcon={<ExploreIcon />}
+              href="/discover"
+              size="large"
+            >
+              Discover
+            </Button>
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={() => setCreateDialogOpen(true)}
+              size="large"
+            >
+              New Story
+            </Button>
+          </Stack>
         </Stack>
 
         {loading ? (

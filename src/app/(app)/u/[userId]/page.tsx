@@ -47,31 +47,24 @@ interface UserProfile {
   image: string | null
 }
 
+
 export default function UserProfilePage(props: {
   params: Promise<{ userId: string }>
 }) {
   return (
-    <Suspense
-      fallback={
-        <Box
-          sx={{
-            minHeight: "100vh",
-            bgcolor: "background.default",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-          }}
-        >
-          <CircularProgress />
-        </Box>
-      }
-    >
+    <Suspense fallback={
+      <Box sx={{ minHeight: "100vh", bgcolor: "background.default", display: "flex", justifyContent: "center", alignItems: "center" }}>
+        <CircularProgress />
+      </Box>
+    }>
       <UserProfilePageInner {...props} />
     </Suspense>
   )
 }
 
-function UserProfilePageInner(props: { params: Promise<{ userId: string }> }) {
+function UserProfilePageInner(props: {
+  params: Promise<{ userId: string }>
+}) {
   const params = use(props.params)
   const { user: currentUser } = useAuth()
   const router = useRouter()
