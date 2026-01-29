@@ -18,12 +18,12 @@
  * 3. Manual trigger via API endpoint (for testing)
  */
 
+import { Firestore, Timestamp } from "firebase-admin/firestore"
+import { Document } from "@/types/document"
 import {
   calculateTrendingScore,
   shouldRecomputeTrendingScore,
 } from "./trending-algorithm"
-import { Document } from "@/types/document"
-import { Firestore, Timestamp } from "firebase-admin/firestore"
 
 /**
  * Batch update trending scores for all public documents

@@ -1,16 +1,16 @@
 "use client"
 
 import {
+  Box,
   List,
   ListItem,
   ListItemButton,
   ListItemText,
   Paper,
   Typography,
-  Box,
 } from "@mui/material"
-import type { Editor } from "@tiptap/react"
 import { TextSelection } from "@tiptap/pm/state"
+import type { Editor } from "@tiptap/react"
 
 export interface TocAnchor {
   id: string

@@ -41,6 +41,7 @@ export function timeAgo(timestamp: Timestamp | Date | string | number | null) {
   }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function extractPreview(content: any): string {
   if (!content) return ""
 

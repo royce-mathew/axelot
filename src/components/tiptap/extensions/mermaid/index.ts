@@ -24,7 +24,7 @@ export const MermaidPreview = Extension.create({
     return {
       insertMermaid:
         (template?: string) =>
-        ({ chain, state }) => {
+        ({ chain }) => {
           const content =
             template?.trim() ||
             `flowchart TD\n  A[Christmas] -->|Get money| B(Go shopping)\n  B --> C{Let me think}\n  C -->|One| D[Laptop]\n  C -->|Two| E[iPhone]\n  C -->|Three| F[fa:fa-car Car]`

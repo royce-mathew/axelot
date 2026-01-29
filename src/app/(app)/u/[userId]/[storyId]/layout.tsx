@@ -1,7 +1,7 @@
 import type { Metadata } from "next"
 import { auth } from "@/auth"
-import { firebaseAdminFirestore } from "@/lib/firebase/server"
 import { SerializableDocument } from "@/types/document"
+import { firebaseAdminFirestore } from "@/lib/firebase/server"
 import { serializeDocument } from "@/lib/serializers/document"
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"
@@ -103,10 +103,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     story.description ||
     story.preview ||
     `Read "${title}" on Axelot - A collaborative storytelling platform.`
-  const authors =
-    story.authorNames && story.authorNames.length > 0
-      ? story.authorNames.join(", ")
-      : "Axelot Community"
   const slug = story.slug || "untitled"
   const url = `${BASE_URL}/u/${userId}/${storyId}-${slug}`
 

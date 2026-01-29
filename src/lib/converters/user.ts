@@ -1,12 +1,11 @@
 import {
-  doc,
   collection,
+  doc,
   DocumentData,
   FirestoreDataConverter,
   QueryDocumentSnapshot,
   SnapshotOptions,
 } from "firebase/firestore"
-
 import { User } from "@/types/user"
 import { db } from "@/lib/firebase/client"
 

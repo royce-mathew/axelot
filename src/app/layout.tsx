@@ -1,7 +1,5 @@
 import type { Metadata, Viewport } from "next"
-import { DM_Sans, Outfit, EB_Garamond } from "next/font/google"
-import InitColorSchemeScript from "@mui/material/InitColorSchemeScript"
-import { Providers } from "@/components/Providers"
+import { DM_Sans, EB_Garamond, Outfit } from "next/font/google"
 import "@/styles/globals.css"
 
 const dmSans = DM_Sans({
@@ -96,8 +94,7 @@ export default function RootLayout({
           backgroundColor: "var(--mui-palette-background-default)",
         }}
       >
-        <InitColorSchemeScript attribute="class" />
-        <Providers>{children}</Providers>
+        {children}
       </body>
     </html>
   )

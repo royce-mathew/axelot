@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Box, Typography, Paper } from "@mui/material"
+import { Box, Paper, Typography } from "@mui/material"
 import { Editor } from "@tiptap/react"
 
 interface TablePickerProps {

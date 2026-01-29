@@ -15,7 +15,6 @@ import { ObservableV2 } from "lib0/observable"
 import SimplePeer from "simple-peer-light"
 import * as awarenessProtocol from "y-protocols/awareness"
 import * as Y from "yjs"
-
 import { db as firebaseDb } from "../firebase/client"
 import {
   base64ToUint8Array,

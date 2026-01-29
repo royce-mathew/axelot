@@ -1,6 +1,6 @@
 "use client"
 
-import { Box, Tabs, Tab } from "@mui/material"
+import { Box, Tab, Tabs } from "@mui/material"
 
 export type DiscoverMode = "all" | "foryou" | "fresh"
 

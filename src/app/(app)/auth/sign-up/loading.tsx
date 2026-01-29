@@ -1,9 +1,4 @@
-import { Box } from "@mui/material"
-import { Container } from "@mui/material"
-import { Paper } from "@mui/material"
-import { Skeleton } from "@mui/material"
-import { Stack } from "@mui/material"
-import { Divider } from "@mui/material"
+import { Box, Container, Divider, Paper, Skeleton, Stack } from "@mui/material"
 
 export default function Loading() {
   return (

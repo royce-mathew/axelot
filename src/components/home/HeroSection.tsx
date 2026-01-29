@@ -1,10 +1,10 @@
 "use client"
 
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward"
+import CodeIcon from "@mui/icons-material/Code"
 import FormatBoldIcon from "@mui/icons-material/FormatBold"
 import FormatItalicIcon from "@mui/icons-material/FormatItalic"
 import FormatListBulletedIcon from "@mui/icons-material/FormatListBulleted"
-import CodeIcon from "@mui/icons-material/Code"
 import LinkIcon from "@mui/icons-material/Link"
 import { Box, Button, Container, Stack, Typography } from "@mui/material"
 
@@ -181,7 +181,7 @@ export const HeroSection = () => {
             <Button
               variant="outlined"
               size="large"
-              href="https://r0yce.com/projects/axelot"
+              href="/docs"
               sx={{
                 px: 4,
                 py: 1.5,

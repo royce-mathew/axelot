@@ -64,6 +64,7 @@ import {
   where,
 } from "firebase/firestore"
 import * as Y from "yjs"
+import { AccessLevel } from "@/types/access"
 import { Document } from "@/types/document"
 import { User } from "@/types/user"
 import { generateSlug } from "@/lib/content-utils"
@@ -74,8 +75,8 @@ import { stringToHslColor, timeAgo } from "@/lib/utils"
 import { FireProvider } from "@/lib/y-fire"
 import { useAuth } from "@/hooks/use-auth"
 import { useDocumentView } from "@/hooks/use-document-view"
+import { useFirebaseReady } from "@/hooks/use-firebase-ready"
 import { TableOfContents, TocAnchor } from "@/components/tiptap/TableOfContents"
-import { AccessLevel } from "@/types/access"
 
 const Tiptap = dynamic(() => import("@/components/tiptap/tiptap"), {
   ssr: false,
@@ -106,6 +107,7 @@ export default function StoryPage({
 }) {
   const unwrappedParams = use(params)
   const { user } = useAuth()
+  const firebaseReady = useFirebaseReady()
   const router = useRouter()
 
   // Extract storyId from the title-slug format (everything before the first dash is the storyId)
@@ -160,13 +162,16 @@ export default function StoryPage({
   // Initialize Y.js provider
   useEffect(() => {
     if (!storyId) return
+    // Wait for Firebase auth state to be determined before creating provider.
+    // This prevents the race condition where NextAuth session loads (giving us user.id)
+    // before Firebase signInWithCustomToken completes, causing Firestore permission errors.
+    if (!firebaseReady) return
 
     // Create a new Y.Doc for this story
     const yDoc = new Y.Doc()
     yDocRef.current = yDoc
 
     // Determine if this should be read-only based on current access
-    // Note: This effect runs before access is determined, so we use a conservative approach
     // If user is not authenticated, assume read-only until proven otherwise
     const isReadOnlyMode = !user?.id
 
@@ -210,7 +215,7 @@ export default function StoryPage({
       yDocRef.current = null
       setProviderError(null)
     }
-  }, [storyId, user?.id])
+  }, [storyId, user?.id, firebaseReady])
 
   // Fetch the document metadata
   useEffect(() => {

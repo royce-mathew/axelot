@@ -1,8 +1,8 @@
 "use client"
 
-import { Paper, Typography, Box } from "@mui/material"
-import { Editor } from "@tiptap/react"
 import { useEffect, useState } from "react"
+import { Box, Paper, Typography } from "@mui/material"
+import { Editor } from "@tiptap/react"
 
 interface CharacterCountPopupProps {
   editor: Editor

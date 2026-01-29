@@ -19,8 +19,8 @@ import {
   Typography,
 } from "@mui/material"
 import { signIn } from "next-auth/react"
-import { useAuth } from "@/hooks/use-auth"
 import { logEvent } from "@/lib/firebase/client"
+import { useAuth } from "@/hooks/use-auth"
 
 function SignInContent() {
   const searchParams = useSearchParams()

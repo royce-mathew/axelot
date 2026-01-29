@@ -1,0 +1,121 @@
+---
+title: Data Model
+description: Firestore collections, schemas, composite indexes, and data flow
+---
+
+# Data Model
+
+All persistent data lives in Cloud Firestore. The data model is designed for real-time collaboration, security isolation, and query performance.
+
+## Collections
+
+### stories
+
+The primary collection storing collaborative documents.
+
+```typescript
+interface Story {
+  // Ownership
+  owner: string              // Firebase user ID of the creator
+  readAccess: string[]       // User IDs with read-only access
+  writeAccess: string[]      // User IDs with edit access
+  authorNames: string[]      // Denormalized display names of collaborators
+
+  // Content
+  title: string
+  description?: string
+  slug: string               // URL-friendly title (auto-generated)
+
+  // Timestamps
+  created: Timestamp
+  lastUpdated: Timestamp
+  lastUpdatedBy: string      // User ID of last editor
+
+  // Categorization
+  tags: string[]
+
+  // Visibility
+  isPublic: boolean          // Visible in discovery feed
+  isArchived: boolean        // Hidden but not deleted
+
+  // Engagement
+  viewCount: number          // Authenticated view count
+  lastViewed: Timestamp
+
+  // Trending
+  trendingScore: number      // Algorithmic score
+  trendingLastComputed: Timestamp
+}
+```
+
+**Subcollections:**
+
+- `stories/{id}/instances/{uid}` -- Active collaboration instances. Each connected editor creates an instance document with a server timestamp.
+- `stories/{id}/instances/{uid}/calls/{peerId}` -- WebRTC offer signals for peer connection establishment.
+- `stories/{id}/instances/{uid}/answers/{peerId}` -- WebRTC answer signals completing the handshake.
+
+### users
+
+Public user profiles.
+
+```typescript
+interface User {
+  email: string
+  emailVerified: boolean
+  name: string
+  image?: string             // Avatar URL from OAuth provider
+  username?: string          // Unique, 3-20 chars
+  bio?: string               // Max 160 characters
+  created: Timestamp
+  updated: Timestamp
+}
+```
+
+### credentials
+
+Password storage for email/password accounts. **Server-only** -- no client-side read or write access.
+
+```typescript
+interface Credentials {
+  userId: string
+  passwordHash: string       // bcrypt hash
+  created: Timestamp
+  updated: Timestamp
+}
+```
+
+### sessions and accounts
+
+Internal NextAuth collections managed by the Firestore adapter. **Server-only** -- no client-side access. These store JWT sessions, OAuth account links, and verification tokens.
+
+## Composite Indexes
+
+Firestore requires composite indexes for queries that combine filters with ordering. These indexes are defined in `firebase/firestore.indexes.json`:
+
+| Index | Fields | Purpose |
+|---|---|---|
+| 1 | `isArchived ASC, isPublic ASC, created DESC` | Discovery feed sorted by creation date |
+| 2 | `isArchived ASC, isPublic ASC, trendingScore DESC` | Trending feed sorted by score |
+| 3 | `isArchived ASC, isPublic ASC, lastUpdated DESC` | Activity feed sorted by last update |
+| 4 | `isPublic ASC, owner ASC, lastUpdated DESC` | User's story dashboard |
+| 5 | `isPublic DESC, lastUpdated DESC` | General public story listing |
+
+## Denormalization
+
+The `authorNames` field on stories is denormalized. Instead of joining story documents with user documents at query time, author display names are stored directly on the story.
+
+This is updated by `syncAuthorNames()` whenever the write access list changes. The trade-off:
+
+- **Reads are fast** -- No joins needed to display author names in story cards
+- **Writes are slightly more complex** -- Name changes require updating all affected stories
+- **Eventual consistency** -- If a user changes their display name, stories show the old name until the next write access update
+
+## Data Serialization
+
+Firestore Timestamps are not JSON-serializable. The `serializeDocument()` function in `src/lib/serializers/document.ts` converts Timestamps to ISO strings for API responses and client-side caching.
+
+## Content Storage
+
+Story content is stored as Yjs-encoded binary data within the Firestore story document. The `content` field contains the full Yjs document state, which the editor hydrates on load. This binary representation is compact and supports efficient merging of concurrent edits.
+
+Preview text is extracted at query time by parsing the Yjs document and extracting plain text, not stored as a separate field.

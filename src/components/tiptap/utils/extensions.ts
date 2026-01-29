@@ -32,9 +32,9 @@ import { CodeBlockShiki } from "../extensions/code"
 import { FontSize } from "../extensions/font-size"
 import { Indent } from "../extensions/indent"
 import { LineHeight } from "../extensions/line-height"
-import { Print } from "../extensions/print"
-import { AIAutocomplete } from "../extensions/autocomplete/main-index"
+// import { AIAutocomplete } from "../extensions/autocomplete/main-index"
 import { MermaidPreview } from "../extensions/mermaid"
+import { Print } from "../extensions/print"
 
 export const extensions: Extensions = [
   // Core extensions

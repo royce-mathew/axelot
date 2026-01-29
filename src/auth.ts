@@ -1,13 +1,13 @@
 import { FirestoreAdapter } from "@auth/firebase-adapter"
 import NextAuth from "next-auth"
+import Credentials from "next-auth/providers/credentials"
 import GitHub from "next-auth/providers/github"
 import Google from "next-auth/providers/google"
-import Credentials from "next-auth/providers/credentials"
 import { ZodError } from "zod"
 // Import the Firebase Admin SDK
-import { firebaseAdminFirestore, adminAuth } from "@/lib/firebase/server"
-import { signInSchema } from "@/lib/validations/auth"
+import { adminAuth, firebaseAdminFirestore } from "@/lib/firebase/server"
 import { verifyPassword } from "@/lib/password"
+import { signInSchema } from "@/lib/validations/auth"
 
 const providers = [
   Google({

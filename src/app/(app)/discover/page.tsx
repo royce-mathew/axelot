@@ -1,13 +1,14 @@
 "use client"
 
-import { useState, useEffect, useCallback, useRef } from "react"
-import { Box, Container, Typography, CircularProgress } from "@mui/material"
+import { useCallback, useEffect, useRef, useState } from "react"
+import { Box, CircularProgress, Container, Typography } from "@mui/material"
 import { BentoHeroGrid } from "@/components/discover/BentoHeroGrid"
 import {
-  DiscoverNavigation,
   DiscoverMode,
+  DiscoverNavigation,
 } from "@/components/discover/DiscoverNavigation"
 import { StoryCard, StoryCardProps } from "@/components/StoryCard"
+
 export default function DiscoverPage() {
   const [mode, setMode] = useState<DiscoverMode>("all")
   const [stories, setStories] = useState<StoryCardProps[]>([])

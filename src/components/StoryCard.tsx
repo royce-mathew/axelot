@@ -1,15 +1,15 @@
 import Link from "next/link"
-import {
-  Card,
-  CardContent,
-  CardActionArea,
-  Typography,
-  Box,
-  Stack,
-} from "@mui/material"
 import { Visibility as VisibilityIcon } from "@mui/icons-material"
-import { timeAgo } from "@/lib/utils"
+import {
+  Box,
+  Card,
+  CardActionArea,
+  CardContent,
+  Stack,
+  Typography,
+} from "@mui/material"
 import { Timestamp } from "firebase/firestore"
+import { timeAgo } from "@/lib/utils"
 
 export interface StoryCardProps {
   id: string

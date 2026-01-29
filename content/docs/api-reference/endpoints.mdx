@@ -1,0 +1,114 @@
+---
+title: Endpoint Reference
+description: Complete HTTP API endpoint documentation
+---
+
+# Endpoint Reference
+
+Axelot exposes 10 HTTP API endpoints organized into six categories. All endpoints are serverless functions deployed on Vercel.
+
+For interactive documentation with request builders and code examples, visit the [Scalar API Reference](/docs/api).
+
+## Endpoints Summary
+
+### Authentication
+
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| POST | `/api/auth/verify-email` | None | Mark a user's email as verified |
+
+### AI
+
+| Method | Path | Auth | Streaming | Description |
+|---|---|---|---|---|
+| POST | `/api/completion` | None | Raw text | AI text completion via OpenRouter |
+| POST | `/api/text-transform` | None | SSE | AI text transformation via OpenRouter |
+
+### Stories
+
+| Method | Path | Auth | Cache | Description |
+|---|---|---|---|---|
+| GET | `/api/stories/discover` | None | 2-10 min | Paginated discovery feed with mode selection |
+| GET | `/api/stories/trending` | None | 10 min | Stories sorted by trending score |
+
+### Users
+
+| Method | Path | Auth | Cache | Description |
+|---|---|---|---|---|
+| GET | `/api/users/{userId}/profile` | None | 10 min | Public user profile |
+| GET | `/api/users/{userId}/stories` | None | 5 min | User's public stories |
+
+### Telemetry
+
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| POST | `/api/document/view` | Firebase token | Atomic view count increment |
+
+### Maintenance
+
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| GET/POST | `/api/trending/cron` | Cron secret | Batch trending score recomputation |
+
+## Authentication Schemes
+
+### Firebase ID Token
+
+Used by: `/api/document/view`
+
+The Firebase ID token is obtained through the following flow:
+
+1. Sign in via NextAuth
+2. The session callback generates a Firebase custom token
+3. The client exchanges the custom token using `signInWithCustomToken()`
+4. The client calls `getIdToken()` to get the ID token
+5. Include in the Authorization header: `Bearer <firebase-id-token>`
+
+### Cron Secret
+
+Used by: `/api/trending/cron`
+
+A shared secret configured in the `CRON_SECRET` environment variable. Include in the Authorization header: `Bearer <cron-secret>`
+
+## Streaming Responses
+
+Two AI endpoints return streaming responses:
+
+**`/api/completion`** returns a raw text stream. Read chunks from the response body directly.
+
+**`/api/text-transform`** returns Server-Sent Events. Each event contains:
+```
+data: {"type":"content","content":"chunk of text"}\n\n
+```
+
+## Caching
+
+Public read endpoints use Next.js server-side caching with `stale-while-revalidate`:
+
+| Endpoint | Cache Duration |
+|---|---|
+| `/api/stories/discover` (all/foryou) | 10 minutes |
+| `/api/stories/discover` (fresh) | 2 minutes |
+| `/api/stories/trending` | 10 minutes |
+| `/api/users/{userId}/profile` | 10 minutes |
+| `/api/users/{userId}/stories` | 5 minutes |
+
+## Error Format
+
+All errors return JSON with an `error` field:
+
+```json
+{
+  "error": "Human-readable error message"
+}
+```
+
+Common HTTP status codes:
+
+| Code | Meaning |
+|---|---|
+| 400 | Validation error (missing or invalid parameters) |
+| 401 | Authentication required or invalid token |
+| 403 | Authenticated but unauthorized for this operation |
+| 404 | Resource not found |
+| 500 | Internal server error |

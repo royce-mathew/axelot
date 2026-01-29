@@ -1,0 +1,67 @@
+---
+title: Quick Start
+description: Create your account and start your first collaborative story in minutes
+---
+
+# Quick Start
+
+This guide walks through creating an account, starting your first story, and inviting a collaborator.
+
+## 1. Create an Account
+
+Axelot supports three sign-in methods:
+
+- **Google OAuth** -- One-click sign-in with your Google account
+- **GitHub OAuth** -- Sign in with your GitHub account
+- **Email and Password** -- Create credentials-based account with email verification
+
+Visit [/auth/sign-up](/auth/sign-up) to get started. OAuth accounts are ready immediately. Email accounts require clicking a verification link before you can sign in.
+
+## 2. Set Up Your Profile
+
+After signing in, visit [/settings](/settings) to configure your profile:
+
+- **Username** -- Choose a unique username (3-20 characters). This creates your public profile URL at `/u/@username`.
+- **Bio** -- Write a short description (up to 160 characters) visible on your profile.
+
+Your display name and avatar are pulled from your OAuth provider.
+
+## 3. Create a Story
+
+Navigate to [My Stories](/stories) and click **New Story**. Enter a title in the dialog and your story opens in the editor.
+
+The editor supports rich formatting:
+
+- Text styling (bold, italic, underline, strikethrough)
+- Headings (H1 through H4)
+- Bullet and numbered lists
+- Code blocks with syntax highlighting
+- Tables, blockquotes, and horizontal rules
+- LaTeX math equations
+- Mermaid diagrams
+
+Changes save automatically as you type.
+
+## 4. Publish Your Story
+
+By default, stories are private. Toggle the **Public/Private** switch in the story header to publish. Public stories:
+
+- Appear in the [Discover](/discover) feed
+- Are accessible to anyone with the link
+- Accumulate view counts that feed into the trending algorithm
+
+Your public story URL follows the pattern: `/u/@username/storyId-slug`
+
+## 5. Invite Collaborators
+
+Click the **Share** button in the story header to invite other users:
+
+- Search by email address or @username
+- Assign a role: **Viewer** (read-only) or **Editor** (can edit in real time)
+- Editors appear in the story's author list and can see each other's cursors
+
+## Next Steps
+
+- [Authentication](/docs/getting-started/authentication) -- Understand the auth system in depth
+- [Collaboration](/docs/getting-started/collaboration) -- Learn about real-time editing and access controls
+- [AI Features](/docs/guides/ai-features) -- Use AI text completion and transformation

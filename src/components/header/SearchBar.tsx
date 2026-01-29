@@ -1,26 +1,24 @@
 "use client"
 
-import React, { useState, useRef, useEffect } from "react"
-import {
-  Box,
-  InputBase,
-  Paper,
-  List,
-  ListItem,
-  ListItemButton,
-  ListItemAvatar,
-  ListItemText,
-  Avatar,
-  Typography,
-  Divider,
-  alpha,
-} from "@mui/material"
-import SearchIcon from "@mui/icons-material/Search"
+import React, { useEffect, useRef, useState } from "react"
+import { useRouter } from "next/navigation"
 import DescriptionIcon from "@mui/icons-material/Description"
 import PersonIcon from "@mui/icons-material/Person"
-import { useRouter } from "next/navigation"
-import { useAuth } from "@/hooks/use-auth"
-import { db, logEvent } from "@/lib/firebase/client"
+import SearchIcon from "@mui/icons-material/Search"
+import {
+  alpha,
+  Avatar,
+  Box,
+  Divider,
+  InputBase,
+  List,
+  ListItem,
+  ListItemAvatar,
+  ListItemButton,
+  ListItemText,
+  Paper,
+  Typography,
+} from "@mui/material"
 import {
   collection,
   getDocs,
@@ -31,7 +29,9 @@ import {
 } from "firebase/firestore"
 import type { Document as Story } from "@/types/document"
 import type { User } from "@/types/user"
+import { db, logEvent } from "@/lib/firebase/client"
 import { timeAgo } from "@/lib/utils"
+import { useAuth } from "@/hooks/use-auth"
 
 interface SearchResultState {
   documents: Array<Story & { id: string }>

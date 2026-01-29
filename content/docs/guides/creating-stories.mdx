@@ -1,0 +1,87 @@
+---
+title: Creating Stories
+description: Story lifecycle from creation through publication, sharing, archiving, and deletion
+---
+
+# Creating Stories
+
+Stories are the core unit of content in Axelot. Each story is a collaborative document backed by a Yjs CRDT for conflict-free real-time editing.
+
+## Story Lifecycle
+
+```
+Create -> Edit -> Publish -> Share -> Archive / Delete
+```
+
+### Creating a Story
+
+Navigate to [My Stories](/stories) and click **New Story**. A dialog prompts for a title. The story is created in Firestore with:
+
+- The current user as the owner
+- An auto-generated URL slug from the title
+- Private visibility by default
+- Empty Yjs document content
+- The owner's display name in the `authorNames` array
+
+The story opens immediately in the editor at `/u/@username/storyId-slug`.
+
+### Editing
+
+The TipTap editor provides rich text editing with these capabilities:
+
+**Text Formatting**
+Bold, italic, underline, strikethrough, inline code, text color, highlight, font size, and line height.
+
+**Block Elements**
+Headings (H1-H4), blockquotes, horizontal rules, and paragraphs with text alignment (left, center, right).
+
+**Lists**
+Bullet lists and numbered lists with indentation control.
+
+**Code Blocks**
+Syntax-highlighted code blocks powered by Shiki. Supports 180+ programming languages with the Tokyo Night theme.
+
+**Tables**
+Resizable tables with header rows, cell merging, and styled borders.
+
+**Math**
+LaTeX math equations rendered with KaTeX. Supports both inline and block math.
+
+**Diagrams**
+Mermaid diagram syntax with live preview. Theme-aware rendering that adapts to dark and light modes.
+
+All changes auto-save with a debounce. The title field also auto-saves and regenerates the URL slug when modified.
+
+### Publishing
+
+Toggle the **Public/Private** switch in the story header. Public stories:
+
+- Appear in the discovery feed at [/discover](/discover)
+- Are indexed by the trending algorithm
+- Show a "Copy Link" button for easy sharing
+- Are accessible to anyone with the URL
+
+### Archiving
+
+Archived stories are hidden from the discovery feed and the owner's public profile. They remain accessible to the owner and collaborators. Archive a story through the menu in the story header. Unarchive at any time.
+
+### Deletion
+
+Deleting a story is permanent. A confirmation dialog prevents accidental deletion. Only the story owner can delete.
+
+## View Tracking
+
+When an authenticated user views a story, the view count increments after a 10-second delay. This prevents accidental clicks from inflating counts. View counts contribute to the trending score.
+
+## Trending Algorithm
+
+The trending algorithm ranks stories in the "For You" tab using:
+
+| Factor | Effect | Formula |
+|---|---|---|
+| View count | Logarithmic scaling | `log10(views + 1) * 4` |
+| Recency | 24-hour linear decay | `max(0, 1 - hoursSinceUpdate / 24) * 10` |
+| Age | Exponential penalty | `(ageInHours / 12)^1.5 * 0.1` |
+| Activity boost | Extra weight for recent edits | 2x (last hour), 1.5x (1-2h), 1.2x (2-6h) |
+
+The logarithmic view scaling prevents a single viral story from dominating the feed indefinitely.

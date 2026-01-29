@@ -1,14 +1,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import type { Editor } from "@tiptap/react"
-import type {
-  AICompletionProvider,
-  AIAutocompleteOptions,
-  GhostTextPosition,
-} from "./types"
 import {
   registerAIAutocompleteHandlers,
   unregisterAIAutocompleteHandlers,
 } from "./ai-autocomplete"
+import type {
+  AIAutocompleteOptions,
+  AICompletionProvider,
+  GhostTextPosition,
+} from "./types"
 
 interface UseAIAutocompleteProps {
   editor: Editor | null
@@ -67,6 +67,7 @@ export function useAIAutocomplete({
 
       const processed = config.postProcess(completionProvider.completion)
       console.log("📝 Updating pending completion from provider:", processed)
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setPendingCompletion(processed)
       pendingCompletionRef.current = processed
     }
@@ -267,6 +268,7 @@ export function useAIAutocomplete({
 
   // Update ghost position when relevant state changes
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     updateGhostPosition()
   }, [pendingCompletion, updateGhostPosition])
 

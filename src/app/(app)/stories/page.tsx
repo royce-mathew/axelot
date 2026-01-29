@@ -47,12 +47,14 @@ import {
   documentRef,
   documentsByOwnerRef,
 } from "@/lib/converters/document"
+import { logEvent } from "@/lib/firebase/client"
 import { timeAgo } from "@/lib/utils"
 import { useAuth } from "@/hooks/use-auth"
-import { logEvent } from "@/lib/firebase/client"
+import { useFirebaseReady } from "@/hooks/use-firebase-ready"
 
 export default function StoriesPage() {
   const { user, isAuthenticated, isLoading } = useAuth()
+  const firebaseReady = useFirebaseReady()
   const router = useRouter()
   const [documents, setDocuments] = useState<Document[]>([])
   const [loading, setLoading] = useState(true)
@@ -65,8 +67,10 @@ export default function StoriesPage() {
 
   // Fetch user's documents
   useEffect(() => {
-    // If the user is not available, skip fetch
-    if (!user) {
+    // Wait for both NextAuth user and Firebase client SDK auth to be ready.
+    // Firebase auth sync (signInWithCustomToken) must complete before
+    // querying Firestore, otherwise the query fails with permission-denied.
+    if (!user || !firebaseReady) {
       return
     }
 
@@ -87,7 +91,7 @@ export default function StoriesPage() {
       console.log("Cleaning up documents subscription")
       unsubscribe()
     }
-  }, [isAuthenticated, isLoading, user, user?.id])
+  }, [isAuthenticated, isLoading, user, user?.id, firebaseReady])
 
   const handleMenuOpen = (
     event: React.MouseEvent<HTMLElement>,

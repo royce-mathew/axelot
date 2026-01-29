@@ -1,23 +1,23 @@
 "use client"
 
-import {
-  AppBar,
-  Toolbar,
-  Box,
-  IconButton,
-  Fab,
-  Zoom,
-  useTheme,
-  useMediaQuery,
-  useScrollTrigger,
-} from "@mui/material"
-import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
+import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp"
+import {
+  AppBar,
+  Box,
+  Fab,
+  IconButton,
+  Toolbar,
+  useMediaQuery,
+  useScrollTrigger,
+  useTheme,
+  Zoom,
+} from "@mui/material"
+import { useAuth } from "@/hooks/use-auth"
 import { DesktopNav } from "./DesktopNav"
 import { MobileNav } from "./MobileNav"
 import { SearchBar } from "./SearchBar"
-import { useAuth } from "@/hooks/use-auth"
 
 export const Header = () => {
   const { isAuthenticated, isLoading } = useAuth()

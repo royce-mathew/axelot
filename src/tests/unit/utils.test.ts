@@ -1,6 +1,6 @@
-import { describe, it, expect, vi } from "vitest"
-import { timeAgo, getInitials, hslToHex, stringToHslColor } from "@/lib/utils"
 import { Timestamp } from "firebase/firestore"
+import { describe, expect, it } from "vitest"
+import { getInitials, hslToHex, stringToHslColor, timeAgo } from "@/lib/utils"
 
 describe("utils", () => {
   describe("getInitials", () => {

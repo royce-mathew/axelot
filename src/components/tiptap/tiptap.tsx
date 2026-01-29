@@ -1,14 +1,14 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { AnyExtension } from "@tiptap/core"
-import { EditorContent, JSONContent, useEditor, Editor } from "@tiptap/react"
 import { Box, Paper } from "@mui/material"
-import Toolbar2 from "./toolbar"
+import { AnyExtension } from "@tiptap/core"
+import Link from "@tiptap/extension-link"
+import { Editor, EditorContent, JSONContent, useEditor } from "@tiptap/react"
 import { BubbleMenu } from "./BubbleMenu"
 import { CharacterCountPopup } from "./CharacterCountPopup"
+import Toolbar2 from "./toolbar"
 import { extensions } from "./utils/extensions"
-import Link from "@tiptap/extension-link"
 import "katex/dist/katex.min.css"
 
 export interface TiptapProps {

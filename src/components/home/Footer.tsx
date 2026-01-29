@@ -1,6 +1,7 @@
 "use client"
 
 import GitHubIcon from "@mui/icons-material/GitHub"
+import MenuBookIcon from "@mui/icons-material/MenuBook"
 import { Box, Container, Link, Stack, Typography } from "@mui/material"
 
 export const Footer = () => {
@@ -33,8 +34,23 @@ export const Footer = () => {
               position: { xs: "static", sm: "absolute" },
               right: { sm: 8 },
               top: { sm: 8 },
+              display: "flex",
+              gap: 2,
             }}
           >
+            <Link
+              href="/docs"
+              aria-label="Documentation"
+              color="inherit"
+              sx={{
+                display: "inline-flex",
+                alignItems: "center",
+                opacity: 0.8,
+                "&:hover": { opacity: 1 },
+              }}
+            >
+              <MenuBookIcon fontSize="small" />
+            </Link>
             <Link
               href="https://github.com/royce-mathew/axelot"
               target="_blank"

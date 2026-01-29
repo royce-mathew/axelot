@@ -1,4 +1,4 @@
-import { Card, CardContent, Skeleton, Stack, Box } from "@mui/material"
+import { Box, Card, CardContent, Skeleton, Stack } from "@mui/material"
 
 export function StoryCardSkeleton({
   variant = "standard",

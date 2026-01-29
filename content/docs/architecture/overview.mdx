@@ -1,0 +1,104 @@
+---
+title: System Overview
+description: High-level architecture of the Axelot platform
+---
+
+# System Overview
+
+Axelot is a full-stack application built on the Next.js App Router with Firebase as the backend. The architecture prioritizes real-time collaboration, serverless scalability, and developer experience.
+
+## Technology Stack
+
+| Layer | Technology | Purpose |
+|---|---|---|
+| Framework | Next.js 16 (App Router) | Server rendering, routing, API routes |
+| UI | Material UI v7 | Component library with theming |
+| Auth | NextAuth v5 (beta) | Multi-provider authentication with JWT |
+| Database | Cloud Firestore | Document database with real-time listeners |
+| Auth Backend | Firebase Authentication | Client-side auth via custom tokens |
+| Editor | TipTap (ProseMirror) | Rich text editing with 35+ extensions |
+| Collaboration | Yjs + WebRTC | CRDT-based conflict-free real-time sync |
+| AI | OpenRouter | Multi-model AI proxy (OpenAI, Anthropic) |
+| Deployment | Vercel | Serverless hosting with edge functions |
+| Docs | Fumadocs + Scalar | Documentation and API reference |
+
+## High-Level Architecture
+
+```
+Client (Browser)
+    |
+    |-- NextAuth session (JWT cookie)
+    |-- Firebase client SDK (custom token exchange)
+    |-- TipTap editor (ProseMirror)
+    |-- Yjs document (CRDT)
+    |-- WebRTC mesh (peer-to-peer)
+    |
+    v
+Next.js App Router (Vercel)
+    |
+    |-- API routes (serverless functions)
+    |-- Server components (SSR/RSC)
+    |-- Proxy middleware (auth redirects)
+    |
+    v
+Firebase
+    |
+    |-- Cloud Firestore (stories, users, credentials, sessions)
+    |-- Firebase Auth (custom token verification)
+    |
+    v
+External Services
+    |
+    |-- OpenRouter API (AI completions and transformations)
+    |-- Vercel Cron (daily trending score updates)
+```
+
+## Data Flow Patterns
+
+### Authentication
+
+NextAuth handles the authentication lifecycle. On sign-in, the session callback generates a Firebase custom token using the Admin SDK. The client exchanges this token for a Firebase ID token, which authenticates Firestore operations through security rules.
+
+### Story Editing
+
+The TipTap editor binds to a Yjs document. Local edits create Yjs updates that propagate to peers via encrypted WebRTC channels. Updates are batched and periodically flushed to Firestore for durability. IndexedDB provides offline caching.
+
+### Discovery Feed
+
+The discovery API queries Firestore for public, non-archived stories. Three sort orders are available: recent activity, trending score, and creation date. Results are cached server-side with revalidation intervals ranging from 2 to 10 minutes.
+
+### View Tracking
+
+Authenticated views are tracked via an API endpoint that atomically increments the view counter. A 10-second client-side delay prevents accidental view inflation. View counts feed into the trending algorithm.
+
+### Trending Scores
+
+A Vercel Cron job runs daily, calling the trending cron endpoint to batch-recompute scores. The algorithm factors in view count (logarithmic), recency (24-hour decay), and age (exponential penalty). Smart skip logic avoids recomputing scores that are still fresh.
+
+## Deployment Architecture
+
+Axelot deploys to Vercel with standalone output:
+
+- **Serverless Functions** -- API routes run as serverless functions with automatic scaling
+- **Static Generation** -- Documentation pages are statically generated at build time
+- **Edge Proxy** -- The auth proxy runs at the edge for fast redirects
+- **Cron Jobs** -- Vercel Cron triggers the trending score update daily at midnight UTC
+
+A Docker configuration is also available for self-hosted deployments. The `standalone` output mode produces a minimal server that can run in any Node.js 20 environment.
+
+## Codebase Structure
+
+```
+src/
+  app/           Next.js App Router (pages, layouts, API routes)
+  components/    React components (header, editor, discover, home)
+  hooks/         Custom React hooks (auth, document view, mounted)
+  lib/           Business logic and utilities
+    converters/  Firestore data converters
+    firebase/    Client and Admin SDK configuration
+    validations/ Zod schemas
+    y-fire/      Forked Yjs + Firestore + WebRTC provider
+  styles/        Global CSS
+  tests/         Vitest test suites
+  types/         TypeScript type definitions
+```

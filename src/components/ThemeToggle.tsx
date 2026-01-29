@@ -1,8 +1,8 @@
 "use client"
 
 import React from "react"
+import { DarkMode, LightMode } from "@mui/icons-material"
 import { Box, useTheme } from "@mui/material"
-import { LightMode, DarkMode } from "@mui/icons-material"
 import { useColorScheme } from "@mui/material/styles"
 
 const ThemeToggle: React.FC = () => {

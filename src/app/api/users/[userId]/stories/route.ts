@@ -1,7 +1,7 @@
 import { connection, NextRequest, NextResponse } from "next/server"
 import { firebaseAdminFirestore } from "@/lib/firebase/server"
-import { extractPreview } from "@/lib/utils"
 import { serializeDocument } from "@/lib/serializers/document"
+import { extractPreview } from "@/lib/utils"
 
 // Cached function to fetch user's public stories
 async function getUserStories(userId: string, page: number, pageSize: number) {

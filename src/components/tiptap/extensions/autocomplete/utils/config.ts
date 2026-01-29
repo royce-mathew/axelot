@@ -1,9 +1,9 @@
 import AddIcon from "@mui/icons-material/Add"
-import RemoveIcon from "@mui/icons-material/Remove"
 import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome"
-import MenuBookIcon from "@mui/icons-material/MenuBook"
-import GroupsIcon from "@mui/icons-material/Groups"
 import BusinessIcon from "@mui/icons-material/Business"
+import GroupsIcon from "@mui/icons-material/Groups"
+import MenuBookIcon from "@mui/icons-material/MenuBook"
+import RemoveIcon from "@mui/icons-material/Remove"
 
 export const defaultPrompts = {
   autocomplete: (text: string) =>

@@ -1,24 +1,24 @@
 "use client"
 
-import { Editor } from "@tiptap/core"
-import { Box, IconButton, Divider, Popover } from "@mui/material"
+import { useEffect, useRef, useState } from "react"
+import {
+  autoUpdate,
+  flip,
+  offset,
+  shift,
+  useFloating,
+} from "@floating-ui/react"
+import CodeIcon from "@mui/icons-material/Code"
 import FormatBoldIcon from "@mui/icons-material/FormatBold"
+import FormatColorFillIcon from "@mui/icons-material/FormatColorFill"
+import FormatColorTextIcon from "@mui/icons-material/FormatColorText"
 import FormatItalicIcon from "@mui/icons-material/FormatItalic"
 import FormatUnderlinedIcon from "@mui/icons-material/FormatUnderlined"
-import StrikethroughSIcon from "@mui/icons-material/StrikethroughS"
-import FormatColorTextIcon from "@mui/icons-material/FormatColorText"
-import FormatColorFillIcon from "@mui/icons-material/FormatColorFill"
-import CodeIcon from "@mui/icons-material/Code"
 import LinkIcon from "@mui/icons-material/Link"
-import { useEffect, useState, useRef } from "react"
+import StrikethroughSIcon from "@mui/icons-material/StrikethroughS"
+import { Box, Divider, IconButton, Popover } from "@mui/material"
+import { Editor } from "@tiptap/core"
 import { Sketch } from "@uiw/react-color"
-import {
-  useFloating,
-  offset,
-  flip,
-  shift,
-  autoUpdate,
-} from "@floating-ui/react"
 
 interface BubbleMenuProps {
   editor: Editor | null

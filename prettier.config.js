@@ -7,7 +7,7 @@ module.exports = {
   singleQuote: false,
   tabWidth: 2,
   trailingComma: "es5",
-  plugins: ["@prettier/plugin-oxc", "@ianvs/prettier-plugin-sort-imports"],
+  plugins: ["@ianvs/prettier-plugin-sort-imports"],
   importOrderParserPlugins: ["typescript", "jsx", "decorators-legacy"],
   importOrder: [
     "^(react/(.*)$)|^(react$)",

@@ -1,13 +1,13 @@
 "use client"
 
 import { useEffect } from "react"
+import theme from "@/theme"
+import { CssBaseline } from "@mui/material"
+import { AppRouterCacheProvider } from "@mui/material-nextjs/v15-appRouter"
+import { ThemeProvider } from "@mui/material/styles"
 import { signInWithCustomToken } from "firebase/auth"
 import { Session } from "next-auth"
 import { SessionProvider, useSession } from "next-auth/react"
-import { ThemeProvider } from "@mui/material/styles"
-import { AppRouterCacheProvider } from "@mui/material-nextjs/v15-appRouter"
-import { CssBaseline } from "@mui/material"
-import theme from "@/theme"
 import { auth } from "@/lib/firebase/client"
 
 async function syncFirebaseAuth(session: Session | null) {

@@ -1,5 +1,5 @@
-import { Document, SerializableDocument } from "@/types/document"
 import { Timestamp } from "firebase/firestore"
+import { Document, SerializableDocument } from "@/types/document"
 
 /**
  * Serializes a Firestore Document to a SerializableDocument
@@ -7,6 +7,7 @@ import { Timestamp } from "firebase/firestore"
  */
 export function serializeDocument(
   docId: string,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   data: Document | any
 ): SerializableDocument {
   return {

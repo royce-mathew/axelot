@@ -1,0 +1,68 @@
+---
+title: Collaboration
+description: Access controls, sharing, and real-time presence in collaborative stories
+---
+
+# Collaboration
+
+Axelot supports real-time collaborative editing with role-based access controls. Multiple users can edit the same story simultaneously with automatic conflict resolution.
+
+## Access Levels
+
+Each story has three levels of access:
+
+| Level | Permissions |
+|---|---|
+| **Owner** | Full control. Can edit, share, publish, archive, and delete the story. |
+| **Editor** (write access) | Can edit the story content in real time. Appears in the author list. |
+| **Viewer** (read access) | Can view private stories. Cannot edit. |
+
+Public stories are readable by anyone, regardless of access level.
+
+## Sharing a Story
+
+The owner can share a story through the Share dialog:
+
+1. Click the **Share** button in the story header
+2. Search for users by email address or @username
+3. Select a role: Viewer or Editor
+4. The user gains immediate access
+
+To change a role, open the Share dialog and update the user's role. To revoke access, remove the user from the share list.
+
+When an editor is added or removed, the story's `authorNames` array is automatically synchronized. This denormalized data appears in story cards and the discovery feed without needing additional lookups.
+
+## Real-Time Editing
+
+When multiple editors open the same story, they connect through a peer-to-peer mesh network:
+
+1. Each editor creates an instance document in Firestore (`stories/{id}/instances/{uid}`)
+2. A mesh topology algorithm determines which peers should connect
+3. WebRTC data channels are established through Firestore signaling
+4. Yjs CRDT updates flow between peers with sub-100ms latency
+5. Changes are periodically persisted to Firestore (3-second debounce)
+
+### Presence Awareness
+
+Active collaborators are visible through:
+
+- **Cursor positions** -- Each editor's cursor appears in a unique color with their name
+- **Text selections** -- Selected text is highlighted with a semi-transparent overlay
+- **Active user list** -- Avatars of all connected editors appear in the story header
+
+### Conflict Resolution
+
+Edits never conflict. Yjs uses Conflict-free Replicated Data Types (CRDTs) that mathematically guarantee all peers converge to the same document state, regardless of the order edits arrive. No manual merge resolution is needed.
+
+### Offline Support
+
+Local changes are cached in IndexedDB. When the user reconnects, cached updates sync with peers and Firestore. This handles temporary network drops and browser tab suspension.
+
+## Read-Only Mode
+
+Users with viewer access (or anyone viewing a public story) see a read-only version:
+
+- The editor toolbar is hidden
+- Links are clickable (navigating directly)
+- No WebRTC peer connections are established
+- The document syncs from Firestore snapshots only

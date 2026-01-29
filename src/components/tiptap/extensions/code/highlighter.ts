@@ -1,11 +1,11 @@
 import { findChildren } from "@tiptap/core"
 import type { Node as ProsemirrorNode } from "@tiptap/pm/model"
 import {
-  type BundledLanguage,
-  type BundledTheme,
   bundledLanguages,
   bundledThemes,
   createHighlighter,
+  type BundledLanguage,
+  type BundledTheme,
   type Highlighter,
 } from "shiki"
 

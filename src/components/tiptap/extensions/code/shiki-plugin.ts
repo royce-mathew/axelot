@@ -1,8 +1,8 @@
-import { BundledLanguage, BundledTheme } from "shiki"
-import { NodeWithPos, findChildren } from "@tiptap/core"
+import { findChildren, NodeWithPos } from "@tiptap/core"
+import { Node as ProsemirrorNode } from "@tiptap/pm/model"
 import { Plugin, PluginKey, PluginView } from "@tiptap/pm/state"
 import { Decoration, DecorationSet } from "@tiptap/pm/view"
-import { Node as ProsemirrorNode } from "@tiptap/pm/model"
+import { BundledLanguage, BundledTheme } from "shiki"
 import {
   getShiki,
   initHighlighter,

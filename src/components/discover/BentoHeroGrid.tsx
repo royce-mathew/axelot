@@ -1,11 +1,11 @@
 "use client"
 
 import Link from "next/link"
-import { Box, Typography, Stack, alpha } from "@mui/material"
 import { Visibility as VisibilityIcon } from "@mui/icons-material"
-import { StoryCardProps } from "@/components/StoryCard"
+import { alpha, Box, Stack, Typography } from "@mui/material"
 import { getGradientStyle } from "@/lib/gradient-generator"
 import { timeAgo } from "@/lib/utils"
+import { StoryCardProps } from "@/components/StoryCard"
 
 interface BentoHeroGridProps {
   stories: StoryCardProps[]

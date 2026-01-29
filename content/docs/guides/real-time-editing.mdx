@@ -1,0 +1,105 @@
+---
+title: Real-Time Editing
+description: Yjs CRDTs, WebRTC mesh networking, encryption, and offline support
+---
+
+# Real-Time Editing
+
+Axelot's collaboration engine is built on three technologies: Yjs (CRDTs for conflict-free merging), WebRTC (peer-to-peer data channels for low latency), and Firestore (persistence and signaling).
+
+## Architecture
+
+```
+Editor A                          Editor B
+   |                                 |
+   |-- Yjs updates ---- WebRTC ---- Yjs updates
+   |                                 |
+   v                                 v
+IndexedDB cache               IndexedDB cache
+   |                                 |
+   +------- Firestore persistence ---+
+```
+
+Updates flow primarily through WebRTC for speed (sub-100ms). Firestore serves as durable storage and a fallback for peers that cannot establish direct connections.
+
+## FireProvider
+
+The `FireProvider` class (`src/lib/y-fire/provider.ts`) orchestrates the entire collaboration lifecycle:
+
+1. **Initialization** -- Creates an instance document in `stories/{id}/instances/{uid}` with a server timestamp. This announces the peer's presence to other editors.
+
+2. **Mesh Construction** -- A directed graph algorithm determines which peers should connect. Each peer connects to up to 3 others, preventing O(n^2) connection scaling.
+
+3. **WebRTC Signaling** -- Peers exchange connection offers and answers through Firestore subcollections (`calls/` and `answers/`). These ephemeral documents are deleted after the handshake completes.
+
+4. **Data Channels** -- Once connected, peers exchange Yjs updates through encrypted WebRTC data channels. Updates are batched (up to 20 per batch or 100ms timeout) to reduce overhead.
+
+5. **Firestore Persistence** -- Updates are flushed to Firestore with a 3-second debounce. If another peer recently saved, the save is skipped to reduce write costs.
+
+6. **Cleanup** -- When a peer disconnects, their instance document is removed. Zombie peers (connections that fail within 30 seconds) are automatically cleaned up.
+
+## Encryption
+
+All peer-to-peer data is encrypted:
+
+- **Key Derivation**: PBKDF2 with 100,000 iterations generates a symmetric key from the caller and receiver UIDs
+- **Encryption**: AES-GCM with a random initialization vector per message
+- **Scope**: Every Yjs update and awareness message is encrypted before transmission
+
+This ensures that even if WebRTC traffic is intercepted, the document content remains confidential.
+
+## Awareness Protocol
+
+The Yjs awareness protocol broadcasts each editor's state:
+
+- Cursor position and selection range
+- User identity (name, color)
+- Connection status
+
+Awareness updates propagate through the same encrypted WebRTC channels as document updates. Each editor is assigned a deterministic color based on their user ID.
+
+## Mesh Topology
+
+The `createGraph` function (`src/lib/y-fire/graph.ts`) generates a directed peer graph:
+
+- Peers are sorted by UID for deterministic graph generation
+- Each peer at index `i` connects to up to 3 peers starting at index `connections * i + 1`
+- Peers toward the end of the sorted list may have fewer or no outgoing connections
+- This forms clusters rather than a fully connected mesh, reducing connection overhead
+
+For small groups (2-3 editors), most peers connect to each other directly. For larger groups, the clustering approach prevents O(n^2) connection scaling at the cost of some peers relying on indirect propagation through Firestore persistence.
+
+## Offline Support
+
+Local changes are cached in IndexedDB via the `idb-keyval` library:
+
+1. Each Yjs update is written to IndexedDB immediately
+2. When the provider reconnects, cached updates are merged with the remote state
+3. After a successful Firestore sync, the local cache is cleared
+
+This handles:
+
+- Temporary network drops
+- Browser tab suspension (mobile devices)
+- Closing and reopening the editor
+
+## Read-Only Mode
+
+When a user has read-only access:
+
+- The FireProvider skips peer network setup entirely
+- The document syncs from Firestore snapshots only (real-time listener)
+- No awareness protocol is broadcast
+- No WebRTC connections are established
+- Local updates are still cached in IndexedDB for faster subsequent loads
+
+## Performance Characteristics
+
+| Metric | Value |
+|---|---|
+| Latency (WebRTC) | Sub-100ms between connected peers |
+| Update batching | Up to 20 updates per batch, 100ms timeout |
+| Firestore debounce | 3 seconds between writes |
+| Zombie timeout | 30 seconds before cleanup |
+| Reconnect debounce | 2 seconds between attempts |
+| Max peer connections | 3 per peer (configurable) |

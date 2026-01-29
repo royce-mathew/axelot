@@ -1,0 +1,37 @@
+---
+title: Axelot Documentation
+description: Collaborative story writing platform with real-time editing and AI augmentation
+---
+
+# Welcome to Axelot
+
+Axelot is a collaborative storytelling platform that combines real-time editing, AI-powered writing assistance, and social discovery. Built with Next.js 16, Firebase, and Yjs CRDTs.
+
+## Core Features
+
+**Real-Time Collaboration**
+Edit stories simultaneously with other writers. Changes merge automatically using conflict-free replicated data types (CRDTs) over encrypted WebRTC peer connections.
+
+**AI Writing Assistance**
+Get intelligent text completions and transformations powered by OpenRouter. The AI assists without replacing the creative process.
+
+**Discovery Feed**
+A trending algorithm surfaces popular stories based on view count, recency, and engagement. Browse by trending, fresh, or all stories.
+
+**Rich Text Editor**
+A full-featured TipTap editor with syntax-highlighted code blocks, LaTeX math, Mermaid diagrams, tables, and 35+ extensions.
+
+**Access Controls**
+Invite collaborators with read or write access. Publish stories publicly or keep them private. Archive stories you want to set aside.
+
+## Quick Links
+
+- [Quick Start](/docs/getting-started/quick-start) -- Set up your first collaborative story
+- [Authentication](/docs/getting-started/authentication) -- How sign-in and Firebase sync work
+- [Real-Time Editing](/docs/guides/real-time-editing) -- Yjs, WebRTC, and the collaboration engine
+- [Data Model](/docs/architecture/data-model) -- Firestore collections and schemas
+- [API Reference](/docs/api) -- Interactive endpoint documentation with Scalar
+
+## For Developers
+
+The [API Reference](/docs/api) provides interactive documentation for all HTTP endpoints, including request builders, code examples in multiple languages, and response schemas. Authentication endpoints, AI streaming, story discovery, user profiles, view tracking, and maintenance jobs are all documented with full request/response examples.

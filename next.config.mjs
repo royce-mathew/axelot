@@ -1,11 +1,14 @@
-import type { NextConfig } from "next"
+import { createMDX } from "fumadocs-mdx/next"
 
 // Added for Docker (standalone runtime):
 // Setting output to "standalone" allows the Dockerfile to copy the
 // minimal server files from .next/standalone for a slimmer image.
-const nextConfig: NextConfig = {
+/** @type {import('next').NextConfig} */
+const nextConfig = {
   output: "standalone",
   cacheComponents: true,
 }
 
-export default nextConfig
+const withMDX = createMDX()
+
+export default withMDX(nextConfig)

@@ -1,8 +1,7 @@
 import { connection, NextRequest, NextResponse } from "next/server"
 import { firebaseAdminFirestore } from "@/lib/firebase/server"
-import { SerializableDocument } from "@/types/document"
-import { extractPreview } from "@/lib/utils"
 import { serializeDocument } from "@/lib/serializers/document"
+import { extractPreview } from "@/lib/utils"
 
 // Cached function to fetch trending stories with pagination
 async function getTrendingStories(page: number, pageSize: number) {

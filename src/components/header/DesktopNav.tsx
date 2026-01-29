@@ -1,28 +1,28 @@
 "use client"
 
 import React, { useState } from "react"
+import Link from "next/link"
+import DarkModeIcon from "@mui/icons-material/DarkMode"
+import DescriptionIcon from "@mui/icons-material/Description"
+import LightModeIcon from "@mui/icons-material/LightMode"
+import LogoutIcon from "@mui/icons-material/Logout"
+import PersonIcon from "@mui/icons-material/Person"
 import {
+  Avatar,
   Box,
   Button,
   CircularProgress,
+  Divider,
   IconButton,
-  Menu,
-  MenuItem,
   ListItemIcon,
   ListItemText,
-  Divider,
+  Menu,
+  MenuItem,
   Tooltip,
-  Avatar,
 } from "@mui/material"
-import Link from "next/link"
-import LogoutIcon from "@mui/icons-material/Logout"
-import LightModeIcon from "@mui/icons-material/LightMode"
-import DarkModeIcon from "@mui/icons-material/DarkMode"
-import DescriptionIcon from "@mui/icons-material/Description"
-import PersonIcon from "@mui/icons-material/Person"
-import ThemeToggle from "@/components/ThemeToggle"
-import { useAuth } from "@/hooks/use-auth"
 import { signIn, signOut } from "next-auth/react"
+import { useAuth } from "@/hooks/use-auth"
+import ThemeToggle from "@/components/ThemeToggle"
 
 export const DesktopNav = () => {
   const { isAuthenticated, isLoading, user } = useAuth()

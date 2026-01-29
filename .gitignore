@@ -2,6 +2,7 @@
 
 # dependencies
 /node_modules
+package-lock.json
 /.pnp
 .pnp.*
 .yarn/*
@@ -24,6 +25,12 @@
 .DS_Store
 *.pem
 
+# IDE/editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
 # debug
 npm-debug.log*
 yarn-debug.log*
@@ -40,3 +47,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# fumadocs generated source
+.source/

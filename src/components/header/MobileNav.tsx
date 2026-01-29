@@ -1,32 +1,32 @@
 "use client"
 
 import React, { useState } from "react"
+import Link from "next/link"
+import CloseIcon from "@mui/icons-material/Close"
+import DarkModeIcon from "@mui/icons-material/DarkMode"
+import DescriptionIcon from "@mui/icons-material/Description"
+import LightModeIcon from "@mui/icons-material/LightMode"
+import LogoutIcon from "@mui/icons-material/Logout"
+import MenuIcon from "@mui/icons-material/Menu"
+import PersonIcon from "@mui/icons-material/Person"
 import {
+  Avatar,
   Box,
-  IconButton,
+  Button,
+  CircularProgress,
   Drawer,
+  IconButton,
   List,
   ListItem,
   ListItemButton,
-  ListItemText,
-  Button,
-  CircularProgress,
-  Typography,
-  Avatar,
   ListItemIcon,
+  ListItemText,
+  Typography,
   useTheme,
 } from "@mui/material"
-import Link from "next/link"
-import MenuIcon from "@mui/icons-material/Menu"
-import CloseIcon from "@mui/icons-material/Close"
-import LogoutIcon from "@mui/icons-material/Logout"
-import LightModeIcon from "@mui/icons-material/LightMode"
-import DarkModeIcon from "@mui/icons-material/DarkMode"
-import DescriptionIcon from "@mui/icons-material/Description"
-import PersonIcon from "@mui/icons-material/Person"
-import ThemeToggle from "@/components/ThemeToggle"
-import { useAuth } from "@/hooks/use-auth"
 import { signIn, signOut } from "next-auth/react"
+import { useAuth } from "@/hooks/use-auth"
+import ThemeToggle from "@/components/ThemeToggle"
 
 export const MobileNav = () => {
   const [drawerOpen, setDrawerOpen] = useState(false)

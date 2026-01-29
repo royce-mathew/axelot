@@ -1,0 +1,1160 @@
+openapi: 3.1.0
+info:
+  title: Axelot API
+  version: 1.0.0
+  description: |
+    Collaborative story writing platform API with real-time editing,
+    AI-powered text augmentation, and social discovery features.
+
+    Authentication uses NextAuth v5 with JWT sessions. Some endpoints
+    require a Firebase ID token obtained by exchanging the custom token
+    from the NextAuth session via the Firebase client SDK.
+  contact:
+    name: Royce Mathew & Sunny Patel
+    email: sunnypatel124555@gmail.com
+    url: https://github.com/royce-mathew/axelot
+  license:
+    name: AGPL-3.0
+    url: https://github.com/royce-mathew/axelot/blob/master/LICENSE
+
+servers:
+  - url: https://axelot.io
+    description: Production
+  - url: http://localhost:3000
+    description: Local development
+
+tags:
+  - name: Authentication
+    description: |
+      User authentication and email verification endpoints.
+      Axelot supports Google OAuth, GitHub OAuth, and email/password
+      credentials with mandatory email verification.
+  - name: AI
+    description: |
+      AI-powered text generation and transformation endpoints.
+      Proxied through OpenRouter to access models from OpenAI,
+      Anthropic, and other providers. All AI endpoints stream
+      their responses.
+  - name: Stories
+    description: |
+      Story discovery and feed endpoints. Stories are collaborative
+      documents with access controls, view tracking, and trending
+      scores. Public stories appear in the discovery feed.
+  - name: Users
+    description: |
+      Public user profile and story listing endpoints.
+      User profiles include display name, username, bio, and avatar.
+  - name: Telemetry
+    description: |
+      View tracking and engagement analytics. View counts feed
+      into the trending algorithm to surface popular content.
+  - name: Maintenance
+    description: |
+      Background job and cron task endpoints. Protected by a
+      shared secret and triggered by Vercel Cron on a daily schedule.
+
+paths:
+  /api/auth/verify-email:
+    post:
+      tags: [Authentication]
+      operationId: verifyEmail
+      summary: Verify a user's email address
+      description: |
+        Sets the `emailVerified` flag to `true` for a credentials-based user.
+        This must be called after the user clicks the verification link sent
+        during sign-up. Users cannot sign in with email/password until their
+        email is verified.
+
+        This operation is idempotent. Calling it multiple times for the same
+        email has no adverse effect.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+              properties:
+                email:
+                  type: string
+                  format: email
+                  description: The email address to mark as verified.
+                  example: alice@example.com
+            examples:
+              basic:
+                summary: Verify a user email
+                value:
+                  email: alice@example.com
+      responses:
+        "200":
+          description: Email verified successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+              examples:
+                success:
+                  value:
+                    success: true
+        "400":
+          description: Missing email parameter.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                missing_email:
+                  value:
+                    error: Email is required
+        "404":
+          description: No user found with the given email.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                not_found:
+                  value:
+                    error: User not found
+        "500":
+          description: Internal server error during verification.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                server_error:
+                  value:
+                    error: Failed to verify email
+
+  /api/completion:
+    post:
+      tags: [AI]
+      operationId: completion
+      summary: Stream AI text completion
+      description: |
+        Sends a prompt to an AI model via OpenRouter and returns a raw text
+        stream of the completion. The response is streamed as plain text
+        chunks, not server-sent events.
+
+        The endpoint acts as a server-side proxy. The OpenRouter API key
+        is stored server-side and never exposed to the client.
+
+        No authentication is required, but rate limiting is planned for
+        a future release.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - prompt
+                - model
+              properties:
+                prompt:
+                  type: string
+                  description: The input text to complete.
+                  example: The spaceship drifted silently through the asteroid belt, its crew unaware that
+                model:
+                  type: string
+                  description: |
+                    The OpenRouter model identifier. Must be a valid model
+                    available on the OpenRouter platform.
+                  example: openai/gpt-4o-mini
+                max_tokens:
+                  type: integer
+                  description: Maximum number of tokens to generate.
+                  default: 128
+                  minimum: 1
+                  maximum: 4096
+                  example: 128
+                temperature:
+                  type: number
+                  format: float
+                  description: |
+                    Sampling temperature. Higher values produce more creative
+                    output. Lower values produce more deterministic output.
+                  default: 0.8
+                  minimum: 0
+                  maximum: 2
+                  example: 0.8
+                stop:
+                  type: array
+                  items:
+                    type: string
+                  description: |
+                    Sequences where the model should stop generating.
+                    Useful for controlling output boundaries.
+                  example: ["\n\n", "THE END"]
+            examples:
+              autocomplete:
+                summary: Autocomplete a sentence
+                value:
+                  prompt: The spaceship drifted silently through the asteroid belt
+                  model: openai/gpt-4o-mini
+                  max_tokens: 128
+                  temperature: 0.8
+              creative:
+                summary: Creative continuation with higher temperature
+                value:
+                  prompt: Once upon a time in a world where stories came alive
+                  model: openai/gpt-4o-mini
+                  max_tokens: 256
+                  temperature: 1.2
+                  stop: ["\n\n"]
+      responses:
+        "200":
+          description: |
+            Streaming text completion. The response body is a raw text
+            stream. Read it chunk by chunk as the model generates tokens.
+          content:
+            text/plain:
+              schema:
+                type: string
+                description: Raw streaming text chunks from the AI model.
+        "500":
+          description: OpenRouter API error or missing API key.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/text-transform:
+    post:
+      tags: [AI]
+      operationId: textTransform
+      summary: Transform text with AI
+      description: |
+        Applies an AI-powered transformation to the provided text and
+        returns the result as a Server-Sent Events (SSE) stream.
+
+        Each SSE event contains a JSON payload with the transformed
+        text chunk. The stream format is:
+
+        ```
+        data: {"type":"content","content":"transformed chunk"}\n\n
+        ```
+
+        Supported actions include expanding text and improving writing
+        quality. The endpoint proxies to OpenRouter with server-side
+        API key management.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - text
+                - action
+                - model
+              properties:
+                text:
+                  type: string
+                  description: The input text to transform.
+                  example: The quick brown fox jumped over the lazy dog.
+                action:
+                  type: string
+                  description: |
+                    The transformation to apply.
+                    - `make-longer`: Expands the text with more detail
+                    - `improve`: Enhances writing quality and clarity
+                  enum:
+                    - make-longer
+                    - improve
+                  example: improve
+                model:
+                  type: string
+                  description: The OpenRouter model identifier.
+                  example: openai/gpt-4o-mini
+                max_tokens:
+                  type: integer
+                  description: Maximum tokens for the transformed output.
+                  default: 256
+                  minimum: 1
+                  maximum: 4096
+                  example: 256
+                temperature:
+                  type: number
+                  format: float
+                  description: Sampling temperature for the transformation.
+                  default: 0.7
+                  minimum: 0
+                  maximum: 2
+                  example: 0.7
+            examples:
+              improve_text:
+                summary: Improve writing quality
+                value:
+                  text: The quick brown fox jumped over the lazy dog.
+                  action: improve
+                  model: openai/gpt-4o-mini
+                  max_tokens: 256
+                  temperature: 0.7
+              expand_text:
+                summary: Expand text with more detail
+                value:
+                  text: The castle stood on a hill.
+                  action: make-longer
+                  model: openai/gpt-4o-mini
+                  max_tokens: 512
+                  temperature: 0.8
+      responses:
+        "200":
+          description: |
+            Server-Sent Events stream of the transformed text.
+            Each event is a JSON object with `type` and `content` fields.
+          content:
+            text/event-stream:
+              schema:
+                type: string
+                description: |
+                  SSE stream. Each event format:
+                  `data: {"type":"content","content":"..."}\n\n`
+        "500":
+          description: OpenRouter API error or internal failure.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/document/view:
+    post:
+      tags: [Telemetry]
+      operationId: trackView
+      summary: Track a story view
+      description: |
+        Atomically increments the view counter for a story document
+        and updates its `lastViewed` timestamp. Requires authentication
+        via a Firebase ID token to prevent anonymous view inflation.
+
+        The client should call this endpoint once per story visit, with
+        a delay (typically 10 seconds) to avoid counting accidental
+        clicks.
+
+        View counts feed into the trending algorithm. Higher view counts
+        contribute to a higher trending score through logarithmic scaling.
+      security:
+        - firebaseAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - documentId
+              properties:
+                documentId:
+                  type: string
+                  description: |
+                    The Firestore document ID of the story to track.
+                  example: abc123def456
+            examples:
+              track:
+                summary: Track a view
+                value:
+                  documentId: abc123def456
+      responses:
+        "200":
+          description: View tracked successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+              examples:
+                success:
+                  value:
+                    success: true
+        "400":
+          description: Missing document ID.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                missing_id:
+                  value:
+                    error: Missing documentId
+        "401":
+          description: |
+            Missing or invalid Firebase ID token. Ensure the
+            `Authorization` header contains a valid bearer token.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                missing_token:
+                  value:
+                    error: Missing or invalid authorization token
+                invalid_token:
+                  value:
+                    error: Invalid Firebase ID token
+        "403":
+          description: Token valid but user is unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                unauthorized:
+                  value:
+                    error: Unauthorized
+        "500":
+          description: Firestore write failed.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                failure:
+                  value:
+                    error: Failed to track view
+
+  /api/stories/discover:
+    get:
+      tags: [Stories]
+      operationId: discoverStories
+      summary: Discover public stories
+      description: |
+        Returns a paginated list of public, non-archived stories.
+        Three discovery modes are available:
+
+        - **all**: Sorted by `lastUpdated` descending. Shows the most
+          recently active stories.
+        - **foryou**: Sorted by `trendingScore` descending. Powered by
+          the trending algorithm that factors in views, recency, and age.
+        - **fresh**: Sorted by `created` descending. Shows the newest
+          stories first.
+
+        Results are cached server-side for performance. Cache durations
+        vary by mode: 10 minutes for `all` and `foryou`, 2 minutes for
+        `fresh`.
+
+        An optional search parameter filters results by title (case-
+        insensitive, client-side substring match on the first 100
+        results).
+      parameters:
+        - name: mode
+          in: query
+          schema:
+            type: string
+            enum:
+              - all
+              - foryou
+              - fresh
+            default: all
+          description: |
+            Discovery mode controlling sort order.
+          example: foryou
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+          description: |
+            Zero-indexed page number for pagination.
+          example: 0
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+          description: |
+            Number of stories per page.
+          example: 20
+        - name: search
+          in: query
+          schema:
+            type: string
+          description: |
+            Optional search term to filter stories by title.
+            Searches the first 100 results client-side.
+          example: science fiction
+      responses:
+        "200":
+          description: Paginated list of public stories.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+              description: |
+                Server-side cache duration.
+                `s-maxage=600, stale-while-revalidate` for all/foryou,
+                `s-maxage=120, stale-while-revalidate` for fresh.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  stories:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Story"
+                  total:
+                    type: integer
+                    description: |
+                      Total matching stories. Only included when a
+                      search term is provided.
+                  hasMore:
+                    type: boolean
+                    description: Whether more pages are available.
+              examples:
+                stories:
+                  summary: Page of discovered stories
+                  value:
+                    stories:
+                      - id: abc123
+                        title: The Last Frontier
+                        owner: user456
+                        authorNames: [Alice, Bob]
+                        slug: the-last-frontier
+                        created: "2025-12-01T10:00:00Z"
+                        lastUpdated: "2025-12-15T14:30:00Z"
+                        tags: [scifi, adventure]
+                        viewCount: 142
+                        trendingScore: 0.873
+                        isPublic: true
+                        isArchived: false
+                        preview: "The ship emerged from hyperspace into a star system no human had ever visited..."
+                    hasMore: true
+        "500":
+          description: Firestore query failure.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                failure:
+                  value:
+                    error: Failed to fetch stories
+
+  /api/stories/trending:
+    get:
+      tags: [Stories]
+      operationId: trendingStories
+      summary: Get trending stories
+      description: |
+        Returns public, non-archived stories sorted by their trending score
+        in descending order. Scores are computed by a background job that
+        runs daily and considers:
+
+        - **View count** (logarithmic scaling to prevent viral domination)
+        - **Recency boost** (linear decay over 24 hours since last update)
+        - **Age penalty** (exponential decay based on creation age)
+
+        The formula:
+        `score = log10(views + 1) * 4 + recencyBoost * 10 - agePenalty * 0.1`
+
+        Only stories with `isPublic: true` and `isArchived: false` are
+        included. Results are cached for 10 minutes.
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+          description: Zero-indexed page number.
+          example: 0
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+          description: Stories per page.
+          example: 20
+      responses:
+        "200":
+          description: Trending stories sorted by score.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+              description: "`s-maxage=600, stale-while-revalidate`"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  stories:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Story"
+                  hasMore:
+                    type: boolean
+              examples:
+                trending:
+                  summary: Top trending stories
+                  value:
+                    stories:
+                      - id: abc123
+                        title: The Last Frontier
+                        owner: user456
+                        authorNames: [Alice]
+                        slug: the-last-frontier
+                        created: "2025-12-01T10:00:00Z"
+                        lastUpdated: "2025-12-15T14:30:00Z"
+                        tags: [scifi]
+                        viewCount: 1420
+                        trendingScore: 2.15
+                        isPublic: true
+                        isArchived: false
+                        preview: "The ship emerged from hyperspace..."
+                    hasMore: true
+        "500":
+          description: Firestore query failure.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/trending/cron:
+    get:
+      tags: [Maintenance]
+      operationId: updateTrendingGet
+      summary: Update trending scores (GET)
+      description: |
+        Batch recomputes trending scores for public stories. This endpoint
+        is called by Vercel Cron on a daily schedule and can also be
+        triggered manually.
+
+        Three modes are available:
+
+        - **all**: Full recompute of all public, non-archived stories.
+          Processes in batches of 500. Uses smart skip logic to avoid
+          recomputing scores that are still fresh.
+        - **recent**: Only recomputes stories updated within the last
+          24 hours. More efficient for frequent runs.
+        - **stats**: Returns monitoring metrics without modifying any
+          documents.
+
+        Smart skip logic:
+        - Stories updated in the last hour: recompute every 15 minutes
+        - Other stories: recompute every 1 hour
+        - Stories never scored: always recompute
+      security:
+        - cronSecret: []
+      parameters:
+        - name: mode
+          in: query
+          schema:
+            type: string
+            enum:
+              - all
+              - recent
+              - stats
+            default: all
+          description: |
+            The update mode.
+            - `all`: Full recompute (up to 500 per batch)
+            - `recent`: Delta update (last 24 hours)
+            - `stats`: Monitoring only, no writes
+          example: recent
+      responses:
+        "200":
+          description: Update completed or stats returned.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/CronUpdateResult"
+                  - $ref: "#/components/schemas/CronStatsResult"
+              examples:
+                update:
+                  summary: Successful update run
+                  value:
+                    success: true
+                    mode: recent
+                    updated: 42
+                    skipped: 158
+                    duration: 1234
+                stats:
+                  summary: Stats query
+                  value:
+                    success: true
+                    mode: stats
+                    stats:
+                      total: 500
+                      withScores: 458
+                      needingUpdate: 42
+                      recentlyUpdated: 15
+                    duration: 89
+        "401":
+          description: Missing or invalid cron secret.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                unauthorized:
+                  value:
+                    error: Unauthorized
+        "500":
+          description: Batch update failure.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: string
+                    example: Firestore batch write failed
+    post:
+      tags: [Maintenance]
+      operationId: updateTrendingPost
+      summary: Update trending scores (POST)
+      description: |
+        Same as the GET variant. Provided for flexibility in how the
+        endpoint is triggered (some cron services prefer POST).
+      security:
+        - cronSecret: []
+      parameters:
+        - name: mode
+          in: query
+          schema:
+            type: string
+            enum:
+              - all
+              - recent
+              - stats
+            default: all
+      responses:
+        "200":
+          description: Update completed or stats returned.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/CronUpdateResult"
+                  - $ref: "#/components/schemas/CronStatsResult"
+        "401":
+          description: Missing or invalid cron secret.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Batch update failure.
+
+  /api/users/{userId}/profile:
+    get:
+      tags: [Users]
+      operationId: getUserProfile
+      summary: Get a user's public profile
+      description: |
+        Returns the public profile for a user. Profiles include the
+        display name, username, bio, and avatar image URL.
+
+        Results are cached server-side for 10 minutes.
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: |
+            The Firebase user ID of the profile to retrieve.
+          example: abc123def456
+      responses:
+        "200":
+          description: User profile data.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+              description: "`s-maxage=600, stale-while-revalidate`"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  profile:
+                    $ref: "#/components/schemas/UserProfile"
+              examples:
+                profile:
+                  summary: User profile
+                  value:
+                    profile:
+                      id: abc123def456
+                      name: Alice Johnson
+                      username: alice
+                      bio: Sci-fi writer and coffee enthusiast.
+                      image: https://lh3.googleusercontent.com/a/photo
+                      email: alice@example.com
+        "404":
+          description: User not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                not_found:
+                  value:
+                    error: User not found
+        "500":
+          description: Firestore read failure.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/users/{userId}/stories:
+    get:
+      tags: [Users]
+      operationId: getUserStories
+      summary: Get a user's public stories
+      description: |
+        Returns a paginated list of public stories owned by the given user,
+        sorted by `lastUpdated` descending. Only public, non-archived
+        stories are returned.
+
+        Results are cached server-side for 5 minutes.
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The Firebase user ID of the story owner.
+          example: abc123def456
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+          description: Zero-indexed page number.
+          example: 0
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+          description: Stories per page.
+          example: 20
+      responses:
+        "200":
+          description: Paginated list of the user's public stories.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+              description: "`s-maxage=300, stale-while-revalidate`"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  stories:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Story"
+                  hasMore:
+                    type: boolean
+              examples:
+                stories:
+                  summary: User's public stories
+                  value:
+                    stories:
+                      - id: story789
+                        title: A New Beginning
+                        owner: abc123def456
+                        authorNames: [Alice Johnson]
+                        slug: a-new-beginning
+                        created: "2025-11-20T08:00:00Z"
+                        lastUpdated: "2025-12-10T16:45:00Z"
+                        tags: [fiction, drama]
+                        viewCount: 87
+                        trendingScore: 0.654
+                        isPublic: true
+                        isArchived: false
+                        preview: "She opened her eyes to find the world had changed overnight..."
+                    hasMore: false
+        "500":
+          description: Firestore query failure.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+components:
+  securitySchemes:
+    firebaseAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        A Firebase ID token obtained by exchanging the custom token
+        from the NextAuth session using the Firebase client SDK.
+
+        Flow:
+        1. Sign in via NextAuth (OAuth or credentials)
+        2. NextAuth session callback generates a Firebase custom token
+        3. Client exchanges custom token via `signInWithCustomToken()`
+        4. Client calls `getIdToken()` to get the Firebase ID token
+        5. Include in requests: `Authorization: Bearer <firebase-id-token>`
+    cronSecret:
+      type: http
+      scheme: bearer
+      description: |
+        A shared secret configured in the `CRON_SECRET` environment
+        variable. Used to authenticate cron job requests from Vercel
+        or manual triggers.
+
+        Include in requests: `Authorization: Bearer <cron-secret>`
+
+  schemas:
+    Error:
+      type: object
+      description: Standard error response.
+      required:
+        - error
+      properties:
+        error:
+          type: string
+          description: Human-readable error message.
+          example: Missing required parameter
+
+    Story:
+      type: object
+      description: |
+        A collaborative story document. Stories have ownership, access
+        controls, metadata, engagement metrics, and content stored as
+        Yjs-encoded binary data in Firestore.
+      properties:
+        id:
+          type: string
+          description: Firestore document ID.
+          example: abc123def456
+        owner:
+          type: string
+          description: Firebase user ID of the story owner.
+          example: user789
+        authorNames:
+          type: array
+          items:
+            type: string
+          description: |
+            Display names of all collaborators (owner + write access users).
+            Denormalized for performance to avoid joins at read time.
+          example: [Alice Johnson, Bob Smith]
+        title:
+          type: string
+          description: Story title set by the owner.
+          example: The Last Frontier
+        description:
+          type: string
+          nullable: true
+          description: Optional story description or subtitle.
+          example: A tale of exploration beyond known space.
+        slug:
+          type: string
+          description: |
+            URL-friendly slug derived from the title. Auto-generated
+            when the title changes.
+          example: the-last-frontier
+        created:
+          type: string
+          format: date-time
+          description: When the story was first created.
+          example: "2025-12-01T10:00:00Z"
+        lastUpdated:
+          type: string
+          format: date-time
+          description: When the story content or metadata was last modified.
+          example: "2025-12-15T14:30:00Z"
+        lastUpdatedBy:
+          type: string
+          description: Firebase user ID of the last person to edit.
+          example: user789
+        tags:
+          type: array
+          items:
+            type: string
+          description: User-defined tags for categorization.
+          example: [scifi, adventure, collaborative]
+        isPublic:
+          type: boolean
+          description: |
+            Whether the story is visible in the discovery feed and
+            accessible to anyone with the link.
+          example: true
+        isArchived:
+          type: boolean
+          description: |
+            Archived stories are hidden from the discovery feed but
+            still accessible to the owner and collaborators.
+          default: false
+          example: false
+        viewCount:
+          type: integer
+          description: |
+            Total number of authenticated views. Incremented by the
+            `/api/document/view` endpoint.
+          default: 0
+          example: 142
+        lastViewed:
+          type: string
+          format: date-time
+          nullable: true
+          description: Timestamp of the most recent view.
+          example: "2025-12-16T09:15:00Z"
+        trendingScore:
+          type: number
+          format: float
+          description: |
+            Algorithmic trending score computed from views, recency,
+            and age. Updated by the cron job. Higher is more trending.
+          default: 0
+          example: 2.15
+        trendingLastComputed:
+          type: string
+          format: date-time
+          nullable: true
+          description: When the trending score was last recomputed.
+          example: "2025-12-16T00:00:00Z"
+        preview:
+          type: string
+          description: |
+            Plain text excerpt extracted from the Yjs-encoded story
+            content. Generated at query time, not stored in Firestore.
+          example: "The ship emerged from hyperspace into a star system no human had ever visited..."
+        readAccess:
+          type: array
+          items:
+            type: string
+          description: |
+            Firebase user IDs with read-only access. These users can
+            view the story even when it is private.
+          example: [viewer1, viewer2]
+        writeAccess:
+          type: array
+          items:
+            type: string
+          description: |
+            Firebase user IDs with write access. These users can
+            collaboratively edit the story in real time and appear
+            in the `authorNames` array.
+          example: [editor1]
+
+    UserProfile:
+      type: object
+      description: Public user profile information.
+      properties:
+        id:
+          type: string
+          description: Firebase user ID.
+          example: abc123def456
+        name:
+          type: string
+          nullable: true
+          description: Display name from OAuth provider or set manually.
+          example: Alice Johnson
+        username:
+          type: string
+          nullable: true
+          description: |
+            Unique username (3-20 characters, alphanumeric with
+            underscores and hyphens). Used for profile URLs:
+            `/u/@username`
+          example: alice
+        bio:
+          type: string
+          nullable: true
+          description: Short biography (max 160 characters).
+          example: Sci-fi writer and coffee enthusiast.
+        image:
+          type: string
+          format: uri
+          nullable: true
+          description: Avatar image URL (typically from OAuth provider).
+          example: https://lh3.googleusercontent.com/a/photo
+        email:
+          type: string
+          format: email
+          nullable: true
+          description: User's email address.
+          example: alice@example.com
+
+    CronUpdateResult:
+      type: object
+      description: Result of a trending score update run.
+      properties:
+        success:
+          type: boolean
+          example: true
+        mode:
+          type: string
+          enum: [all, recent]
+          example: recent
+        updated:
+          type: integer
+          description: Number of stories whose scores were updated.
+          example: 42
+        skipped:
+          type: integer
+          description: |
+            Number of stories skipped because their scores were
+            still fresh (based on smart skip logic).
+          example: 158
+        duration:
+          type: integer
+          description: Total execution time in milliseconds.
+          example: 1234
+
+    CronStatsResult:
+      type: object
+      description: Monitoring statistics for trending scores.
+      properties:
+        success:
+          type: boolean
+          example: true
+        mode:
+          type: string
+          enum: [stats]
+          example: stats
+        stats:
+          type: object
+          properties:
+            total:
+              type: integer
+              description: Total number of public, non-archived stories.
+              example: 500
+            withScores:
+              type: integer
+              description: Stories that already have a computed trending score.
+              example: 458
+            needingUpdate:
+              type: integer
+              description: Stories with stale or missing trending scores.
+              example: 42
+            recentlyUpdated:
+              type: integer
+              description: Stories updated in the last 24 hours.
+              example: 15
+        duration:
+          type: integer
+          description: Query execution time in milliseconds.
+          example: 89

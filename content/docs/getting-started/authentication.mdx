@@ -1,0 +1,96 @@
+---
+title: Authentication
+description: Multi-provider authentication with NextAuth and Firebase custom token synchronization
+---
+
+# Authentication
+
+Axelot uses NextAuth v5 for session management with a Firebase custom token bridge for client-side operations. This dual system enables OAuth convenience while maintaining Firebase security rules.
+
+## Authentication Flow
+
+```
+User signs in (Google, GitHub, or Credentials)
+        |
+        v
+NextAuth creates JWT session
+        |
+        v
+Session callback generates Firebase custom token (via Admin SDK)
+        |
+        v
+Client exchanges custom token for Firebase ID token
+        |
+        v
+Firebase client SDK is now authenticated
+        |
+        v
+Firestore security rules allow access
+```
+
+## Providers
+
+### Google OAuth
+
+Sign in with a Google account. The OAuth flow is handled entirely by NextAuth. Email account linking is enabled, meaning a user who signs up with email/password can later sign in with Google using the same email.
+
+### GitHub OAuth
+
+Sign in with a GitHub account. Same email linking behavior as Google.
+
+### Email and Password
+
+Users can register with an email address and password. The registration flow:
+
+1. User submits email and password at `/auth/sign-up`
+2. Server creates a user document in Firestore with `emailVerified: false`
+3. Password is hashed with bcrypt and stored in a separate `credentials` collection
+4. A verification email is sent via Firebase client SDK
+5. User clicks the verification link, which opens `/auth/verify-email`
+6. The page calls `POST /api/auth/verify-email` to set `emailVerified: true`
+7. User can now sign in with their credentials
+
+Unverified users are blocked from signing in. This prevents account creation with someone else's email.
+
+## Firebase Synchronization
+
+NextAuth manages sessions, but Firestore security rules require Firebase Authentication. The bridge works like this:
+
+**Server side** (in the NextAuth session callback):
+```typescript
+const firebaseToken = await adminAuth.createCustomToken(userId)
+session.firebaseToken = firebaseToken
+```
+
+**Client side** (in the `FirebaseAuthSynchronize` component):
+```typescript
+await signInWithCustomToken(auth, session.firebaseToken)
+```
+
+This runs automatically when the NextAuth session loads. The Firebase client SDK then has a valid user, and Firestore queries pass security rules.
+
+**Important:** The custom token exchange is asynchronous. Components that depend on Firestore (the collaborative editor, the stories list) use the `useFirebaseReady` hook to wait for `onAuthStateChanged` to fire before issuing queries. Without this guard, Firestore requests can race ahead of the token exchange and fail with `permission-denied`.
+
+## Session Structure
+
+The JWT session includes:
+
+| Field | Type | Description |
+|---|---|---|
+| `user.id` | string | Firebase user ID |
+| `user.email` | string | User email |
+| `user.name` | string | Display name |
+| `user.image` | string | Avatar URL |
+| `user.username` | string | Unique username (nullable) |
+| `firebaseToken` | string | Short-lived Firebase custom token |
+
+## Protected Routes
+
+The proxy middleware at `src/proxy.ts` handles route protection:
+
+- `/stories` -- Redirects unauthenticated users to sign-in with a callback URL
+- `/auth/*` -- Redirects authenticated users to `/stories` (except `/auth/verify-email`)
+
+## Credential Isolation
+
+Password hashes are stored in a dedicated `credentials` Firestore collection with no client-side read/write rules. Only the Firebase Admin SDK (server-side) can access password data. This prevents any client from reading or modifying password hashes.

@@ -1,0 +1,122 @@
+---
+title: AI Features
+description: AI-powered text completion and transformation for the writing experience
+---
+
+# AI Features
+
+Axelot integrates AI writing assistance through OpenRouter, providing access to models from OpenAI, Anthropic, and other providers. All AI features are server-side proxied to keep API keys secure.
+
+## Text Completion (Experimental)
+
+The autocomplete extension is built but currently disabled in the production editor configuration. When enabled, it provides ghost text suggestions as the writer types.
+
+### How It Works (When Enabled)
+
+- Triggers after a configurable delay when the writer pauses
+- Displays ghost text that the writer can accept (Tab/Enter) or dismiss (Escape)
+- Streams completions from the `/api/completion` endpoint
+- Post-processes output to extract a single sentence (max 120 characters)
+
+### Extension Configuration
+
+The autocomplete extension is defined in `src/components/tiptap/extensions/autocomplete/ai-autocomplete.ts` with these defaults:
+
+| Setting | Default | Description |
+|---|---|---|
+| Model | `openrouter/auto` | OpenRouter's automatic model selection |
+| Temperature | `0.5` | Conservative for coherent continuations |
+| Max tokens | `60` | Short single-sentence completions |
+| Stop sequences | `\n\n` | Stop at paragraph boundaries |
+| Accept keys | Tab, Enter, ArrowRight | Keys that accept the suggestion |
+| Dismiss key | Escape | Key that dismisses the suggestion |
+
+The extension is currently commented out in `src/components/tiptap/utils/extensions.ts` and is not active in the editor.
+
+### Completion API Endpoint
+
+`POST /api/completion` accepts a prompt and returns a raw text stream. The response is streamed as plain text chunks, not server-sent events.
+
+```typescript
+const response = await fetch("/api/completion", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    prompt: "The spaceship drifted silently through",
+    model: "openrouter/auto",
+    max_tokens: 60,
+    temperature: 0.5,
+  }),
+})
+
+const reader = response.body.getReader()
+const decoder = new TextDecoder()
+
+while (true) {
+  const { done, value } = await reader.read()
+  if (done) break
+  const chunk = decoder.decode(value)
+  // Append chunk to ghost text overlay
+}
+```
+
+## Text Transformation
+
+Select text in the editor and apply AI-powered transformations:
+
+- **Improve** -- Enhances writing quality, fixes grammar, improves clarity
+- **Make Longer** -- Expands the selected text with additional detail and description
+
+### How It Works
+
+1. Select text in the editor
+2. A bubble menu appears with transformation options
+3. Choose an action (improve or make longer)
+4. The transformation streams in, replacing the selected text
+5. Accept or undo the change
+
+### Transform API Endpoint
+
+`POST /api/text-transform` returns a Server-Sent Events stream. Each event contains a JSON payload with the transformed text chunk:
+
+```typescript
+const response = await fetch("/api/text-transform", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    text: "The castle stood on a hill.",
+    action: "make-longer",
+    model: "openai/gpt-4o-mini",
+    max_tokens: 256,
+    temperature: 0.8,
+  }),
+})
+
+const reader = response.body.getReader()
+const decoder = new TextDecoder()
+
+while (true) {
+  const { done, value } = await reader.read()
+  if (done) break
+  const text = decoder.decode(value)
+  // Parse SSE: data: {"type":"content","content":"..."}\n\n
+}
+```
+
+## Security
+
+- The `OPENROUTER_API_KEY` is stored server-side only
+- AI endpoints are server-side proxies, never exposing the API key
+- No authentication is required for AI endpoints (rate limiting planned)
+- Request bodies are forwarded to OpenRouter without modification
+
+## Cost Considerations
+
+AI features use OpenRouter's pay-per-token pricing. Costs scale with:
+
+- Number of active writers using text transformations
+- Length of prompts (context window usage)
+- Max token settings for transformations
+- Model selection (larger models cost more per token)
+
+Rate limiting is planned for a future release to control costs and prevent abuse.

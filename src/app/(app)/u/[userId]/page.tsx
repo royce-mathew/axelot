@@ -1,6 +1,6 @@
 "use client"
 
-import { use, useEffect, useState, Suspense } from "react"
+import { Suspense, use, useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import {
   Add as AddIcon,
@@ -18,6 +18,7 @@ import {
   CardActionArea,
   CardContent,
   Chip,
+  CircularProgress,
   Container,
   Divider,
   IconButton,
@@ -28,8 +29,8 @@ import {
   Skeleton,
   Stack,
   Typography,
-  CircularProgress,
 } from "@mui/material"
+import { SerializableDocument } from "@/types/document"
 import {
   getUserIdByUsername,
   isUsernameParam,
@@ -37,7 +38,6 @@ import {
 } from "@/lib/username-utils"
 import { timeAgo } from "@/lib/utils"
 import { useAuth } from "@/hooks/use-auth"
-import { SerializableDocument } from "@/types/document"
 
 interface UserProfile {
   id: string
@@ -47,24 +47,31 @@ interface UserProfile {
   image: string | null
 }
 
-
 export default function UserProfilePage(props: {
   params: Promise<{ userId: string }>
 }) {
   return (
-    <Suspense fallback={
-      <Box sx={{ minHeight: "100vh", bgcolor: "background.default", display: "flex", justifyContent: "center", alignItems: "center" }}>
-        <CircularProgress />
-      </Box>
-    }>
+    <Suspense
+      fallback={
+        <Box
+          sx={{
+            minHeight: "100vh",
+            bgcolor: "background.default",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          <CircularProgress />
+        </Box>
+      }
+    >
       <UserProfilePageInner {...props} />
     </Suspense>
   )
 }
 
-function UserProfilePageInner(props: {
-  params: Promise<{ userId: string }>
-}) {
+function UserProfilePageInner(props: { params: Promise<{ userId: string }> }) {
   const params = use(props.params)
   const { user: currentUser } = useAuth()
   const router = useRouter()

@@ -9,7 +9,6 @@ import {
   SnapshotOptions,
   where,
 } from "firebase/firestore"
-
 import { Document } from "@/types/document"
 import { db } from "@/lib/firebase/client"
 

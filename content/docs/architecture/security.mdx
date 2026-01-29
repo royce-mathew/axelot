@@ -1,0 +1,128 @@
+---
+title: Security
+description: Authentication flow, Firestore rules, credential isolation, and security considerations
+---
+
+# Security
+
+Axelot implements defense-in-depth security with multiple layers: authentication, authorization via Firestore rules, credential isolation, and encrypted collaboration.
+
+## Authentication Security
+
+### JWT Sessions
+
+NextAuth uses JWT-based sessions stored in HttpOnly cookies. Tokens include the user ID, username, and a short-lived Firebase custom token. The JWT is signed with the `AUTH_SECRET` environment variable.
+
+### OAuth Email Linking
+
+Both Google and GitHub providers have `allowDangerousEmailAccountLinking` enabled. This means a user who signs up with email/password can later sign in with an OAuth provider using the same email. The trade-off is convenience versus the theoretical risk of email-based account takeover.
+
+### Password Hashing
+
+Passwords are hashed with bcrypt via the `bcryptjs` library. The library uses timing-safe comparison to prevent timing attacks during password verification.
+
+## Firestore Security Rules
+
+Security rules (`firebase/firestore.rules`) are the primary authorization layer. All client-side Firestore operations must pass these rules.
+
+### Stories
+
+```
+Read:
+  - Public stories: anyone
+  - Private stories: owner, readAccess, or writeAccess users
+
+Create:
+  - Authenticated users only
+  - Must set themselves as owner
+  - Required fields validated (title, created, lastUpdated, etc.)
+
+Update:
+  - Owner or writeAccess users
+
+Delete:
+  - Owner only
+```
+
+### Collaboration Instances
+
+```
+stories/{id}/instances/** (recursive):
+  - Any authenticated user can read/write
+```
+
+This permissive rule on subcollections is intentional for collaboration performance. Instance documents are ephemeral (deleted on disconnect) and contain only peer connection metadata, not story content.
+
+### Users
+
+```
+Read: anyone (profiles are public)
+Write: self only (request.auth.uid == documentId)
+```
+
+### Server-Only Collections
+
+```
+credentials: deny all client access
+sessions: deny all client access
+accounts: deny all client access
+```
+
+These collections are only accessible through the Firebase Admin SDK on the server. Password hashes, session tokens, and OAuth account links are never readable from the client.
+
+## Credential Isolation
+
+Password hashes are stored in a dedicated `credentials` collection separate from the `users` collection. This design ensures:
+
+- Client-side code can never read password hashes (Firestore rules deny all access)
+- Even if a user document is compromised, password data is in a separate location
+- The Admin SDK (server-only) is the sole accessor of credential data
+
+## Encrypted Collaboration
+
+WebRTC data channels between peers are encrypted:
+
+- **Key derivation**: PBKDF2 with 100,000 iterations using caller + receiver UIDs as input
+- **Encryption algorithm**: AES-GCM with random IV per message
+- **Scope**: All Yjs document updates and awareness messages
+
+This prevents eavesdropping on peer-to-peer traffic, even on untrusted networks.
+
+## API Security
+
+### Cron Endpoint Protection
+
+The trending cron endpoint (`/api/trending/cron`) requires a bearer token matching the `CRON_SECRET` environment variable. Without the correct secret, requests return 401.
+
+### AI Proxy
+
+AI endpoints (`/api/completion`, `/api/text-transform`) proxy to OpenRouter. The `OPENROUTER_API_KEY` is stored server-side and never included in client bundles.
+
+### Firebase Token Verification
+
+The view tracking endpoint (`/api/document/view`) requires a Firebase ID token in the Authorization header. The token is verified using the Firebase Admin SDK before any database operation.
+
+## Environment Variables
+
+All secrets are stored in environment variables, never in source code:
+
+| Variable | Purpose | Access |
+|---|---|---|
+| `AUTH_SECRET` | NextAuth JWT signing | Server only |
+| `AUTH_GOOGLE_ID` / `SECRET` | Google OAuth credentials | Server only |
+| `AUTH_GITHUB_ID` / `SECRET` | GitHub OAuth credentials | Server only |
+| `FIREBASE_PROJECT_ID` | Firebase Admin initialization | Server only |
+| `FIREBASE_CLIENT_EMAIL` | Firebase Admin service account | Server only |
+| `FIREBASE_PRIVATE_KEY` | Firebase Admin private key | Server only |
+| `OPENROUTER_API_KEY` | AI provider authentication | Server only |
+| `CRON_SECRET` | Cron endpoint authentication | Server only |
+| `NEXT_PUBLIC_FIREBASE_*` | Firebase client SDK config | Public (safe) |
+
+## Security Considerations
+
+Areas identified for future hardening:
+
+- **Rate limiting** -- AI endpoints currently have no rate limits. Per-user or per-IP rate limiting is recommended.
+- **Email verification tokens** -- The current verification flow accepts an email address directly. A signed, time-limited token would be more secure.
+- **CSRF protection** -- NextAuth provides built-in CSRF tokens for its routes. Custom API routes should validate the origin header.
+- **Dependency scanning** -- Regular security audits of npm dependencies are recommended, especially for the vendored y-fire library.
